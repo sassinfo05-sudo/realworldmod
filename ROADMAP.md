@@ -146,9 +146,27 @@ compile, run, and review.
     just expires on its own. Head/arm/torso zones and their own effects
     (aim sway, reduced carry weight, etc.) aren't started.
 
+- **Slice 9 — Vehicle drivetrain physics** (first piece of Section 4):
+  - `VehicleState` (speed, fuel) and `VehiclePhysics.tick(state, throttle)`:
+    a pure, deliberately Minecraft-independent per-tick simulation —
+    acceleration, braking (faster than coasting), coast-to-stop with no
+    overshoot past zero, reverse, top-speed/reverse-speed clamping,
+    throttle-input clamping, and fuel consumption that stops mattering
+    once the tank is empty (throttle is then ignored, not just weakened).
+  - Deliberately does **not** attempt the entity/rendering wrapper (a
+    custom `Entity` subclass, `EntityType` registration, input capture,
+    and a client-side model/renderer) in this slice — that is a
+    substantially larger, harder-to-verify piece of work than everything
+    shipped so far (it can't be checked the way items/blocks/mixins were,
+    by inspecting bytecode/refmaps; it needs an actual running game
+    client), so it's left as its own follow-up rather than shipped
+    half-working.
+
 ## Not started yet (tracked, in priority order)
 
-1. **Vehicle entity + drivetrain physics** (Section 4).
+1. **Wire `VehiclePhysics` into an actual rideable entity**: custom
+   `Entity`/`EntityType`, input capture, and a client-side model/renderer
+   — the part of Section 4 that needs a running game client to verify.
 2. **Expand the medical system**: other body zones, illness/hospital
    treatment, NPC injuries, persistence (Section 5).
 3. **Police/crime state machine + court flow** (Section 7).

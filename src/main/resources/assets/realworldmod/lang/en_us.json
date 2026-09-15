@@ -1,8 +1,11 @@
 {
   "itemGroup.realworldmod.electronics": "RealWorld Electronics",
   "item.realworldmod.smartphone": "Smartphone",
+  "item.realworldmod.land_deed": "Land Deed",
   "message.realworldmod.phone_dead": "Battery dead. Plug in a charging cable.",
   "message.realworldmod.no_permit": "You don't own a deed for this property.",
+  "message.realworldmod.plot_claimed": "Plot claimed! You now own this land.",
+  "message.realworldmod.plot_already_claimed": "This land is already claimed by someone else.",
   "gui.realworldmod.phone.unlock": "Unlock",
   "gui.realworldmod.phone.app.settings": "Settings",
   "gui.realworldmod.phone.app.messages": "Messages",

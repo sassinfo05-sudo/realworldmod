@@ -51,4 +51,19 @@ class ClaimRegistryTest {
         registry.clear();
         assertTrue(registry.canModify(stranger, 5, 5));
     }
+
+    @Test
+    void overlapsAnyDetectsIntersectingRectangle() {
+        assertTrue(registry.overlapsAny(5, 5, 15, 15));
+    }
+
+    @Test
+    void overlapsAnyIsFalseForDisjointRectangle() {
+        assertFalse(registry.overlapsAny(20, 20, 30, 30));
+    }
+
+    @Test
+    void overlapsAnyIsTrueEvenForEdgeTouchingRectangle() {
+        assertTrue(registry.overlapsAny(10, 10, 20, 20));
+    }
 }

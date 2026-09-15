@@ -42,4 +42,14 @@ public final class ClaimRegistry {
                 .map(claim -> claim.ownerId().equals(playerId))
                 .orElse(true);
     }
+
+    /** Whether the given rectangle intersects any existing claim (used before creating a new one). */
+    public boolean overlapsAny(int minX, int minZ, int maxX, int maxZ) {
+        return claims.stream().anyMatch(claim -> rectanglesIntersect(claim, minX, minZ, maxX, maxZ));
+    }
+
+    private static boolean rectanglesIntersect(Claim claim, int minX, int minZ, int maxX, int maxZ) {
+        return claim.minX() <= maxX && claim.maxX() >= minX
+                && claim.minZ() <= maxZ && claim.maxZ() >= minZ;
+    }
 }

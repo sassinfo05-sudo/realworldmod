@@ -16,7 +16,10 @@ public final class ModItemGroups {
             FabricItemGroup.builder()
                     .icon(() -> new ItemStack(ModItems.SMARTPHONE))
                     .displayName(Text.translatable("itemGroup.realworldmod.electronics"))
-                    .entries((context, entries) -> entries.add(ModItems.SMARTPHONE))
+                    .entries((context, entries) -> {
+                        entries.add(ModItems.SMARTPHONE);
+                        entries.add(ModItems.LAND_DEED);
+                    })
                     .build());
 
     private ModItemGroups() {

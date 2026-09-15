@@ -63,21 +63,34 @@ compile, run, and review.
   - `PropertyProtection`: hooks Fabric API's `PlayerBlockBreakEvents.BEFORE`
     to cancel breaking blocks inside a claim the breaking player doesn't
     own, with a feedback message.
-  - **Known gap, tracked not hidden**: block *placement* isn't gated yet —
-    Fabric API has no generic "before block placed" event, so that needs a
-    mixin (see item 1 below). There is also no way yet to actually *create*
-    a claim in-game (no deed item, no plot-purchase flow) — `ClaimDatabase`
-    is wired up and tested, but nothing populates it during play yet.
+  - **Known gap at the time**: block *placement* wasn't gated (still true —
+    see item 1 below), and there was no in-game way to actually create a
+    claim.
+
+- **Slice 4 — Deed item & in-game claim purchase flow**:
+  - `PropertyService`: the single place claims get created, wrapping
+    `ClaimRegistry` + `ClaimDatabase` so they can't drift out of sync
+    (`RealWorldMod` no longer touches `ClaimDatabase` directly).
+  - `ClaimRegistry.overlapsAny(...)`: rectangle-intersection check (not just
+    point containment) used before creating a new claim, unit tested
+    including the edge-touching case.
+  - `ModItems.LAND_DEED`: a real, obtainable item (in the creative tab).
+  - `DeedUseHandler`: right-clicking a block with a deed in hand claims a
+    33x33 plot centered on it via `UseBlockCallback`, consuming one deed on
+    success and refusing (with feedback) if it would overlap existing land.
+  - This closes the biggest gap from slice 3: claims can now actually be
+    created during play, not just loaded from a pre-seeded database.
 
 ## Not started yet (tracked, in priority order)
 
-1. **Block placement gate + deed item/purchase flow** — a mixin for
-   before-place protection, plus an actual way to buy/claim a plot in-game
-   (deed item, or a real-estate phone app that writes into `ClaimDatabase`).
+1. **Block placement gate** — Fabric API has no generic "before block
+   placed" event, so protecting placement (not just breaking) inside
+   someone else's claim needs a mixin.
 2. **Vehicle entity + drivetrain physics** (Section 4).
 3. **Targeted anatomical damage model** (Section 5).
 4. **Economy ledger + banking app** (plugs into the phone app framework;
-   Sections 3 & 6).
+   deeds should eventually cost money via this, instead of being free
+   creative-tab items; Sections 3 & 6).
 5. **Police/crime state machine + court flow** (Section 7).
 6. **Biome/wildlife AI overhaul** (Section 8).
 7. **Utilities (power/water/telecom) + waste** (Section 9).

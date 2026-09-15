@@ -12,6 +12,8 @@ public final class ModItems {
             .maxCount(1)
             .component(ModDataComponents.PHONE_BATTERY, PhoneBattery.MAX_LEVEL)));
 
+    public static final Item LAND_DEED = register("land_deed", new Item(new Item.Settings().maxCount(16)));
+
     private ModItems() {
     }
 

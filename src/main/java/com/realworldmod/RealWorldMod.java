@@ -6,9 +6,10 @@ import com.realworldmod.init.ModItems;
 import com.realworldmod.npc.NpcDatabase;
 import com.realworldmod.npc.NpcScheduleManager;
 import com.realworldmod.phone.PhoneUseHandler;
-import com.realworldmod.property.ClaimDatabase;
 import com.realworldmod.property.ClaimRegistry;
+import com.realworldmod.property.DeedUseHandler;
 import com.realworldmod.property.PropertyProtection;
+import com.realworldmod.property.PropertyService;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -32,8 +33,7 @@ public final class RealWorldMod implements ModInitializer {
 
     private NpcDatabase npcDatabase;
     private NpcScheduleManager scheduleManager;
-    private ClaimDatabase claimDatabase;
-    private final ClaimRegistry claimRegistry = new ClaimRegistry();
+    private final PropertyService propertyService = new PropertyService(new ClaimRegistry());
 
     @Override
     public void onInitialize() {
@@ -43,7 +43,8 @@ public final class RealWorldMod implements ModInitializer {
         ModItems.register();
         ModItemGroups.register();
         PhoneUseHandler.register();
-        new PropertyProtection(claimRegistry).register();
+        new PropertyProtection(propertyService.registry()).register();
+        new DeedUseHandler(propertyService).register();
 
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             Path saveRoot = server.getSavePath(WorldSavePath.ROOT);
@@ -55,12 +56,9 @@ public final class RealWorldMod implements ModInitializer {
             LOGGER.info("[RealWorldMod] Citizen database opened at {}", npcDbPath);
 
             Path claimDbPath = saveRoot.resolve("realworldmod").resolve("claims.sqlite");
-            claimDatabase = new ClaimDatabase(claimDbPath);
-            claimDatabase.open();
-            claimRegistry.clear();
-            claimDatabase.findAll().forEach(claimRegistry::add);
+            propertyService.open(claimDbPath);
             LOGGER.info("[RealWorldMod] Claim database opened at {} ({} claims loaded)",
-                    claimDbPath, claimRegistry.all().size());
+                    claimDbPath, propertyService.registry().all().size());
         });
 
         ServerTickEvents.END_SERVER_TICK.register(server -> {
@@ -74,9 +72,7 @@ public final class RealWorldMod implements ModInitializer {
             if (npcDatabase != null) {
                 npcDatabase.close();
             }
-            if (claimDatabase != null) {
-                claimDatabase.close();
-            }
+            propertyService.close();
         });
     }
 }

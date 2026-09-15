@@ -14,6 +14,8 @@ import com.realworldmod.init.ModItemGroups;
 import com.realworldmod.init.ModItems;
 import com.realworldmod.medical.IllnessService;
 import com.realworldmod.medical.LegInjuryEffect;
+import com.realworldmod.medical.MedicineUseHandler;
+import com.realworldmod.medical.PharmacyUseHandler;
 import com.realworldmod.medical.WeatherIllnessEffect;
 import com.realworldmod.npc.NpcDatabase;
 import com.realworldmod.npc.NpcScheduleManager;
@@ -82,6 +84,8 @@ public final class RealWorldMod implements ModInitializer {
         UtilityNetworking.registerServerReceivers(utilityService);
         new JobUseHandler(jobService).register();
         LegInjuryEffect.register();
+        MedicineUseHandler.register();
+        new PharmacyUseHandler(bankService).register();
 
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             Path saveRoot = server.getSavePath(WorldSavePath.ROOT);

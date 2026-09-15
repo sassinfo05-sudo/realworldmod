@@ -21,6 +21,10 @@ public final class ModBlocks {
                     .strength(0.3f)
                     .luminance(state -> state.get(UtilityLampBlock.LIT) ? 15 : 0)));
 
+    /** Sells {@code MEDICINE} for real money — see {@code PharmacyUseHandler}. */
+    public static final Block PHARMACY_COUNTER = register("pharmacy_counter",
+            new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));
+
     private ModBlocks() {
     }
 

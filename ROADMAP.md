@@ -261,6 +261,20 @@ compile, run, and review.
     NPCs still don't get sick. No pharmacy/hospital/recovery-item system
     to treat it early — like the leg injury, it just runs its course.
 
+- **Slice 15 — Pharmacy & medicine**: closes the "just has to run its
+  course" gap both medical slices left behind.
+  - `ModItems.MEDICINE` + `MedicineUseHandler`: using it clears Nausea,
+    Weakness, and Slowness (exactly what the leg-injury and illness
+    slices apply) via `LivingEntity.removeStatusEffect`; it's only
+    consumed if it actually cured something, so healthy players can't
+    waste it by accident.
+  - `ModBlocks.PHARMACY_COUNTER` + `PharmacyUseHandler`: right-clicking it
+    empty-handed buys one Medicine through `BankService`, same
+    withdraw-or-refuse shape as every other paid interaction.
+  - No new pure logic (the "which effects to cure" list is a fixed
+    constant, not really unit-test-worthy on its own) — Minecraft-glue
+    slice, same category as `PropertyProtection`/`UtilityLampBlock`.
+
 ## Not started yet (tracked, in priority order)
 
 1. **Police NPCs / arrest / court flow** for a wanted level that's
@@ -268,10 +282,8 @@ compile, run, and review.
 2. **Wire `VehiclePhysics` into an actual rideable entity**: custom
    `Entity`/`EntityType`, input capture, and a client-side model/renderer
    — the part of Section 4 that needs a running game client to verify.
-3. **Pharmacy/hospital treatment** to heal injuries and illness early
-   instead of waiting them out (Section 5).
-4. **Biome/wildlife AI overhaul** (Section 8).
-5. Rendering/PBR overhaul, aviation/ATC, space program — largest, latest.
+3. **Biome/wildlife AI overhaul** (Section 8).
+4. Rendering/PBR overhaul, aviation/ATC, space program — largest, latest.
 
 Each future slice will follow the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game client,

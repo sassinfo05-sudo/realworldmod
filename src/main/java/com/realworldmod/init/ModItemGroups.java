@@ -19,8 +19,10 @@ public final class ModItemGroups {
                     .entries((context, entries) -> {
                         entries.add(ModItems.SMARTPHONE);
                         entries.add(ModItems.LAND_DEED);
+                        entries.add(ModItems.MEDICINE);
                         entries.add(ModBlocks.CASH_REGISTER);
                         entries.add(ModBlocks.UTILITY_LAMP);
+                        entries.add(ModBlocks.PHARMACY_COUNTER);
                     })
                     .build());
 

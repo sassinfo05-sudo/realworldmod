@@ -21,14 +21,20 @@ import com.realworldmod.property.DeedUseHandler;
 import com.realworldmod.property.PropertyAccess;
 import com.realworldmod.property.PropertyProtection;
 import com.realworldmod.property.PropertyService;
+import com.realworldmod.utilities.UtilityService;
+import com.realworldmod.utilities.net.UtilityNetworking;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 import net.minecraft.util.WorldSavePath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
+import java.util.List;
+import java.util.UUID;
 
 /**
  * Entry point for the RealWorld total-conversion mod. Wires together the
@@ -48,6 +54,7 @@ public final class RealWorldMod implements ModInitializer {
     private final CrimeService crimeService = new CrimeService();
     private final LawEnforcementService lawEnforcementService =
             new LawEnforcementService(crimeService, bankService);
+    private final UtilityService utilityService = new UtilityService(bankService);
 
     @Override
     public void onInitialize() {
@@ -66,6 +73,8 @@ public final class RealWorldMod implements ModInitializer {
         BankNetworking.registerServerReceiver(bankService);
         CrimeNetworking.registerPayloadTypes();
         CrimeNetworking.registerServerReceiver(crimeService);
+        UtilityNetworking.registerPayloadTypes();
+        UtilityNetworking.registerServerReceivers(utilityService);
         new JobUseHandler(jobService).register();
         LegInjuryEffect.register();
 
@@ -86,6 +95,10 @@ public final class RealWorldMod implements ModInitializer {
             Path bankDbPath = saveRoot.resolve("realworldmod").resolve("bank.sqlite");
             bankService.open(bankDbPath);
             LOGGER.info("[RealWorldMod] Bank database opened at {}", bankDbPath);
+
+            Path utilityDbPath = saveRoot.resolve("realworldmod").resolve("utilities.sqlite");
+            utilityService.open(utilityDbPath);
+            LOGGER.info("[RealWorldMod] Utility database opened at {}", utilityDbPath);
         });
 
         ServerTickEvents.END_SERVER_TICK.register(server -> {
@@ -94,6 +107,17 @@ public final class RealWorldMod implements ModInitializer {
                 scheduleManager.tick(dayTime);
             }
             crimeService.tick(server.getOverworld().getTime());
+
+            List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
+            List<UUID> disconnected = utilityService.tick(
+                    server.getOverworld().getTime(), onlinePlayers.stream().map(ServerPlayerEntity::getUuid).toList());
+            if (!disconnected.isEmpty()) {
+                for (ServerPlayerEntity player : onlinePlayers) {
+                    if (disconnected.contains(player.getUuid())) {
+                        player.sendMessage(Text.translatable("message.realworldmod.power_shutoff"), true);
+                    }
+                }
+            }
         });
 
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
@@ -102,6 +126,7 @@ public final class RealWorldMod implements ModInitializer {
             }
             propertyService.close();
             bankService.close();
+            utilityService.close();
         });
     }
 }

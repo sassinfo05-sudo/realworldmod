@@ -198,17 +198,43 @@ compile, run, and review.
     is the entire consequence. Fines only trigger from trespassing, since
     that's still the only tracked offense.
 
+- **Slice 12 — Utility billing** (first piece of Section 9: "Unpaid
+  utility bills result in lights shutting off"):
+  - `UtilityState` (connected, unpaid cents) and `UtilityBillingMath`: pure
+    transitions for an automatic billing attempt and a manual payoff, unit
+    tested.
+  - `UtilityDatabase`/`UtilityService`: the same open/cache/persist shape
+    as the property/bank/economy services, billing through `BankService`
+    so a household's power is only as reliable as its owner's balance.
+    Failed payments disconnect and *accumulate* debt (a full-amount
+    all-or-nothing withdrawal each cycle, consistent with how
+    `BankService.withdraw` already works elsewhere) rather than partially
+    paying it down.
+  - A fifth `PhoneApp`, Utilities, shows connection status and unpaid
+    balance and adds a "Pay Now" button — the mod's first phone app with
+    a C2S action payload (`PayUtilityBillPayload`) rather than a
+    read-only display.
+  - Wired into the server tick over all currently online players; anyone
+    newly disconnected gets an action-bar message.
+  - **Known gaps**: billing only runs for online players (an offline
+    player's meter doesn't run while they're away — arguably realistic,
+    but not a deliberate design choice, just what the online-player tick
+    naturally gives you); no actual visible in-world consequence yet
+    (no lights, no blocks that turn off) — "power" is currently a purely
+    account-level flag exposed only through the phone.
+
 ## Not started yet (tracked, in priority order)
 
-1. **Police NPCs / arrest / court flow** for a wanted level that's
+1. **Give disconnected power a visible in-world effect** — lamps, minecart
+   stations, etc. that actually go dark, not just a phone-app flag.
+2. **Police NPCs / arrest / court flow** for a wanted level that's
    maxed out, beyond just fines (Section 7).
-2. **Wire `VehiclePhysics` into an actual rideable entity**: custom
+3. **Wire `VehiclePhysics` into an actual rideable entity**: custom
    `Entity`/`EntityType`, input capture, and a client-side model/renderer
    — the part of Section 4 that needs a running game client to verify.
-3. **Expand the medical system**: other body zones, illness/hospital
+4. **Expand the medical system**: other body zones, illness/hospital
    treatment, NPC injuries, persistence (Section 5).
-4. **Biome/wildlife AI overhaul** (Section 8).
-5. **Utilities (power/water/telecom) + waste** (Section 9).
+5. **Biome/wildlife AI overhaul** (Section 8).
 6. Rendering/PBR overhaul, aviation/ATC, space program — largest, latest.
 
 Each future slice will follow the same pattern: a self-contained Java

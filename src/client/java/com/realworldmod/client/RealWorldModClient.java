@@ -3,11 +3,13 @@ package com.realworldmod.client;
 import com.realworldmod.client.crime.ClientCrimeState;
 import com.realworldmod.client.economy.ClientBankState;
 import com.realworldmod.client.phone.PhoneLockScreen;
+import com.realworldmod.client.utilities.ClientUtilityState;
 import com.realworldmod.crime.net.WantedLevelResponsePayload;
 import com.realworldmod.economy.net.BankBalanceResponsePayload;
 import com.realworldmod.init.ModDataComponents;
 import com.realworldmod.init.ModItems;
 import com.realworldmod.phone.PhoneBattery;
+import com.realworldmod.utilities.net.UtilityStatusResponsePayload;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
@@ -27,6 +29,8 @@ public final class RealWorldModClient implements ClientModInitializer {
                 (payload, context) -> ClientBankState.set(payload.balanceCents()));
         ClientPlayNetworking.registerGlobalReceiver(WantedLevelResponsePayload.ID,
                 (payload, context) -> ClientCrimeState.set(payload.wantedLevel()));
+        ClientPlayNetworking.registerGlobalReceiver(UtilityStatusResponsePayload.ID,
+                (payload, context) -> ClientUtilityState.set(payload.powerConnected(), payload.unpaidCents()));
 
         UseItemCallback.EVENT.register((player, world, hand) -> {
             if (!world.isClient || hand != Hand.MAIN_HAND) {

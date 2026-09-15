@@ -24,6 +24,12 @@
   "gui.realworldmod.phone.crime.minor": "Minor infractions (%s/5)",
   "gui.realworldmod.phone.crime.wanted": "Wanted (%s/5)",
   "gui.realworldmod.phone.crime.most_wanted": "Most Wanted (%s/5)",
+  "gui.realworldmod.phone.app.utilities": "Utilities",
+  "gui.realworldmod.phone.utilities.connected": "Power: Connected",
+  "gui.realworldmod.phone.utilities.disconnected": "Power: DISCONNECTED",
+  "gui.realworldmod.phone.utilities.owed": "Balance owed: %s",
+  "gui.realworldmod.phone.utilities.pay_now": "Pay Now",
+  "message.realworldmod.power_shutoff": "Your power has been shut off due to unpaid bills.",
   "gui.realworldmod.phone.settings.battery": "Battery: %s%%",
   "gui.realworldmod.phone.settings.power_off": "Lock phone",
   "gui.realworldmod.phone.messages.empty": "No messages yet."

@@ -242,6 +242,25 @@ compile, run, and review.
     property system's existing "unclaimed = unrestricted" convention) —
     only lamps inside an owned claim are actually billable.
 
+- **Slice 14 — Illness from rain exposure** (Section 5: "staying in
+  freezing rain causes illness"):
+  - `IllnessRisk`: pure exposure-tick counter + threshold check, unit
+    tested including the "resets to zero the instant you're not exposed"
+    behavior.
+  - `IllnessService`: per-player exposure tracking with an edge trigger —
+    fires exactly once when the threshold is crossed, then resets, rather
+    than re-firing every tick while still exposed (tested explicitly).
+  - `WeatherIllnessEffect`: uses `World.hasRain(BlockPos)` (true rain +
+    exposed to open sky, not just "touching water") to drive the exposure
+    check, and applies Nausea + Weakness for two minutes on trigger.
+  - Wired into the same online-player loop the utility billing already
+    walks, so this slice added no new per-tick iteration cost.
+  - **Known gaps**: not gated by biome temperature yet (any rain counts,
+    not just "freezing" rain), and not persisted across a relog (exposure
+    progress resets on rejoin — a minor, acceptable gap for this slice).
+    NPCs still don't get sick. No pharmacy/hospital/recovery-item system
+    to treat it early — like the leg injury, it just runs its course.
+
 ## Not started yet (tracked, in priority order)
 
 1. **Police NPCs / arrest / court flow** for a wanted level that's
@@ -249,8 +268,8 @@ compile, run, and review.
 2. **Wire `VehiclePhysics` into an actual rideable entity**: custom
    `Entity`/`EntityType`, input capture, and a client-side model/renderer
    — the part of Section 4 that needs a running game client to verify.
-3. **Expand the medical system**: other body zones, illness/hospital
-   treatment, NPC injuries, persistence (Section 5).
+3. **Pharmacy/hospital treatment** to heal injuries and illness early
+   instead of waiting them out (Section 5).
 4. **Biome/wildlife AI overhaul** (Section 8).
 5. Rendering/PBR overhaul, aviation/ATC, space program — largest, latest.
 

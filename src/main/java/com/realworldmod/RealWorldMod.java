@@ -12,7 +12,9 @@ import com.realworldmod.init.ModBlocks;
 import com.realworldmod.init.ModDataComponents;
 import com.realworldmod.init.ModItemGroups;
 import com.realworldmod.init.ModItems;
+import com.realworldmod.medical.IllnessService;
 import com.realworldmod.medical.LegInjuryEffect;
+import com.realworldmod.medical.WeatherIllnessEffect;
 import com.realworldmod.npc.NpcDatabase;
 import com.realworldmod.npc.NpcScheduleManager;
 import com.realworldmod.phone.PhoneUseHandler;
@@ -56,6 +58,7 @@ public final class RealWorldMod implements ModInitializer {
     private final LawEnforcementService lawEnforcementService =
             new LawEnforcementService(crimeService, bankService);
     private final UtilityService utilityService = new UtilityService(bankService);
+    private final IllnessService illnessService = new IllnessService();
 
     @Override
     public void onInitialize() {
@@ -113,12 +116,11 @@ public final class RealWorldMod implements ModInitializer {
             List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
             List<UUID> disconnected = utilityService.tick(
                     server.getOverworld().getTime(), onlinePlayers.stream().map(ServerPlayerEntity::getUuid).toList());
-            if (!disconnected.isEmpty()) {
-                for (ServerPlayerEntity player : onlinePlayers) {
-                    if (disconnected.contains(player.getUuid())) {
-                        player.sendMessage(Text.translatable("message.realworldmod.power_shutoff"), true);
-                    }
+            for (ServerPlayerEntity player : onlinePlayers) {
+                if (disconnected.contains(player.getUuid())) {
+                    player.sendMessage(Text.translatable("message.realworldmod.power_shutoff"), true);
                 }
+                WeatherIllnessEffect.check(illnessService, player);
             }
         });
 

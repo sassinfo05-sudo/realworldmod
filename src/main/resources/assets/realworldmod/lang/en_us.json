@@ -14,6 +14,7 @@
   "message.realworldmod.leg_bruised": "Your leg is bruised — you're limping.",
   "message.realworldmod.leg_fractured": "You fractured your leg! You need medical attention.",
   "message.realworldmod.fine_issued": "You've been fined %s for repeat offenses.",
+  "message.realworldmod.caught_a_cold": "You've caught a cold from standing in the rain.",
   "gui.realworldmod.phone.unlock": "Unlock",
   "gui.realworldmod.phone.app.settings": "Settings",
   "gui.realworldmod.phone.app.messages": "Messages",

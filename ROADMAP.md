@@ -34,20 +34,35 @@ compile, run, and review.
     actually change state.
   - Unit tests for the FSM transition table and the SQLite CRUD layer.
 
+- **Slice 2 — Smartphone + GUI app framework** (Section 3):
+  - `ModItems.SMARTPHONE`: a real item, added to its own creative tab
+    (`ModItemGroups.ELECTRONICS`).
+  - `ModDataComponents.PHONE_BATTERY`: persistent 0-100 battery level stored
+    directly on the item stack (Minecraft's data-component API), synced to
+    clients over the network.
+  - `PhoneBattery` / `TimeOfDayFormatter`: pure, unit-tested logic for
+    battery drain/charge curves and rendering the in-game clock.
+  - `PhoneUseHandler` (common) decrements battery server-side and blocks use
+    when dead; `RealWorldModClient` (client-only, split source set) opens
+    the UI.
+  - `PhoneLockScreen` → `PhoneHomeScreen` → per-app `Screen`s
+    (`SettingsAppScreen`, `MessagesAppScreen` as first two apps), wired
+    through `PhoneApp` (common enum) and `ClientPhoneApps` (client-side
+    enum → `Screen` mapping) — this is the extension point every later app
+    (banking, real estate, BlockTube, dark web) plugs into.
+
 ## Not started yet (tracked, in priority order)
 
-1. **In-game smartphone / GUI framework** (Section 3) — an `Item` +
-   `Screen` for a lock screen and home screen grid; the foundation every
-   later "app" (banking, real estate, BlockTube, dark web) will render into.
-2. **World gen & anti-griefing** (intro constraints) — city/suburb/highway
+1. **World gen & anti-griefing** (intro constraints) — city/suburb/highway
    structure templates, deed/permit-gated block breaking.
-3. **Vehicle entity + drivetrain physics** (Section 4).
-4. **Targeted anatomical damage model** (Section 5).
-5. **Economy ledger + banking app** (Sections 3 & 6).
-6. **Police/crime state machine + court flow** (Section 7).
-7. **Biome/wildlife AI overhaul** (Section 8).
-8. **Utilities (power/water/telecom) + waste** (Section 9).
-9. Rendering/PBR overhaul, aviation/ATC, space program — largest, latest.
+2. **Vehicle entity + drivetrain physics** (Section 4).
+3. **Targeted anatomical damage model** (Section 5).
+4. **Economy ledger + banking app** (plugs into the phone app framework;
+   Sections 3 & 6).
+5. **Police/crime state machine + court flow** (Section 7).
+6. **Biome/wildlife AI overhaul** (Section 8).
+7. **Utilities (power/water/telecom) + waste** (Section 9).
+8. Rendering/PBR overhaul, aviation/ATC, space program — largest, latest.
 
 Each future slice will follow the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game client,

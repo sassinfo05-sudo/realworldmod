@@ -3,6 +3,17 @@ plugins {
     java
 }
 
+loom {
+    splitEnvironmentSourceSets()
+
+    mods {
+        register("realworldmod") {
+            sourceSet("main")
+            sourceSet("client")
+        }
+    }
+}
+
 version = project.property("mod_version") as String
 group = project.property("maven_group") as String
 

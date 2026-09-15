@@ -1,0 +1,11 @@
+{
+  "itemGroup.realworldmod.electronics": "RealWorld Electronics",
+  "item.realworldmod.smartphone": "Smartphone",
+  "message.realworldmod.phone_dead": "Battery dead. Plug in a charging cable.",
+  "gui.realworldmod.phone.unlock": "Unlock",
+  "gui.realworldmod.phone.app.settings": "Settings",
+  "gui.realworldmod.phone.app.messages": "Messages",
+  "gui.realworldmod.phone.settings.battery": "Battery: %s%%",
+  "gui.realworldmod.phone.settings.power_off": "Lock phone",
+  "gui.realworldmod.phone.messages.empty": "No messages yet."
+}

@@ -9,7 +9,8 @@
   "license": "ARR",
   "environment": "*",
   "entrypoints": {
-    "main": ["com.realworldmod.RealWorldMod"]
+    "main": ["com.realworldmod.RealWorldMod"],
+    "client": ["com.realworldmod.client.RealWorldModClient"]
   },
   "mixins": [],
   "depends": {

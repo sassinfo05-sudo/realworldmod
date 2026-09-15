@@ -1,7 +1,11 @@
 package com.realworldmod;
 
+import com.realworldmod.init.ModDataComponents;
+import com.realworldmod.init.ModItemGroups;
+import com.realworldmod.init.ModItems;
 import com.realworldmod.npc.NpcDatabase;
 import com.realworldmod.npc.NpcScheduleManager;
+import com.realworldmod.phone.PhoneUseHandler;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -29,6 +33,11 @@ public final class RealWorldMod implements ModInitializer {
     @Override
     public void onInitialize() {
         LOGGER.info("[RealWorldMod] Initializing citizen simulation subsystem");
+
+        ModDataComponents.register();
+        ModItems.register();
+        ModItemGroups.register();
+        PhoneUseHandler.register();
 
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             Path saveRoot = server.getSavePath(WorldSavePath.ROOT);

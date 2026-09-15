@@ -1,0 +1,30 @@
+package com.realworldmod.init;
+
+import com.realworldmod.RealWorldMod;
+import net.minecraft.block.AbstractBlock;
+import net.minecraft.block.Block;
+import net.minecraft.item.BlockItem;
+import net.minecraft.item.Item;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
+import net.minecraft.util.Identifier;
+
+public final class ModBlocks {
+    /** A job site: interacting with it (empty hand) pays a wage — see {@code JobUseHandler}. */
+    public static final Block CASH_REGISTER = register("cash_register",
+            new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));
+
+    private ModBlocks() {
+    }
+
+    private static Block register(String path, Block block) {
+        Identifier id = Identifier.of(RealWorldMod.MOD_ID, path);
+        Block registeredBlock = Registry.register(Registries.BLOCK, id, block);
+        Registry.register(Registries.ITEM, id, new BlockItem(registeredBlock, new Item.Settings()));
+        return registeredBlock;
+    }
+
+    public static void register() {
+        // Classloading this class runs the static initializer above.
+    }
+}

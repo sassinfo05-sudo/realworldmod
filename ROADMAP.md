@@ -95,16 +95,26 @@ compile, run, and review.
     balance from the server and displays it once the response lands,
     proving out the pattern every later networked app (real estate,
     BlockTube, courts) will reuse.
-  - **Known gap**: nothing in-game deposits or spends money yet — no jobs,
-    shops, or NPC payroll are wired to `BankService` — so every balance
-    starts and stays at zero outside of tests until the next slice.
+  - **Known gap at the time**: nothing in-game deposited or spent money yet
+    (closed by slice 6, below).
+
+- **Slice 6 — Cash register block & job wage payout**:
+  - `JobService`: pure cooldown-gated payout logic (`tryWorkShift`,
+    `ticksRemaining`), unit tested against a real `BankService` so the
+    money actually moves, not just a mock.
+  - `ModBlocks.CASH_REGISTER`: a real, placeable block (registered with a
+    matching `BlockItem`, added to the creative tab).
+  - `JobUseHandler`: right-clicking a cash register with an empty hand
+    (via `UseBlockCallback`, same pattern as `DeedUseHandler`) works a
+    shift, depositing a wage through `BankService` — one cooldown per
+    player, not per block, for this slice.
+  - This closes the slice 5 gap: a balance can now actually go from $0 to
+    something during play, and the Banking app reflects it.
 
 ## Not started yet (tracked, in priority order)
 
-1. **Give the economy something to do**: a simple shop/trade interaction or
-   NPC payroll that actually calls `BankService.deposit`/`transfer`, so
-   balances move during play instead of only in tests. Land deeds should
-   also start costing money through this instead of being free.
+1. **Land deeds should cost money** — spend through `BankService` instead
+   of being a free creative-tab item, now that balances are real.
 2. **Block placement gate** — Fabric API has no generic "before block
    placed" event, so protecting placement (not just breaking) inside
    someone else's claim needs a mixin.

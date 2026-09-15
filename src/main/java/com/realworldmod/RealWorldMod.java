@@ -1,7 +1,10 @@
 package com.realworldmod;
 
 import com.realworldmod.economy.BankService;
+import com.realworldmod.economy.JobService;
+import com.realworldmod.economy.JobUseHandler;
 import com.realworldmod.economy.net.BankNetworking;
+import com.realworldmod.init.ModBlocks;
 import com.realworldmod.init.ModDataComponents;
 import com.realworldmod.init.ModItemGroups;
 import com.realworldmod.init.ModItems;
@@ -37,6 +40,7 @@ public final class RealWorldMod implements ModInitializer {
     private NpcScheduleManager scheduleManager;
     private final PropertyService propertyService = new PropertyService(new ClaimRegistry());
     private final BankService bankService = new BankService();
+    private final JobService jobService = new JobService(bankService);
 
     @Override
     public void onInitialize() {
@@ -44,12 +48,14 @@ public final class RealWorldMod implements ModInitializer {
 
         ModDataComponents.register();
         ModItems.register();
+        ModBlocks.register();
         ModItemGroups.register();
         PhoneUseHandler.register();
         new PropertyProtection(propertyService.registry()).register();
         new DeedUseHandler(propertyService).register();
         BankNetworking.registerPayloadTypes();
         BankNetworking.registerServerReceiver(bankService);
+        new JobUseHandler(jobService).register();
 
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             Path saveRoot = server.getSavePath(WorldSavePath.ROOT);

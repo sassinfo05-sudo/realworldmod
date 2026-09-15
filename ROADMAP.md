@@ -81,16 +81,35 @@ compile, run, and review.
   - This closes the biggest gap from slice 3: claims can now actually be
     created during play, not just loaded from a pre-seeded database.
 
+- **Slice 5 — Bank accounts & Banking app** (Sections 3 & 6):
+  - `BankMath`: pure, unit-tested cents arithmetic (`deposit`, `withdraw`
+    returning `Optional` on insufficient funds).
+  - `BankDatabase` / `BankService`: same open/cache/persist shape as the
+    property system, plus `transfer(from, to, amount)` for
+    player<->player/NPC payments.
+  - `CurrencyFormatter`: cents -> `"$12.34"` display strings.
+  - First real client<->server networked feature: `BankBalanceRequestPayload`
+    (C2S) / `BankBalanceResponsePayload` (S2C) using Minecraft's
+    `CustomPayload` API, registered through `BankNetworking`.
+  - `BankingAppScreen` (third `PhoneApp`): opening it requests the player's
+    balance from the server and displays it once the response lands,
+    proving out the pattern every later networked app (real estate,
+    BlockTube, courts) will reuse.
+  - **Known gap**: nothing in-game deposits or spends money yet — no jobs,
+    shops, or NPC payroll are wired to `BankService` — so every balance
+    starts and stays at zero outside of tests until the next slice.
+
 ## Not started yet (tracked, in priority order)
 
-1. **Block placement gate** — Fabric API has no generic "before block
+1. **Give the economy something to do**: a simple shop/trade interaction or
+   NPC payroll that actually calls `BankService.deposit`/`transfer`, so
+   balances move during play instead of only in tests. Land deeds should
+   also start costing money through this instead of being free.
+2. **Block placement gate** — Fabric API has no generic "before block
    placed" event, so protecting placement (not just breaking) inside
    someone else's claim needs a mixin.
-2. **Vehicle entity + drivetrain physics** (Section 4).
-3. **Targeted anatomical damage model** (Section 5).
-4. **Economy ledger + banking app** (plugs into the phone app framework;
-   deeds should eventually cost money via this, instead of being free
-   creative-tab items; Sections 3 & 6).
+3. **Vehicle entity + drivetrain physics** (Section 4).
+4. **Targeted anatomical damage model** (Section 5).
 5. **Police/crime state machine + court flow** (Section 7).
 6. **Biome/wildlife AI overhaul** (Section 8).
 7. **Utilities (power/water/telecom) + waste** (Section 9).

@@ -1,10 +1,13 @@
 package com.realworldmod.client;
 
+import com.realworldmod.client.economy.ClientBankState;
 import com.realworldmod.client.phone.PhoneLockScreen;
+import com.realworldmod.economy.net.BankBalanceResponsePayload;
 import com.realworldmod.init.ModDataComponents;
 import com.realworldmod.init.ModItems;
 import com.realworldmod.phone.PhoneBattery;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Hand;
@@ -18,6 +21,9 @@ import net.minecraft.util.TypedActionResult;
 public final class RealWorldModClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
+        ClientPlayNetworking.registerGlobalReceiver(BankBalanceResponsePayload.ID,
+                (payload, context) -> ClientBankState.set(payload.balanceCents()));
+
         UseItemCallback.EVENT.register((player, world, hand) -> {
             if (!world.isClient || hand != Hand.MAIN_HAND) {
                 return TypedActionResult.pass(player.getStackInHand(hand));

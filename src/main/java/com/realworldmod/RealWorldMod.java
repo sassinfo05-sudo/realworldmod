@@ -1,5 +1,7 @@
 package com.realworldmod;
 
+import com.realworldmod.economy.BankService;
+import com.realworldmod.economy.net.BankNetworking;
 import com.realworldmod.init.ModDataComponents;
 import com.realworldmod.init.ModItemGroups;
 import com.realworldmod.init.ModItems;
@@ -34,6 +36,7 @@ public final class RealWorldMod implements ModInitializer {
     private NpcDatabase npcDatabase;
     private NpcScheduleManager scheduleManager;
     private final PropertyService propertyService = new PropertyService(new ClaimRegistry());
+    private final BankService bankService = new BankService();
 
     @Override
     public void onInitialize() {
@@ -45,6 +48,8 @@ public final class RealWorldMod implements ModInitializer {
         PhoneUseHandler.register();
         new PropertyProtection(propertyService.registry()).register();
         new DeedUseHandler(propertyService).register();
+        BankNetworking.registerPayloadTypes();
+        BankNetworking.registerServerReceiver(bankService);
 
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             Path saveRoot = server.getSavePath(WorldSavePath.ROOT);
@@ -59,6 +64,10 @@ public final class RealWorldMod implements ModInitializer {
             propertyService.open(claimDbPath);
             LOGGER.info("[RealWorldMod] Claim database opened at {} ({} claims loaded)",
                     claimDbPath, propertyService.registry().all().size());
+
+            Path bankDbPath = saveRoot.resolve("realworldmod").resolve("bank.sqlite");
+            bankService.open(bankDbPath);
+            LOGGER.info("[RealWorldMod] Bank database opened at {}", bankDbPath);
         });
 
         ServerTickEvents.END_SERVER_TICK.register(server -> {
@@ -73,6 +82,7 @@ public final class RealWorldMod implements ModInitializer {
                 npcDatabase.close();
             }
             propertyService.close();
+            bankService.close();
         });
     }
 }

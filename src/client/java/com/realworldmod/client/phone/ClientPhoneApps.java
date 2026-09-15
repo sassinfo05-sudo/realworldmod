@@ -18,6 +18,7 @@ public final class ClientPhoneApps {
         return switch (app) {
             case SETTINGS -> new SettingsAppScreen(phoneStack);
             case MESSAGES -> new MessagesAppScreen(phoneStack);
+            case BANKING -> new BankingAppScreen(phoneStack);
         };
     }
 }

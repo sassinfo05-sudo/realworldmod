@@ -16,7 +16,7 @@ compile, run, and review. This document is the single source of truth for
 what's actually implemented versus what the original brief asked for; it's
 updated with every slice so neither side ever has to guess.
 
-## Done (19 slices so far, 123 unit tests, all passing)
+## Done (20 slices so far, 123 unit tests, all passing)
 
 - **Project scaffold**: Fabric Loom-based Gradle build (Minecraft 1.21.1,
   Yarn `1.21.1+build.3`, Fabric Loader `0.19.5`, Fabric API
@@ -153,6 +153,46 @@ updated with every slice so neither side ever has to guess.
     + basic shapes), not real art — this closes the "nothing renders"
     gap, not the "AAA visual fidelity" gap from Section 1.
 
+- **Slice 19 — `CarEntity`: `VehiclePhysics` is finally driveable**
+  (Section 4), the highest-risk slice of the project so far:
+  - `CarEntity extends Entity`: reads the controlling passenger's public
+    `forwardSpeed`/`sidewaysSpeed` fields each server tick, feeds
+    `forwardSpeed` into `VehiclePhysics.tick` as throttle, turns at a
+    fixed rate off `sidewaysSpeed` while moving, and applies the
+    resulting velocity via `move(MovementType.SELF, ...)` with a simple
+    constant-gravity fall when airborne. Fuel and speed persist through
+    `readCustomDataFromNbt`/`writeCustomDataToNbt`.
+  - `ModEntities.CAR`: real `EntityType` registration (`SpawnGroup.MISC`,
+    1.4x1.0 bounding box).
+  - Mounting: `Entity.interact` starts riding on an empty right-click if
+    unoccupied; `ModItems.CAR_KEY` + `CarSpawnHandler` spawn one via
+    `UseBlockCallback`, same event pattern as every other spawn-a-thing
+    handler this session.
+  - `CarEntityRenderer` (client): reuses
+    `BlockRenderManager.renderBlockAsEntity` — the same mechanism vanilla's
+    `FallingBlockEntityRenderer` uses for sand/gravel — scaled into a
+    rough car silhouette, instead of writing custom cuboid model geometry.
+  - **Why this one is different from every other slice**: every prior
+    Minecraft-side integration (items, blocks, mixins, events, data
+    components, networking) was verified by inspecting the actual 1.21.1
+    mappings and, for the mixin, the generated refmap — real, but
+    checkable without a running client. Whether this entity actually
+    *feels* driveable (turn rate, acceleration feel, camera behavior),
+    whether the placeholder block-as-entity visual is oriented/scaled
+    correctly, and whether passenger positioning looks right cannot be
+    confirmed the same way — only by actually launching the game. Treat
+    it as implemented-but-unflown until someone (or a future session with
+    client access) actually gets in and drives it.
+  - **Known gaps**: no client-side movement prediction/reconciliation (a
+    laggy connection would feel poor — moot in single-player, matters if
+    this is ever played with others), no suspension/tire-friction-by-
+    surface, no collision damage, no dismount key handling beyond
+    whatever Minecraft's default riding controls provide, no fuel gauge
+    or speed HUD (fuel/speed aren't networked to the client at all — they
+    live only in the server-side entity), no actual car model/texture
+    (placeholder vanilla concrete block), and only one vehicle type exists
+    against the brief's 300+.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -230,15 +270,16 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   marketplace, game consoles/discs/arcades/claw machines/racing sims.
 
 **Section 4 — Automotive, Aviation & Global Transit**
-- Done: `VehiclePhysics` — a pure, tested drivetrain simulation (throttle
-  → speed, braking, coasting, reverse, fuel consumption).
-- Missing: the physics isn't attached to anything — there is no vehicle
-  `Entity`, no `EntityType` registration, no player input capture, no
-  client-side model/renderer, so nothing is actually driveable in game
-  yet. Beyond that: the other 299+ vehicle types, mechanic
-  shops/tuning/paint/body damage, garage capacity limits, any aviation at
-  all (airports, ticketing, TSA, boarding, airliners), ATC job/radar
-  minigame, subways/bullet trains/transit cards/timetables.
+- Done: `VehiclePhysics` (pure drivetrain simulation) wired into a real,
+  spawnable, rideable `CarEntity` with a placeholder visual — see slice
+  19. One vehicle type exists; its feel/visuals are unverified without a
+  running client (see slice 19's own caveat above).
+- Missing: the other 299+ vehicle types, mechanic
+  shops/tuning/paint/body-damage repair, garage capacity limits, any
+  aviation at all (airports, ticketing, TSA, boarding, airliners), ATC
+  job/radar minigame, subways/bullet trains/transit cards/timetables. The
+  one vehicle that exists also has no fuel gauge/speed HUD, no
+  suspension/tire-friction modeling, and no collision damage.
 
 **Section 5 — Biology, Medical, Fitness & Lineage**
 - Done: two damage/exposure sources (fall damage, rain exposure) each
@@ -324,18 +365,16 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 
 ## Priority order for what's next
 
-1. **Wire `VehiclePhysics` into an actual rideable entity** (Section 4) —
-   custom `Entity`/`EntityType`, input capture, client-side model/
-   renderer. The biggest "can't verify without a running client" risk of
-   anything queued.
-2. **NPCs as real entities**, not just database rows (Section 2) — the
-   single highest-leverage gap, since almost every other section
-   (commerce, dialogue, police chases, wildlife wardens) assumes NPCs
-   exist as agents in the world.
-3. **Real wildlife AI** to replace the crime-system stand-in (Section 8).
-4. **Police NPCs / court/trial step** before an automatic arrest becomes
+1. **NPCs as real entities**, not just database rows (Section 2) — the
+   single highest-leverage remaining gap, since almost every other
+   section (commerce, dialogue, police chases, wildlife wardens) assumes
+   NPCs exist as agents in the world. Now that slice 19 has proven the
+   custom-`Entity` + custom-renderer pattern once, this is the same kind
+   of work applied to something more consequential.
+2. **Real wildlife AI** to replace the crime-system stand-in (Section 8).
+3. **Police NPCs / court/trial step** before an automatic arrest becomes
    an adjudicated one (Section 7).
-5. Everything else in the "missing" lists above, then finally
+4. Everything else in the "missing" lists above, then finally
    rendering/PBR, aviation/ATC, and the space program — deliberately
    last, as the largest and least incrementally verifiable pieces.
 

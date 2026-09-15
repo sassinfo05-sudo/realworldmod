@@ -16,6 +16,8 @@ public final class ModItems {
 
     public static final Item MEDICINE = register("medicine", new Item(new Item.Settings().maxCount(16)));
 
+    public static final Item CAR_KEY = register("car_key", new Item(new Item.Settings().maxCount(1)));
+
     private ModItems() {
     }
 

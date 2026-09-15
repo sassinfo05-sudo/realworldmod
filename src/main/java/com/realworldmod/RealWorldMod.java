@@ -13,6 +13,7 @@ import com.realworldmod.economy.JobUseHandler;
 import com.realworldmod.economy.net.BankNetworking;
 import com.realworldmod.init.ModBlocks;
 import com.realworldmod.init.ModDataComponents;
+import com.realworldmod.init.ModEntities;
 import com.realworldmod.init.ModItemGroups;
 import com.realworldmod.init.ModItems;
 import com.realworldmod.medical.IllnessService;
@@ -31,6 +32,7 @@ import com.realworldmod.property.PropertyService;
 import com.realworldmod.utilities.UtilityAccess;
 import com.realworldmod.utilities.UtilityService;
 import com.realworldmod.utilities.net.UtilityNetworking;
+import com.realworldmod.vehicle.CarSpawnHandler;
 import com.realworldmod.wildlife.HuntingLicenseService;
 import com.realworldmod.wildlife.LicenseUseHandler;
 import com.realworldmod.wildlife.PoachingHandler;
@@ -77,6 +79,7 @@ public final class RealWorldMod implements ModInitializer {
         ModDataComponents.register();
         ModItems.register();
         ModBlocks.register();
+        ModEntities.register();
         ModItemGroups.register();
         PhoneUseHandler.register();
         PropertyAccess.set(propertyService.registry());
@@ -96,6 +99,7 @@ public final class RealWorldMod implements ModInitializer {
         new PharmacyUseHandler(bankService).register();
         new LicenseUseHandler(bankService, huntingLicenseService).register();
         new PoachingHandler(lawEnforcementService, huntingLicenseService).register();
+        CarSpawnHandler.register();
 
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             Path saveRoot = server.getSavePath(WorldSavePath.ROOT);

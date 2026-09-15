@@ -1,0 +1,99 @@
+package com.realworldmod.vehicle;
+
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.MovementType;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
+import net.minecraft.world.World;
+
+/**
+ * The first real, rideable wrapper around {@link VehiclePhysics} (Section
+ * 4). Movement is server-authoritative and deliberately simple: no
+ * client-side prediction/reconciliation, no suspension or tire-friction
+ * variation by surface, no collision damage. See ROADMAP.md — this is the
+ * highest-risk slice of the project so far because, unlike every earlier
+ * Minecraft-side integration, its correctness (does it actually feel
+ * driveable, is the model oriented/scaled right) cannot be verified by
+ * inspecting bytecode or a generated refmap; it needs a running game
+ * client.
+ */
+public class CarEntity extends Entity {
+    private static final double STARTING_FUEL_LITERS = 100.0;
+    private static final float TURN_DEGREES_PER_TICK = 3.0f;
+    private static final double GRAVITY_PER_TICK = 0.04;
+
+    private VehicleState vehicleState = VehicleState.atRestWithFuel(STARTING_FUEL_LITERS);
+
+    public CarEntity(EntityType<? extends CarEntity> entityType, World world) {
+        super(entityType, world);
+    }
+
+    public VehicleState vehicleState() {
+        return vehicleState;
+    }
+
+    @Override
+    protected void initDataTracker(DataTracker.Builder builder) {
+        // No synced fields yet — speed/fuel aren't shown in any HUD in this slice.
+    }
+
+    @Override
+    protected void readCustomDataFromNbt(NbtCompound nbt) {
+        double fuel = nbt.contains("Fuel") ? nbt.getDouble("Fuel") : STARTING_FUEL_LITERS;
+        double speed = nbt.contains("Speed") ? nbt.getDouble("Speed") : 0.0;
+        vehicleState = new VehicleState(speed, fuel);
+    }
+
+    @Override
+    protected void writeCustomDataToNbt(NbtCompound nbt) {
+        nbt.putDouble("Fuel", vehicleState.fuelLiters());
+        nbt.putDouble("Speed", vehicleState.speedBlocksPerTick());
+    }
+
+    @Override
+    public ActionResult interact(PlayerEntity player, Hand hand) {
+        if (!this.getWorld().isClient && this.getPassengerList().isEmpty()) {
+            return player.startRiding(this) ? ActionResult.SUCCESS : ActionResult.PASS;
+        }
+        return ActionResult.PASS;
+    }
+
+    @Override
+    public LivingEntity getControllingPassenger() {
+        Entity passenger = this.getFirstPassenger();
+        return passenger instanceof LivingEntity living ? living : null;
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (this.getWorld().isClient) {
+            return;
+        }
+
+        LivingEntity controller = this.getControllingPassenger();
+        double throttle = controller != null ? controller.forwardSpeed : 0.0;
+        float steer = controller != null ? controller.sidewaysSpeed : 0.0f;
+
+        vehicleState = VehiclePhysics.tick(vehicleState, throttle);
+
+        if (controller != null && vehicleState.speedBlocksPerTick() != 0) {
+            this.setYaw(this.getYaw() - steer * TURN_DEGREES_PER_TICK);
+            this.setBodyYaw(this.getYaw());
+        }
+
+        double speed = vehicleState.speedBlocksPerTick();
+        double yawRadians = Math.toRadians(this.getYaw());
+        double dx = -Math.sin(yawRadians) * speed;
+        double dz = Math.cos(yawRadians) * speed;
+        double dy = this.isOnGround() ? 0.0 : this.getVelocity().y - GRAVITY_PER_TICK;
+
+        this.setVelocity(dx, dy, dz);
+        this.move(MovementType.SELF, this.getVelocity());
+    }
+}

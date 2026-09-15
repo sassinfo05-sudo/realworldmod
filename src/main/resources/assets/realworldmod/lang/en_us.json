@@ -7,6 +7,8 @@
   "block.realworldmod.pharmacy_counter": "Pharmacy Counter",
   "block.realworldmod.license_office": "License Office",
   "item.realworldmod.medicine": "Medicine",
+  "item.realworldmod.car_key": "Car Key",
+  "entity.realworldmod.car": "Car",
   "message.realworldmod.wage_paid": "You earned %s for your shift.",
   "message.realworldmod.wage_cooldown": "You're not scheduled again for %s more seconds.",
   "message.realworldmod.phone_dead": "Battery dead. Plug in a charging cable.",

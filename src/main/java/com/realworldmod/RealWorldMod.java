@@ -8,6 +8,7 @@ import com.realworldmod.init.ModBlocks;
 import com.realworldmod.init.ModDataComponents;
 import com.realworldmod.init.ModItemGroups;
 import com.realworldmod.init.ModItems;
+import com.realworldmod.medical.LegInjuryEffect;
 import com.realworldmod.npc.NpcDatabase;
 import com.realworldmod.npc.NpcScheduleManager;
 import com.realworldmod.phone.PhoneUseHandler;
@@ -58,6 +59,7 @@ public final class RealWorldMod implements ModInitializer {
         BankNetworking.registerPayloadTypes();
         BankNetworking.registerServerReceiver(bankService);
         new JobUseHandler(jobService).register();
+        LegInjuryEffect.register();
 
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             Path saveRoot = server.getSavePath(WorldSavePath.ROOT);

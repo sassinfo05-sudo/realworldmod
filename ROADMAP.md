@@ -131,10 +131,26 @@ compile, run, and review.
     block before the server's rejection reaches it — a normal, cosmetic
     rubber-banding effect, not a correctness bug.
 
+- **Slice 8 — Leg injuries from fall damage** (first piece of Section 5's
+  localized anatomical damage system):
+  - `LegInjury` (NONE/BRUISED/FRACTURED) and `FallInjuryCalculator`: pure,
+    unit-tested thresholds mapping fall damage to injury severity, and
+    injury severity to a Slowness effect amplifier/duration.
+  - `LegInjuryEffect`: hooks Fabric API's
+    `ServerLivingEntityEvents.AFTER_DAMAGE`, and on fall damage above the
+    bruise threshold applies Slowness (standing in for a real limp) plus a
+    feedback message.
+  - **Known gaps, deliberately scoped out of this slice**: players only
+    (NPCs don't get hurt yet), no persistence of the injury across a
+    relog, and no hospital/cast/treatment to heal it early — the effect
+    just expires on its own. Head/arm/torso zones and their own effects
+    (aim sway, reduced carry weight, etc.) aren't started.
+
 ## Not started yet (tracked, in priority order)
 
 1. **Vehicle entity + drivetrain physics** (Section 4).
-2. **Targeted anatomical damage model** (Section 5).
+2. **Expand the medical system**: other body zones, illness/hospital
+   treatment, NPC injuries, persistence (Section 5).
 3. **Police/crime state machine + court flow** (Section 7).
 4. **Biome/wildlife AI overhaul** (Section 8).
 5. **Utilities (power/water/telecom) + waste** (Section 9).

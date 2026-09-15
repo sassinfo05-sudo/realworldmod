@@ -10,6 +10,8 @@
   "message.realworldmod.plot_claimed": "Plot claimed for %s! You now own this land.",
   "message.realworldmod.plot_already_claimed": "This land is already claimed by someone else.",
   "message.realworldmod.plot_cannot_afford": "You can't afford this plot (%s).",
+  "message.realworldmod.leg_bruised": "Your leg is bruised — you're limping.",
+  "message.realworldmod.leg_fractured": "You fractured your leg! You need medical attention.",
   "gui.realworldmod.phone.unlock": "Unlock",
   "gui.realworldmod.phone.app.settings": "Settings",
   "gui.realworldmod.phone.app.messages": "Messages",

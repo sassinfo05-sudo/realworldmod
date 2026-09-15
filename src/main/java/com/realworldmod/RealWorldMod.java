@@ -31,6 +31,9 @@ import com.realworldmod.property.PropertyService;
 import com.realworldmod.utilities.UtilityAccess;
 import com.realworldmod.utilities.UtilityService;
 import com.realworldmod.utilities.net.UtilityNetworking;
+import com.realworldmod.wildlife.HuntingLicenseService;
+import com.realworldmod.wildlife.LicenseUseHandler;
+import com.realworldmod.wildlife.PoachingHandler;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -65,6 +68,7 @@ public final class RealWorldMod implements ModInitializer {
     private final ArrestService arrestService = new ArrestService(crimeService);
     private final UtilityService utilityService = new UtilityService(bankService);
     private final IllnessService illnessService = new IllnessService();
+    private final HuntingLicenseService huntingLicenseService = new HuntingLicenseService();
 
     @Override
     public void onInitialize() {
@@ -90,6 +94,8 @@ public final class RealWorldMod implements ModInitializer {
         LegInjuryEffect.register();
         MedicineUseHandler.register();
         new PharmacyUseHandler(bankService).register();
+        new LicenseUseHandler(bankService, huntingLicenseService).register();
+        new PoachingHandler(lawEnforcementService, huntingLicenseService).register();
 
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             Path saveRoot = server.getSavePath(WorldSavePath.ROOT);

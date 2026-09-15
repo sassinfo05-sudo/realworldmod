@@ -294,12 +294,31 @@ compile, run, and review.
     breakout mechanic, and no court/trial step before the sentence — the
     arrest is automatic and immediate at max wanted level.
 
+- **Slice 17 — Hunting licenses & poaching** (first piece of Section 8:
+  "Hunting without state licenses alerts NPC game wardens"):
+  - `HuntingLicenseService`: a pure, unit-tested per-player permit flag
+    (permanent once bought — no renewal/expiry yet).
+  - `ModBlocks.LICENSE_OFFICE` + `LicenseUseHandler`: same
+    withdraw-or-refuse purchase shape as the pharmacy/deed/job blocks.
+  - `PoachingHandler`: hooks Fabric API's
+    `ServerLivingEntityEvents.AFTER_DEATH` — killing any `AnimalEntity`
+    without a license routes through the *existing*
+    `LawEnforcementService.recordOffense`, the same crime pipeline
+    trespassing already uses (including its fine-at-threshold behavior),
+    rather than building separate warden NPCs from scratch.
+  - **Scope decision, not hidden**: any vanilla passive animal counts as
+    poachable "game" for this MVP — the full design's distinction between
+    wildlife and owned livestock isn't implemented. No real warden NPCs,
+    scent trails, or herd migration (the rest of Section 8) either.
+
 ## Not started yet (tracked, in priority order)
 
 1. **Wire `VehiclePhysics` into an actual rideable entity**: custom
    `Entity`/`EntityType`, input capture, and a client-side model/renderer
    — the part of Section 4 that needs a running game client to verify.
-2. **Biome/wildlife AI overhaul** (Section 8).
+2. **Real wildlife AI**: predator/prey behavior, scent trails, herd
+   migration, actual warden NPCs instead of the crime-system stand-in
+   (Section 8).
 3. Rendering/PBR overhaul, aviation/ATC, space program — largest, latest.
 
 Each future slice will follow the same pattern: a self-contained Java

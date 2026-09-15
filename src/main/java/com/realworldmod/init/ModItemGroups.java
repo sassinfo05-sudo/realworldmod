@@ -23,6 +23,7 @@ public final class ModItemGroups {
                         entries.add(ModBlocks.CASH_REGISTER);
                         entries.add(ModBlocks.UTILITY_LAMP);
                         entries.add(ModBlocks.PHARMACY_COUNTER);
+                        entries.add(ModBlocks.LICENSE_OFFICE);
                     })
                     .build());
 

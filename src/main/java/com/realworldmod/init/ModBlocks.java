@@ -25,6 +25,10 @@ public final class ModBlocks {
     public static final Block PHARMACY_COUNTER = register("pharmacy_counter",
             new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));
 
+    /** Sells hunting licenses — see {@code LicenseUseHandler}. */
+    public static final Block LICENSE_OFFICE = register("license_office",
+            new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));
+
     private ModBlocks() {
     }
 

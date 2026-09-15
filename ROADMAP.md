@@ -16,7 +16,7 @@ compile, run, and review. This document is the single source of truth for
 what's actually implemented versus what the original brief asked for; it's
 updated with every slice so neither side ever has to guess.
 
-## Done (20 slices so far, 123 unit tests, all passing)
+## Done (21 slices so far, 127 unit tests, all passing)
 
 - **Project scaffold**: Fabric Loom-based Gradle build (Minecraft 1.21.1,
   Yarn `1.21.1+build.3`, Fabric Loader `0.19.5`, Fabric API
@@ -193,6 +193,46 @@ updated with every slice so neither side ever has to guess.
     (placeholder vanilla concrete block), and only one vehicle type exists
     against the brief's 300+.
 
+- **Slice 20 — `CitizenEntity`: NPCs become real, visible entities**
+  (Section 2), the second entity-based slice, applying slice 19's
+  "custom `Entity` + `BlockRenderManager`-as-renderer" pattern to
+  something more consequential:
+  - `CitizenEntity extends PathAwareEntity`: uses vanilla's off-the-shelf
+    `WanderAroundGoal`/`LookAtEntityGoal`/`LookAroundGoal`/`SwimGoal` —
+    real pathfinding and wandering behavior with zero custom AI code —
+    registered with `FabricDefaultAttributeRegistry` (required for any
+    `LivingEntity` subclass, unlike the plain-`Entity` car).
+  - The entity's own UUID *is* its `NpcProfile` primary key — no separate
+    synced link field needed. `NpcDatabase.findById` (new, replacing an
+    O(n) `findAll` + filter scan; both are unit tested) looks up the
+    profile on interact.
+  - `NpcDialogue`: pure, unit-tested formatting of a one-line greeting
+    that varies by the citizen's current `DailyState` — the first time
+    the slice-1 daily-schedule data actually surfaces to the player.
+  - `ModItems.CITIZEN_SPAWNER` + `CitizenSpawnHandler`: spawns the entity
+    *and* creates its matching `NpcProfile` row in one action, so
+    `NpcScheduleManager` picks it up on the very next tick.
+  - `NpcAccess`: a new static holder, needed because (unlike
+    `PropertyService`/`BankService`/`UtilityService`, which are stable
+    wrapper objects reused across world reloads) `NpcDatabase` itself is
+    replaced wholesale in `RealWorldMod`'s `SERVER_STARTING` handler each
+    time a world loads — `CitizenSpawnHandler` registers its event
+    listener exactly once at mod init but always reads the *current*
+    database through this holder rather than a stale constructor-injected
+    reference.
+  - Same unverified-without-a-client caveat as slice 19: whether wandering
+    actually looks reasonable, whether the placeholder box silhouette
+    reads as a person, and whether pathfinding behaves near the mod's own
+    blocks (cash registers, lamps, etc.) is unconfirmed.
+  - **Known gaps**: the daily-schedule FSM still doesn't drive this
+    entity's *movement* — a "WORKING" citizen wanders in place near where
+    it spawned rather than walking to a real workplace structure (there
+    are no home/workplace structures to walk to yet); dialogue is one
+    fixed line per state, not a branching tree; no NPC behavioral AI
+    (crime, mugging, reacting to the player); NPCs still can't get sick,
+    injured, arrested, or paid — every other system this session built
+    (medical, crime, economy) only ever touches players.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -241,17 +281,23 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 
 **Section 2 — Autonomous Citizen & NPC Engine (GOAP)**
 - Done: persistent SQLite citizen records, a deterministic (not GOAP)
-  daily-schedule FSM cycling through 6 states.
-- Missing: NPCs are data rows, not entities — there is no `Entity`/mob
-  actually walking around, no pathfinding, no home/workplace structures
-  to walk between, no fridge/breakfast/commute-by-vehicle animation, no
-  job-task mini-behaviors (cashiering, patrols, factory work), no evening
-  leisure destinations, no dialogue system/dialogue trees, no NPC
-  behavioral AI (mugging, reacting to red-light running, independent
-  crime, police chases). True GOAP (goal-oriented action planning, i.e.
-  dynamic plan search over actions) was never implemented — the FSM is a
-  simpler deterministic rule tree, called out as such in the code's own
-  Javadoc from slice 1 onward.
+  daily-schedule FSM cycling through 6 states, and — as of slice 20 — a
+  real, spawnable, wandering `CitizenEntity` in the world whose UUID
+  links back to that database row, with a one-line greeting that reflects
+  its current schedule state.
+- Missing: the daily schedule doesn't drive the entity's movement yet
+  (no home/workplace structures to path to, so a "WORKING" citizen just
+  wanders near its spawn point rather than commuting anywhere), no
+  fridge/breakfast/commute-by-vehicle animation, no job-task
+  mini-behaviors (cashiering, patrols, factory work), no evening leisure
+  destinations, no branching dialogue tree (one fixed line per state), no
+  NPC behavioral AI (mugging, reacting to red-light running, independent
+  crime, police chases) — and NPCs are entirely exempt from every other
+  system this session built (economy, medical, crime): only players can
+  earn, get sick, get hurt, or get arrested. True GOAP (goal-oriented
+  action planning, i.e. dynamic plan search over actions) was never
+  implemented — the FSM is a simpler deterministic rule tree, called out
+  as such in the code's own Javadoc from slice 1 onward.
 
 **Section 3 — Consumer Electronics, Computers & In-Game Internet**
 - Done: one smartphone item with battery, a 5-app OS shell (Settings,
@@ -365,15 +411,14 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 
 ## Priority order for what's next
 
-1. **NPCs as real entities**, not just database rows (Section 2) — the
-   single highest-leverage remaining gap, since almost every other
-   section (commerce, dialogue, police chases, wildlife wardens) assumes
-   NPCs exist as agents in the world. Now that slice 19 has proven the
-   custom-`Entity` + custom-renderer pattern once, this is the same kind
-   of work applied to something more consequential.
+1. **Make the daily schedule actually move `CitizenEntity`** — walk to a
+   real home/workplace position instead of wandering in place, the
+   natural next step now that both the entity and the schedule data
+   exist separately (Section 2).
 2. **Real wildlife AI** to replace the crime-system stand-in (Section 8).
 3. **Police NPCs / court/trial step** before an automatic arrest becomes
-   an adjudicated one (Section 7).
+   an adjudicated one (Section 7) — now buildable on the same
+   `PathAwareEntity` pattern `CitizenEntity` proved out.
 4. Everything else in the "missing" lists above, then finally
    rendering/PBR, aviation/ATC, and the space program — deliberately
    last, as the largest and least incrementally verifiable pieces.

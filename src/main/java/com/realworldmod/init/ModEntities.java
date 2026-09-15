@@ -1,7 +1,9 @@
 package com.realworldmod.init;
 
 import com.realworldmod.RealWorldMod;
+import com.realworldmod.npc.CitizenEntity;
 import com.realworldmod.vehicle.CarEntity;
+import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnGroup;
 import net.minecraft.registry.Registries;
@@ -16,10 +18,17 @@ public final class ModEntities {
                     .dimensions(1.4f, 1.0f)
                     .build("car"));
 
+    public static final EntityType<CitizenEntity> CITIZEN = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(RealWorldMod.MOD_ID, "citizen"),
+            EntityType.Builder.<CitizenEntity>create(CitizenEntity::new, SpawnGroup.MISC)
+                    .dimensions(0.6f, 1.8f)
+                    .build("citizen"));
+
     private ModEntities() {
     }
 
     public static void register() {
-        // Classloading this class runs the static initializer above.
+        FabricDefaultAttributeRegistry.register(CITIZEN, CitizenEntity.createAttributes());
     }
 }

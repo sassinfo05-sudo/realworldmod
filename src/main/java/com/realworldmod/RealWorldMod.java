@@ -21,6 +21,8 @@ import com.realworldmod.medical.LegInjuryEffect;
 import com.realworldmod.medical.MedicineUseHandler;
 import com.realworldmod.medical.PharmacyUseHandler;
 import com.realworldmod.medical.WeatherIllnessEffect;
+import com.realworldmod.npc.CitizenSpawnHandler;
+import com.realworldmod.npc.NpcAccess;
 import com.realworldmod.npc.NpcDatabase;
 import com.realworldmod.npc.NpcScheduleManager;
 import com.realworldmod.phone.PhoneUseHandler;
@@ -100,6 +102,7 @@ public final class RealWorldMod implements ModInitializer {
         new LicenseUseHandler(bankService, huntingLicenseService).register();
         new PoachingHandler(lawEnforcementService, huntingLicenseService).register();
         CarSpawnHandler.register();
+        CitizenSpawnHandler.register();
 
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             Path saveRoot = server.getSavePath(WorldSavePath.ROOT);
@@ -108,6 +111,7 @@ public final class RealWorldMod implements ModInitializer {
             npcDatabase = new NpcDatabase(npcDbPath);
             npcDatabase.open();
             scheduleManager = new NpcScheduleManager(npcDatabase);
+            NpcAccess.set(npcDatabase);
             LOGGER.info("[RealWorldMod] Citizen database opened at {}", npcDbPath);
 
             Path claimDbPath = saveRoot.resolve("realworldmod").resolve("claims.sqlite");

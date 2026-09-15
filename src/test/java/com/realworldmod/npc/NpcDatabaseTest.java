@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NpcDatabaseTest {
     private NpcDatabase database;
@@ -66,5 +68,20 @@ class NpcDatabaseTest {
                 .findFirst()
                 .orElseThrow();
         assertEquals(DailyState.WAKING, reloaded.currentState());
+    }
+
+    @Test
+    void findByIdReturnsTheMatchingCitizen() {
+        UUID id = UUID.randomUUID();
+        database.upsert(new NpcProfile(id, "Morgan Diaz", "5 Elm St", "City Hall",
+                160_000L, 9, 17, DailyState.LEISURE));
+
+        assertTrue(database.findById(id).isPresent());
+        assertEquals("Morgan Diaz", database.findById(id).orElseThrow().name());
+    }
+
+    @Test
+    void findByIdIsEmptyForUnknownCitizen() {
+        assertFalse(database.findById(UUID.randomUUID()).isPresent());
     }
 }

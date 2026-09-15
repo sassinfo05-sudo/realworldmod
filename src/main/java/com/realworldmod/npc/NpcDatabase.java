@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -96,6 +97,17 @@ public final class NpcDatabase implements AutoCloseable {
             statement.executeUpdate();
         } catch (SQLException e) {
             throw new IllegalStateException("Failed to update state for citizen " + citizenId, e);
+        }
+    }
+
+    public Optional<NpcProfile> findById(UUID citizenId) {
+        try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM citizens WHERE id = ?")) {
+            statement.setString(1, citizenId.toString());
+            try (ResultSet rs = statement.executeQuery()) {
+                return rs.next() ? Optional.of(readRow(rs)) : Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw new IllegalStateException("Failed to load citizen " + citizenId, e);
         }
     }
 

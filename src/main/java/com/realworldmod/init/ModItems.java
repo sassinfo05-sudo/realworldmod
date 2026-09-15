@@ -18,6 +18,8 @@ public final class ModItems {
 
     public static final Item CAR_KEY = register("car_key", new Item(new Item.Settings().maxCount(1)));
 
+    public static final Item CITIZEN_SPAWNER = register("citizen_spawner", new Item(new Item.Settings().maxCount(16)));
+
     private ModItems() {
     }
 

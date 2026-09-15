@@ -2,6 +2,7 @@
   "itemGroup.realworldmod.electronics": "RealWorld Electronics",
   "item.realworldmod.smartphone": "Smartphone",
   "message.realworldmod.phone_dead": "Battery dead. Plug in a charging cable.",
+  "message.realworldmod.no_permit": "You don't own a deed for this property.",
   "gui.realworldmod.phone.unlock": "Unlock",
   "gui.realworldmod.phone.app.settings": "Settings",
   "gui.realworldmod.phone.app.messages": "Messages",

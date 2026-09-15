@@ -51,10 +51,29 @@ compile, run, and review.
     enum → `Screen` mapping) — this is the extension point every later app
     (banking, real estate, BlockTube, dark web) plugs into.
 
+- **Slice 3 — Land claims & anti-griefing** (intro constraint: "modifying
+  property requires owning the deed"):
+  - `Claim`: an immutable X/Z-rectangle (full height) owned by a player
+    UUID, with inclusive-boundary containment.
+  - `ClaimRegistry`: pure, unit-tested query logic (`canModify`,
+    `findClaimAt`) — unclaimed land stays freely modifiable, only deeded
+    plots are protected (see the scope note in `ClaimRegistry`'s Javadoc).
+  - `ClaimDatabase`: SQLite persistence, same pattern as `NpcDatabase`,
+    loaded into the in-memory registry on server start.
+  - `PropertyProtection`: hooks Fabric API's `PlayerBlockBreakEvents.BEFORE`
+    to cancel breaking blocks inside a claim the breaking player doesn't
+    own, with a feedback message.
+  - **Known gap, tracked not hidden**: block *placement* isn't gated yet —
+    Fabric API has no generic "before block placed" event, so that needs a
+    mixin (see item 1 below). There is also no way yet to actually *create*
+    a claim in-game (no deed item, no plot-purchase flow) — `ClaimDatabase`
+    is wired up and tested, but nothing populates it during play yet.
+
 ## Not started yet (tracked, in priority order)
 
-1. **World gen & anti-griefing** (intro constraints) — city/suburb/highway
-   structure templates, deed/permit-gated block breaking.
+1. **Block placement gate + deed item/purchase flow** — a mixin for
+   before-place protection, plus an actual way to buy/claim a plot in-game
+   (deed item, or a real-estate phone app that writes into `ClaimDatabase`).
 2. **Vehicle entity + drivetrain physics** (Section 4).
 3. **Targeted anatomical damage model** (Section 5).
 4. **Economy ledger + banking app** (plugs into the phone app framework;

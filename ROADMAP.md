@@ -117,17 +117,28 @@ compile, run, and review.
   claim, refusing with a clear message if either check fails. The
   property and economy systems from slices 3-6 are now fully connected.
 
+- **Slice 7 — Block-placement mixin**: the mod's first Mixin. `BlockItemMixin`
+  injects into `BlockItem.place(ItemPlacementContext)` at `HEAD`
+  (cancellable) and refuses placement inside a claim the placing player
+  doesn't own, using the same `ClaimRegistry.canModify` check as breaking.
+  Since the mixin runs outside the mod's own constructor-injected object
+  graph, `PropertyAccess` is a small static holder set once from
+  `RealWorldMod.onInitialize()` so the mixin can reach the live registry.
+  This closes the anti-griefing gap left open since slice 3: both breaking
+  and placing are now gated.
+  - **Known limitation**: the check only runs server-side (the standard
+    pattern for this kind of gate), so a client may briefly render the
+    block before the server's rejection reaches it — a normal, cosmetic
+    rubber-banding effect, not a correctness bug.
+
 ## Not started yet (tracked, in priority order)
 
-1. **Block placement gate** — Fabric API has no generic "before block
-   placed" event, so protecting placement (not just breaking) inside
-   someone else's claim needs a mixin.
-2. **Vehicle entity + drivetrain physics** (Section 4).
-3. **Targeted anatomical damage model** (Section 5).
-4. **Police/crime state machine + court flow** (Section 7).
-5. **Biome/wildlife AI overhaul** (Section 8).
-6. **Utilities (power/water/telecom) + waste** (Section 9).
-7. Rendering/PBR overhaul, aviation/ATC, space program — largest, latest.
+1. **Vehicle entity + drivetrain physics** (Section 4).
+2. **Targeted anatomical damage model** (Section 5).
+3. **Police/crime state machine + court flow** (Section 7).
+4. **Biome/wildlife AI overhaul** (Section 8).
+5. **Utilities (power/water/telecom) + waste** (Section 9).
+6. Rendering/PBR overhaul, aviation/ATC, space program — largest, latest.
 
 Each future slice will follow the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game client,

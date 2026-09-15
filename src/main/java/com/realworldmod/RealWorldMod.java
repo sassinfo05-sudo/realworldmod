@@ -13,6 +13,7 @@ import com.realworldmod.npc.NpcScheduleManager;
 import com.realworldmod.phone.PhoneUseHandler;
 import com.realworldmod.property.ClaimRegistry;
 import com.realworldmod.property.DeedUseHandler;
+import com.realworldmod.property.PropertyAccess;
 import com.realworldmod.property.PropertyProtection;
 import com.realworldmod.property.PropertyService;
 import net.fabricmc.api.ModInitializer;
@@ -51,6 +52,7 @@ public final class RealWorldMod implements ModInitializer {
         ModBlocks.register();
         ModItemGroups.register();
         PhoneUseHandler.register();
+        PropertyAccess.set(propertyService.registry());
         new PropertyProtection(propertyService.registry()).register();
         new DeedUseHandler(propertyService, bankService).register();
         BankNetworking.registerPayloadTypes();

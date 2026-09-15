@@ -4,17 +4,16 @@ import com.realworldmod.crime.LawEnforcementService;
 import com.realworldmod.crime.OffenseOutcome;
 import com.realworldmod.economy.CurrencyFormatter;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
-import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 
 /**
- * Section 8's "hunting without a license alerts NPC game wardens," reduced
- * to reusing the existing crime system instead of building warden NPCs:
- * killing any {@link AnimalEntity} without a license is a recorded
- * offense, same as trespassing. Scope decision — see ROADMAP.md — any
- * vanilla passive animal counts as "game" here; the full design would
- * distinguish wildlife from owned livestock.
+ * Section 8's "hunting without a license alerts NPC game wardens," still
+ * reduced to reusing the existing crime system rather than building warden
+ * NPCs as agents (see ROADMAP.md), but as of slice 22 correctly scoped to
+ * real wildlife: killing a {@link DeerEntity} without a license is a
+ * recorded offense, same as trespassing. Vanilla livestock (cows, pigs,
+ * chickens, sheep) is no longer treated as poachable game.
  */
 public final class PoachingHandler {
     public static final int POACHING_SEVERITY = 1;
@@ -29,7 +28,7 @@ public final class PoachingHandler {
 
     public void register() {
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
-            if (!(entity instanceof AnimalEntity)) {
+            if (!(entity instanceof DeerEntity)) {
                 return;
             }
             if (!(damageSource.getAttacker() instanceof ServerPlayerEntity player)) {

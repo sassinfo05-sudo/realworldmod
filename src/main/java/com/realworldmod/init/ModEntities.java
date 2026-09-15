@@ -3,6 +3,7 @@ package com.realworldmod.init;
 import com.realworldmod.RealWorldMod;
 import com.realworldmod.npc.CitizenEntity;
 import com.realworldmod.vehicle.CarEntity;
+import com.realworldmod.wildlife.DeerEntity;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnGroup;
@@ -25,10 +26,18 @@ public final class ModEntities {
                     .dimensions(0.6f, 1.8f)
                     .build("citizen"));
 
+    public static final EntityType<DeerEntity> DEER = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(RealWorldMod.MOD_ID, "deer"),
+            EntityType.Builder.<DeerEntity>create(DeerEntity::new, SpawnGroup.CREATURE)
+                    .dimensions(0.7f, 1.3f)
+                    .build("deer"));
+
     private ModEntities() {
     }
 
     public static void register() {
         FabricDefaultAttributeRegistry.register(CITIZEN, CitizenEntity.createAttributes());
+        FabricDefaultAttributeRegistry.register(DEER, DeerEntity.createAttributes());
     }
 }

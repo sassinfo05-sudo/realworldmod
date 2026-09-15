@@ -6,6 +6,7 @@ import com.realworldmod.client.phone.PhoneLockScreen;
 import com.realworldmod.client.utilities.ClientUtilityState;
 import com.realworldmod.client.npc.CitizenEntityRenderer;
 import com.realworldmod.client.vehicle.CarEntityRenderer;
+import com.realworldmod.client.wildlife.DeerEntityRenderer;
 import com.realworldmod.crime.net.WantedLevelResponsePayload;
 import com.realworldmod.economy.net.BankBalanceResponsePayload;
 import com.realworldmod.init.ModDataComponents;
@@ -38,6 +39,7 @@ public final class RealWorldModClient implements ClientModInitializer {
 
         EntityRendererRegistry.register(ModEntities.CAR, CarEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.CITIZEN, CitizenEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.DEER, DeerEntityRenderer::new);
 
         UseItemCallback.EVENT.register((player, world, hand) -> {
             if (!world.isClient || hand != Hand.MAIN_HAND) {

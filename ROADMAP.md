@@ -258,6 +258,37 @@ updated with every slice so neither side ever has to guess.
     unverified without a running client whether the walk actually looks
     right or whether citizens get stuck on the mod's own blocks en route.
 
+- **Slice 22 — `DeerEntity`: real wildlife AI** (Section 8), replacing the
+  "any vanilla passive animal counts as game" stand-in from slice 17:
+  - `DeerEntity extends PathAwareEntity`, same architectural shape as
+    `CitizenEntity`/`CarEntity`, rendered via `BlockRenderManager` as a
+    scaled brown-terracotta box (placeholder, not real art).
+  - `WildlifeBehavior`: a pure, unit-tested helper holding the flee-trigger
+    and herd-crowding distance thresholds plus a centroid-averaging
+    function — the same "pure logic separate from the `Goal`" split
+    `CommuteTarget`/`CommuteGoal` used in slice 21.
+  - `FleeFromPlayerGoal`: makes a deer run from the nearest player once
+    within range, *before* being hit — a genuine behavioral difference
+    from every vanilla passive mob, which only ever flees after damage.
+  - `HerdWithOthersGoal`: finds nearby `DeerEntity` instances via
+    `World.getEntitiesByClass` and drifts toward their average position,
+    a real (if simple) take on "prey herding," lower priority than fleeing
+    so a scare always breaks up the herd's drift.
+  - `PoachingHandler` now checks `instanceof DeerEntity` instead of
+    `instanceof AnimalEntity`, fixing the wildlife/livestock distinction
+    called out as missing since slice 17 — killing a cow or pig is no
+    longer a crime.
+  - `DeerSpawnHandler` + `ModItems.DEER_SPAWNER`: item-triggered spawning,
+    mirroring `CitizenSpawnHandler`, since the mod still has no
+    biome-based natural spawning for anything.
+  - Every new Minecraft API surface touched (`World.getClosestPlayer`,
+    `World.getEntitiesByClass`, `Box.expand`, `Entity.squaredDistanceTo`)
+    was verified via `javap` against the real mappings before use.
+  - **Known gaps**: see the updated Section 8 status above — no predator
+    AI, no true migration, item-spawned only, no warden-NPC agent;
+    unverified without a running client whether flee/herd movement looks
+    natural rather than jittery.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -482,19 +513,29 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   as a distinct faction type from ordinary criminal organizations.
 
 **Section 8 — Biomes, Ecology, Wildlife & Zoos**
-- Done: a hunting-license permit system and a poaching penalty that
-  reuses the existing crime pipeline — a law-enforcement-side stand-in,
-  not an ecology system.
+- Done: as of slice 22, a real `DeerEntity` (`PathAwareEntity`) is the
+  mod's first genuine wildlife AI — `FleeFromPlayerGoal` makes it run from
+  an approaching player on proximity alone (unlike vanilla passive mobs,
+  which only flee once actually hit), and `HerdWithOthersGoal` drifts it
+  toward the average position of nearby deer (a real, if simple, take on
+  "prey herding"), both backed by a pure unit-tested `WildlifeBehavior`
+  helper. `PoachingHandler` now only fires on killing a `DeerEntity`,
+  fixing the old "any vanilla animal counts as game" stand-in — vanilla
+  livestock (cows, pigs, chickens, sheep) is no longer poachable. Plus the
+  pre-existing hunting-license permit system and poaching penalty that
+  reuses the crime pipeline.
 - Missing: no biome-specific mechanics at all (no multi-layer canopy/leaf
   decay/wildfires in forests, no machete-gated jungle thickets/equipment
   rust/malaria, no desert sand-dune physics/heatstroke/mirage/flash
-  floods), no wildlife AI whatsoever (no predator scent-trail stalking, no
-  prey herding/migration, "poaching" currently applies to *any* vanilla
-  passive animal with no wildlife/livestock distinction and no warden NPCs
-  — game wardens are simulated only as an automatic fine, not an agent),
-  no zoo/safari system (no enclosures, HVAC, vet care, breeding, monorails,
-  ticketing, gift shops). **Requested and tracked, not started**:
-  abandoned towns as a distinct, generated location type.
+  floods); no predator AI (only prey flee/herd behavior exists, nothing
+  stalks or hunts anything); no migration (herding is proximity-only, not
+  a seasonal or territorial routine); deer only spawn via a
+  `DEER_SPAWNER` item, not natural biome-based spawning; still no warden
+  NPCs as agents (poaching remains an automatic fine, not a chasing
+  game-warden entity — closely related to item 2 in "Priority order"
+  below); no zoo/safari system (no enclosures, HVAC, vet care, breeding,
+  monorails, ticketing, gift shops). **Requested and tracked, not
+  started**: abandoned towns as a distinct, generated location type.
 
 **Section 9 — Utilities, Space & Industrial Supply Chains**
 - Done: the most complete slice-for-slice implementation of any single
@@ -515,17 +556,20 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 
 ## Priority order for what's next
 
-1. **Real wildlife AI** to replace the crime-system stand-in (Section 8).
-2. **Police NPCs / court/trial step** before an automatic arrest becomes
+1. **Police NPCs / court/trial step** before an automatic arrest becomes
    an adjudicated one (Section 7) — now buildable on the same
    `PathAwareEntity` + custom-`Goal` pattern `CitizenEntity`/`CommuteGoal`
-   proved out.
-3. Everything else in the "missing" lists above, then finally
+   and `DeerEntity`/`FleeFromPlayerGoal` both proved out; also the natural
+   place to build the "warden NPCs" gap Section 8 still calls out (a
+   warden entity that chases a caught poacher is the same shape as a
+   police entity that chases a wanted player).
+2. Everything else in the "missing" lists above, then finally
    rendering/PBR, aviation/ATC, and the space program — deliberately
    last, as the largest and least incrementally verifiable pieces.
 
-(Slice 21 closed out the previous top item — daily-schedule-driven
-`CitizenEntity` movement — see Section 2 above.)
+(Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
+Section 2 above. Slice 22 closed out the previous top item, real wildlife
+AI — see Section 8 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

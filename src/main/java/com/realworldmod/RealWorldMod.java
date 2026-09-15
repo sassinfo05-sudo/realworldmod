@@ -35,6 +35,7 @@ import com.realworldmod.utilities.UtilityAccess;
 import com.realworldmod.utilities.UtilityService;
 import com.realworldmod.utilities.net.UtilityNetworking;
 import com.realworldmod.vehicle.CarSpawnHandler;
+import com.realworldmod.wildlife.DeerSpawnHandler;
 import com.realworldmod.wildlife.HuntingLicenseService;
 import com.realworldmod.wildlife.LicenseUseHandler;
 import com.realworldmod.wildlife.PoachingHandler;
@@ -103,6 +104,7 @@ public final class RealWorldMod implements ModInitializer {
         new PoachingHandler(lawEnforcementService, huntingLicenseService).register();
         CarSpawnHandler.register();
         CitizenSpawnHandler.register();
+        DeerSpawnHandler.register();
 
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             Path saveRoot = server.getSavePath(WorldSavePath.ROOT);

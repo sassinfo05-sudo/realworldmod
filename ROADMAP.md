@@ -362,6 +362,40 @@ updated with every slice so neither side ever has to guess.
     running tally of what "10/10 assets, nothing looks like Minecraft"
     would actually still require.
 
+- **Slice 25 — LabPBR normal/specular maps for every existing texture**
+  (Section 1), in response to a direct request to "add shaders and PBR":
+  - What this is *not*: a custom shader/rendering pipeline written into
+    the mod. That would mean raw GLSL hooked into Minecraft's renderer
+    via Mixin, with zero way to compile-test or visually verify it
+    without a GPU-attached running client — a broken shader mixin doesn't
+    just render wrong, it can take down the entire render thread. That
+    risk wasn't taken.
+  - What this actually is, and how "PBR" genuinely exists in the
+    Minecraft ecosystem: a `_n.png` (normal) and `_s.png` (specular) map
+    next to every one of the mod's existing textures, in the
+    [LabPBR](https://shaderlabs.org/wiki/LabPBR_Material_Standard) format
+    that Iris and every modern shader pack (Complementary, BSL, etc.)
+    already read by filename convention — no Java code, no model JSON
+    changes, nothing to register. The actual PBR lighting math is done by
+    whatever shader pack the *player* runs; this just supplies the
+    material data for it to consume.
+  - Normal maps are derived per-texture via a Sobel filter over each
+    base texture's own luminance (a standard "fake bump from a diffuse
+    image" technique, since there's no real height/3D data to sample —
+    documented in the generation script itself). Specular maps encode
+    smoothness/F0/porosity/emissive per texture, with the lit
+    `utility_lamp_on` texture the only one actually marked emissive
+    (the previously "just visibly changes state" lamp texture would now
+    genuinely glow under a PBR shader pack).
+  - **Known gaps**: normal maps are inferred from 2D texture detail, not
+    real geometry, so the bump is subtle and approximate, not sculpted;
+    every specular value is a reasonable guess, not measured/authored per
+    material; nothing here has been visually confirmed — that requires a
+    running client with Iris and a PBR shader pack installed, neither of
+    which this session has; this covers every *existing* texture but adds
+    no new ones, so it doesn't move the "10/10, hundreds of assets"
+    backlog at all — only the "PBR" half of the last two requests.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data

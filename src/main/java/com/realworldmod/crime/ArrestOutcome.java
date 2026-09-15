@@ -5,5 +5,6 @@ public enum ArrestOutcome {
     NOT_ARRESTED,
     JUST_ARRESTED,
     STILL_DETAINED,
-    JUST_RELEASED
+    JUST_RELEASED,
+    ACQUITTED
 }

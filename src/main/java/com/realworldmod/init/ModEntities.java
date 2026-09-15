@@ -1,6 +1,7 @@
 package com.realworldmod.init;
 
 import com.realworldmod.RealWorldMod;
+import com.realworldmod.crime.PoliceEntity;
 import com.realworldmod.npc.CitizenEntity;
 import com.realworldmod.vehicle.CarEntity;
 import com.realworldmod.wildlife.DeerEntity;
@@ -33,11 +34,19 @@ public final class ModEntities {
                     .dimensions(0.7f, 1.3f)
                     .build("deer"));
 
+    public static final EntityType<PoliceEntity> POLICE = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(RealWorldMod.MOD_ID, "police"),
+            EntityType.Builder.<PoliceEntity>create(PoliceEntity::new, SpawnGroup.MISC)
+                    .dimensions(0.6f, 1.8f)
+                    .build("police"));
+
     private ModEntities() {
     }
 
     public static void register() {
         FabricDefaultAttributeRegistry.register(CITIZEN, CitizenEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(DEER, DeerEntity.createAttributes());
+        FabricDefaultAttributeRegistry.register(POLICE, PoliceEntity.createAttributes());
     }
 }

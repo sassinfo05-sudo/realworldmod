@@ -289,6 +289,44 @@ updated with every slice so neither side ever has to guess.
     unverified without a running client whether flee/herd movement looks
     natural rather than jittery.
 
+- **Slice 23 — `PoliceEntity` and a real court/trial step before arrest**
+  (Section 7), closing the "no police NPCs, no trial before sentencing"
+  gap open since slice 16's automatic detainment:
+  - `PoliceEntity extends PathAwareEntity`, same architectural shape as
+    `CitizenEntity`/`DeerEntity`, rendered as a scaled blue-concrete box.
+  - `PoliceBehavior`: a pure, unit-tested helper (`shouldChase`,
+    `canApprehend`) — the same "pure logic separate from the `Goal`"
+    split every custom AI goal in this mod now uses.
+  - `ChaseWantedPlayerGoal`: pursues the nearest player once
+    `PoliceBehavior.shouldChase` says they're "Wanted" (level 3+), and on
+    contact while still at maximum wanted level hands off to a new
+    `TrialService` instead of arresting directly.
+  - `TrialService` + `TrialVerdict`: a fixed-length (30-second) trial
+    starts on apprehension; the verdict is decided against the wanted
+    level *at the trial's end* (which keeps decaying the whole time via
+    the existing `CrimeService.tick`), not the level at capture — staying
+    clean (or lucky) through the whole trial gets you acquitted instead of
+    convicted on stale evidence.
+  - `ArrestService` was rewired around this: reaching max wanted level no
+    longer arrests anyone by itself (`ArrestServiceTest` updated
+    accordingly) — only a `GUILTY` verdict from `TrialService.tick` starts
+    detention; `NOT_GUILTY` produces a new `ArrestOutcome.ACQUITTED`,
+    handled by `ArrestHandler` with its own message.
+  - `TrialAccess`/`ArrestAccess`: new static holders (same pattern as
+    `CrimeAccess`/`NpcAccess`) so `ChaseWantedPlayerGoal` — instantiated by
+    `EntityType.Builder` with no constructor-injection path — can reach
+    the live `TrialService`/`ArrestService` to avoid re-apprehending an
+    already-detained or already-on-trial player.
+  - `PoliceSpawnHandler` + `ModItems.POLICE_SPAWNER`: item-triggered
+    spawning, mirroring `CitizenSpawnHandler`/`DeerSpawnHandler`.
+  - Every new Minecraft API surface touched (`EntityNavigation.
+    startMovingTo(Entity, double)`, `World.getTime()`) was verified via
+    `javap` against the real mappings before use.
+  - **Known gaps**: see the updated Section 7 status above — no tactical
+    AI, no real courtroom/judge simulation behind the verdict, item-spawned
+    only, no undercover variant yet; unverified without a running client
+    whether the chase actually looks like a chase.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -486,28 +524,40 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   also Section 5).
 
 **Section 7 — Government, Law Enforcement, Courts & Underworld**
-- Done: the most fleshed-out non-economy system — per-player wanted level
-  with decay, fines at a threshold, automatic detainment (teleport +
-  Blindness) at max level with a timed release that clears the record, all
-  exposed live through a phone app.
-- Missing: no actual police *NPCs* (no patrol AI, no chase, no tactical
-  cover/spike strips/pit maneuvers — "arrest" is an instant, automatic
-  teleport with no NPC agent involved), no municipal border/tax-rate
-  system (`BankService` has no concept of city-specific sales/property/
-  income tax), no real prison — no cell block, no yard, no prison jobs, no
-  faction/contraband/breakout mechanics, no trial/court step before
-  sentencing (arrest is immediate and automatic, not adjudicated), no
-  civil courts (no lease/partnership contracts, no suing NPCs, no judge
-  UI, no search warrants), no underworld/narcotics system (no dark web
-  purchases, no chemical labs, no drug smuggling, no money laundering
-  through front businesses) — the "dark web" referenced in Section 3 and
-  the "underworld" here are both entirely unbuilt. **Requested and
-  tracked, not started**: running for and holding government office (up
-  to leading the whole in-game country); terrorism attacks that occur
+- Done: per-player wanted level with decay, fines at a threshold, and — as
+  of slice 23 — a real `PoliceEntity` (`PathAwareEntity`) that patrols and
+  actively chases a player once `PoliceBehavior.shouldChase` says they're
+  "Wanted" or worse, apprehending them on contact if they're still at
+  maximum wanted level (`PoliceBehavior.canApprehend`). Apprehension no
+  longer detains anyone directly: it starts a `TrialService` trial (a
+  genuine, if minimal, "court/trial step before sentencing" — the
+  ROADMAP-tracked gap this closes), and only a `GUILTY` verdict at the
+  trial's end — checked against whatever the wanted level has decayed to
+  by then, not the level at capture — actually detains the player
+  (teleport + Blindness) for a timed sentence; `NOT_GUILTY` acquits them
+  outright. All of it, plus the trial/verdict flow, is exposed live
+  through the existing phone app and `ArrestHandler` messages.
+- Missing: `PoliceEntity` only patrols/chases — no tactical cover, spike
+  strips, pit maneuvers, backup calls, or squad coordination; deer/police
+  spawn only via items (`POLICE_SPAWNER`), not real police-station
+  structures or patrol routes; the trial's verdict logic is a single
+  wanted-level check, not an actual evidence/witness/judge simulation
+  (there is no judge NPC, no courtroom, no defense); no municipal
+  border/tax-rate system (`BankService` has no concept of city-specific
+  sales/property/income tax); no real prison — no cell block, no yard, no
+  prison jobs, no faction/contraband/breakout mechanics; no civil courts
+  (no lease/partnership contracts, no suing NPCs, no judge UI, no search
+  warrants); no underworld/narcotics system (no dark web purchases, no
+  chemical labs, no drug smuggling, no money laundering through front
+  businesses) — the "dark web" referenced in Section 3 and the
+  "underworld" here are both entirely unbuilt. **Requested and tracked,
+  not started**: running for and holding government office (up to
+  leading the whole in-game country); terrorism attacks that occur
   dynamically as the game progresses and get repaired afterward (also
   needs the "construction actually works" gap below); undercover police
-  NPCs indistinguishable from civilians until they act; kidnapping (of
-  the player or of a random citizen); a defined path for the player to
+  NPCs indistinguishable from civilians until they act (now buildable as
+  a `PoliceEntity` variant that doesn't render as one); kidnapping (of the
+  player or of a random citizen); a defined path for the player to
   "become a criminal" as a real career/reputation track, not just an
   accumulating wanted level; illuminati-style secret societies and cults
   as a distinct faction type from ordinary criminal organizations.
@@ -556,20 +606,22 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 
 ## Priority order for what's next
 
-1. **Police NPCs / court/trial step** before an automatic arrest becomes
-   an adjudicated one (Section 7) — now buildable on the same
-   `PathAwareEntity` + custom-`Goal` pattern `CitizenEntity`/`CommuteGoal`
-   and `DeerEntity`/`FleeFromPlayerGoal` both proved out; also the natural
-   place to build the "warden NPCs" gap Section 8 still calls out (a
-   warden entity that chases a caught poacher is the same shape as a
-   police entity that chases a wanted player).
-2. Everything else in the "missing" lists above, then finally
-   rendering/PBR, aviation/ATC, and the space program — deliberately
-   last, as the largest and least incrementally verifiable pieces.
+1. **Game-warden NPC for poaching** (Section 8) — `PoliceEntity`/
+   `ChaseWantedPlayerGoal` from slice 23 is directly reusable for this: a
+   warden entity that chases a player caught poaching is the same shape
+   as a police entity chasing a wanted one, closing the "warden NPCs are
+   simulated only as an automatic fine, not an agent" gap explicitly
+   called out in Section 8 twice now.
+2. Everything else in the "missing" lists above — diversify out of the
+   `PathAwareEntity`/custom-`Goal` NPC pattern (slices 20-23 all used it)
+   into a different section next, then finally rendering/PBR, aviation/
+   ATC, and the space program — deliberately last, as the largest and
+   least incrementally verifiable pieces.
 
-(Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
-Section 2 above. Slice 22 closed out the previous top item, real wildlife
-AI — see Section 8 above.)
+(Slice 21 closed out daily-schedule-driven `CitizenEntity` movement —
+see Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
+above. Slice 23 closed out police NPCs and a real court/trial step — see
+Section 7 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

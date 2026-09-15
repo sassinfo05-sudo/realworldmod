@@ -22,6 +22,8 @@ public final class ModItems {
 
     public static final Item DEER_SPAWNER = register("deer_spawner", new Item(new Item.Settings().maxCount(16)));
 
+    public static final Item POLICE_SPAWNER = register("police_spawner", new Item(new Item.Settings().maxCount(16)));
+
     private ModItems() {
     }
 

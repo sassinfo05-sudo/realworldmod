@@ -1,11 +1,15 @@
 package com.realworldmod;
 
+import com.realworldmod.crime.ArrestAccess;
 import com.realworldmod.crime.ArrestHandler;
 import com.realworldmod.crime.ArrestOutcome;
 import com.realworldmod.crime.ArrestService;
 import com.realworldmod.crime.CrimeAccess;
 import com.realworldmod.crime.CrimeService;
 import com.realworldmod.crime.LawEnforcementService;
+import com.realworldmod.crime.PoliceSpawnHandler;
+import com.realworldmod.crime.TrialAccess;
+import com.realworldmod.crime.TrialService;
 import com.realworldmod.crime.net.CrimeNetworking;
 import com.realworldmod.economy.BankService;
 import com.realworldmod.economy.JobService;
@@ -70,7 +74,8 @@ public final class RealWorldMod implements ModInitializer {
     private final CrimeService crimeService = new CrimeService();
     private final LawEnforcementService lawEnforcementService =
             new LawEnforcementService(crimeService, bankService);
-    private final ArrestService arrestService = new ArrestService(crimeService);
+    private final TrialService trialService = new TrialService();
+    private final ArrestService arrestService = new ArrestService(crimeService, trialService);
     private final UtilityService utilityService = new UtilityService(bankService);
     private final IllnessService illnessService = new IllnessService();
     private final HuntingLicenseService huntingLicenseService = new HuntingLicenseService();
@@ -87,6 +92,8 @@ public final class RealWorldMod implements ModInitializer {
         PhoneUseHandler.register();
         PropertyAccess.set(propertyService.registry());
         CrimeAccess.set(lawEnforcementService);
+        TrialAccess.set(trialService);
+        ArrestAccess.set(arrestService);
         UtilityAccess.set(utilityService);
         new PropertyProtection(propertyService.registry(), lawEnforcementService).register();
         new DeedUseHandler(propertyService, bankService).register();
@@ -105,6 +112,7 @@ public final class RealWorldMod implements ModInitializer {
         CarSpawnHandler.register();
         CitizenSpawnHandler.register();
         DeerSpawnHandler.register();
+        PoliceSpawnHandler.register();
 
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             Path saveRoot = server.getSavePath(WorldSavePath.ROOT);

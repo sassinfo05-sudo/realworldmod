@@ -35,6 +35,7 @@ public final class ArrestHandler {
                 player.requestTeleport(spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5);
                 player.sendMessage(Text.translatable("message.realworldmod.released"), false);
             }
+            case ACQUITTED -> player.sendMessage(Text.translatable("message.realworldmod.acquitted"), false);
             case STILL_DETAINED, NOT_ARRESTED -> {
                 // No action needed on these ticks.
             }

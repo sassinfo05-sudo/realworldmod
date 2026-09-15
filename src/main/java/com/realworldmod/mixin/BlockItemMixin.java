@@ -2,6 +2,9 @@ package com.realworldmod.mixin;
 
 import com.realworldmod.crime.CrimeAccess;
 import com.realworldmod.crime.CrimeService;
+import com.realworldmod.crime.LawEnforcementService;
+import com.realworldmod.crime.OffenseOutcome;
+import com.realworldmod.economy.CurrencyFormatter;
 import com.realworldmod.property.ClaimRegistry;
 import com.realworldmod.property.PropertyAccess;
 import net.minecraft.entity.player.PlayerEntity;
@@ -42,9 +45,14 @@ abstract class BlockItemMixin {
         BlockPos pos = context.getBlockPos();
         if (!registry.canModify(player.getUuid(), pos.getX(), pos.getZ())) {
             player.sendMessage(Text.translatable("message.realworldmod.no_permit"), true);
-            CrimeService crimeService = CrimeAccess.get();
-            if (crimeService != null) {
-                crimeService.recordCrime(player.getUuid(), CrimeService.TRESPASS_SEVERITY);
+            LawEnforcementService lawEnforcementService = CrimeAccess.get();
+            if (lawEnforcementService != null) {
+                OffenseOutcome outcome = lawEnforcementService.recordOffense(
+                        player.getUuid(), CrimeService.TRESPASS_SEVERITY);
+                if (outcome.fined()) {
+                    player.sendMessage(Text.translatable("message.realworldmod.fine_issued",
+                            CurrencyFormatter.format(LawEnforcementService.FINE_CENTS)), true);
+                }
             }
             cir.setReturnValue(ActionResult.FAIL);
         }

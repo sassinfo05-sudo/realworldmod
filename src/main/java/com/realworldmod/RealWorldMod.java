@@ -2,6 +2,7 @@ package com.realworldmod;
 
 import com.realworldmod.crime.CrimeAccess;
 import com.realworldmod.crime.CrimeService;
+import com.realworldmod.crime.LawEnforcementService;
 import com.realworldmod.crime.net.CrimeNetworking;
 import com.realworldmod.economy.BankService;
 import com.realworldmod.economy.JobService;
@@ -45,6 +46,8 @@ public final class RealWorldMod implements ModInitializer {
     private final BankService bankService = new BankService();
     private final JobService jobService = new JobService(bankService);
     private final CrimeService crimeService = new CrimeService();
+    private final LawEnforcementService lawEnforcementService =
+            new LawEnforcementService(crimeService, bankService);
 
     @Override
     public void onInitialize() {
@@ -56,8 +59,8 @@ public final class RealWorldMod implements ModInitializer {
         ModItemGroups.register();
         PhoneUseHandler.register();
         PropertyAccess.set(propertyService.registry());
-        CrimeAccess.set(crimeService);
-        new PropertyProtection(propertyService.registry(), crimeService).register();
+        CrimeAccess.set(lawEnforcementService);
+        new PropertyProtection(propertyService.registry(), lawEnforcementService).register();
         new DeedUseHandler(propertyService, bankService).register();
         BankNetworking.registerPayloadTypes();
         BankNetworking.registerServerReceiver(bankService);

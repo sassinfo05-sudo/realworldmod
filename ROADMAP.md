@@ -183,10 +183,25 @@ compile, run, and review.
     informational. Not persisted across a relog. Only trespassing counts
     as a crime so far; no other Section 7 offenses are wired up.
 
+- **Slice 11 — Fines: crime finally has an economic consequence**:
+  - `LawEnforcementService` wraps `CrimeService` + `BankService`:
+    `recordOffense` records the crime as before, and once the resulting
+    wanted level reaches `FINE_THRESHOLD` (3), attempts to withdraw
+    `FINE_CENTS` ($25) — a best-effort citation, not an error, if the
+    player can't afford it (unit tested for both outcomes, plus the
+    below-threshold no-op case).
+  - `PropertyProtection` and `BlockItemMixin` both switched from calling
+    `CrimeService` directly to going through `LawEnforcementService`, so
+    trespassing (break or place) now both raises the record and, once
+    flagged, drains the wallet.
+  - **Known gaps**: still no police NPCs, arrests, or court flow — a fine
+    is the entire consequence. Fines only trigger from trespassing, since
+    that's still the only tracked offense.
+
 ## Not started yet (tracked, in priority order)
 
-1. **Give a high wanted level consequences**: police NPCs, an arrest/court
-   flow, fines withdrawn via `BankService` (Section 7).
+1. **Police NPCs / arrest / court flow** for a wanted level that's
+   maxed out, beyond just fines (Section 7).
 2. **Wire `VehiclePhysics` into an actual rideable entity**: custom
    `Entity`/`EntityType`, input capture, and a client-side model/renderer
    — the part of Section 4 that needs a running game client to verify.

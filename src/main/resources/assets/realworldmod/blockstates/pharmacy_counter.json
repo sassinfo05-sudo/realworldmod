@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "realworldmod:block/pharmacy_counter" }
+  }
+}

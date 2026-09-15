@@ -16,7 +16,7 @@ compile, run, and review. This document is the single source of truth for
 what's actually implemented versus what the original brief asked for; it's
 updated with every slice so neither side ever has to guess.
 
-## Done (18 slices so far, 123 unit tests, all passing)
+## Done (19 slices so far, 123 unit tests, all passing)
 
 - **Project scaffold**: Fabric Loom-based Gradle build (Minecraft 1.21.1,
   Yarn `1.21.1+build.3`, Fabric Loader `0.19.5`, Fabric API
@@ -133,6 +133,25 @@ updated with every slice so neither side ever has to guess.
     + `LicenseUseHandler`, `PoachingHandler` (killing an `AnimalEntity`
     without a license routes through the existing
     `LawEnforcementService.recordOffense`).
+
+- **Slice 18 — Visual assets for every registered block/item**: closes a
+  gap that had gone unaddressed (and unmentioned) through 17 slices —
+  every item and block added so far (`SMARTPHONE`, `LAND_DEED`,
+  `MEDICINE`, `CASH_REGISTER`, `UTILITY_LAMP`, `PHARMACY_COUNTER`,
+  `LICENSE_OFFICE`) had no model, blockstate, or texture, meaning they'd
+  render as Minecraft's missing-texture purple/black checkerboard in an
+  actual game session despite all their interaction logic working
+  correctly. Added a distinct 16x16 placeholder texture per item/block,
+  `item/generated`-based item models for the plain items, `cube_all`
+  block models + blockstates for the plain blocks, and a lit/unlit
+  blockstate variant pair for `UTILITY_LAMP` (mirroring vanilla's
+  redstone lamp) so it now visibly swaps texture, not just luminance,
+  when power is cut. Verified by parsing every new JSON file and opening
+  every PNG (not just trusting a clean `gradle build`, since Gradle
+  doesn't semantically validate Minecraft resource JSON).
+  - **Known gap**: textures are simple placeholder pixel art (flat colors
+    + basic shapes), not real art — this closes the "nothing renders"
+    gap, not the "AAA visual fidelity" gap from Section 1.
 
 ### Cross-cutting things already true of the whole codebase
 

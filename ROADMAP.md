@@ -111,19 +111,23 @@ compile, run, and review.
   - This closes the slice 5 gap: a balance can now actually go from $0 to
     something during play, and the Banking app reflects it.
 
+- **Slice 6b — Deeds cost money**: `DeedUseHandler` now checks for overlap
+  first (a pure, free query), then withdraws `PRICE_CENTS` (5000, i.e.
+  $50.00) from the buyer's `BankService` account before creating the
+  claim, refusing with a clear message if either check fails. The
+  property and economy systems from slices 3-6 are now fully connected.
+
 ## Not started yet (tracked, in priority order)
 
-1. **Land deeds should cost money** — spend through `BankService` instead
-   of being a free creative-tab item, now that balances are real.
-2. **Block placement gate** — Fabric API has no generic "before block
+1. **Block placement gate** — Fabric API has no generic "before block
    placed" event, so protecting placement (not just breaking) inside
    someone else's claim needs a mixin.
-3. **Vehicle entity + drivetrain physics** (Section 4).
-4. **Targeted anatomical damage model** (Section 5).
-5. **Police/crime state machine + court flow** (Section 7).
-6. **Biome/wildlife AI overhaul** (Section 8).
-7. **Utilities (power/water/telecom) + waste** (Section 9).
-8. Rendering/PBR overhaul, aviation/ATC, space program — largest, latest.
+2. **Vehicle entity + drivetrain physics** (Section 4).
+3. **Targeted anatomical damage model** (Section 5).
+4. **Police/crime state machine + court flow** (Section 7).
+5. **Biome/wildlife AI overhaul** (Section 8).
+6. **Utilities (power/water/telecom) + waste** (Section 9).
+7. Rendering/PBR overhaul, aviation/ATC, space program — largest, latest.
 
 Each future slice will follow the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game client,

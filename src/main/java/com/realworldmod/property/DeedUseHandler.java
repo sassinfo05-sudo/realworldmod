@@ -1,5 +1,7 @@
 package com.realworldmod.property;
 
+import com.realworldmod.economy.BankService;
+import com.realworldmod.economy.CurrencyFormatter;
 import com.realworldmod.init.ModItems;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.item.ItemStack;
@@ -11,16 +13,20 @@ import net.minecraft.util.math.BlockPos;
 /**
  * Lets a player turn a {@code LAND_DEED} item into an actual claim: right
  * click a block with a deed in hand to claim a square plot centered on it,
- * provided it doesn't overlap land someone else already owns.
+ * provided it doesn't overlap land someone else already owns and the
+ * player can afford the purchase price.
  */
 public final class DeedUseHandler {
     /** Half-width of a newly claimed plot, in blocks (a 33x33 square). */
     public static final int PLOT_RADIUS = 16;
+    public static final long PRICE_CENTS = 5000;
 
     private final PropertyService propertyService;
+    private final BankService bankService;
 
-    public DeedUseHandler(PropertyService propertyService) {
+    public DeedUseHandler(PropertyService propertyService, BankService bankService) {
         this.propertyService = propertyService;
+        this.bankService = bankService;
     }
 
     public void register() {
@@ -34,15 +40,27 @@ public final class DeedUseHandler {
             }
 
             BlockPos pos = hitResult.getBlockPos();
-            var claim = propertyService.claimPlot(player.getUuid(), pos.getX(), pos.getZ(), PLOT_RADIUS);
-            if (claim.isPresent()) {
-                stack.decrement(1);
-                player.sendMessage(Text.translatable("message.realworldmod.plot_claimed"), true);
-                return ActionResult.SUCCESS;
+            int minX = pos.getX() - PLOT_RADIUS;
+            int maxX = pos.getX() + PLOT_RADIUS;
+            int minZ = pos.getZ() - PLOT_RADIUS;
+            int maxZ = pos.getZ() + PLOT_RADIUS;
+
+            if (propertyService.registry().overlapsAny(minX, minZ, maxX, maxZ)) {
+                player.sendMessage(Text.translatable("message.realworldmod.plot_already_claimed"), true);
+                return ActionResult.FAIL;
             }
 
-            player.sendMessage(Text.translatable("message.realworldmod.plot_already_claimed"), true);
-            return ActionResult.FAIL;
+            if (bankService.withdraw(player.getUuid(), PRICE_CENTS).isEmpty()) {
+                player.sendMessage(Text.translatable("message.realworldmod.plot_cannot_afford",
+                        CurrencyFormatter.format(PRICE_CENTS)), true);
+                return ActionResult.FAIL;
+            }
+
+            propertyService.claimPlot(player.getUuid(), pos.getX(), pos.getZ(), PLOT_RADIUS);
+            stack.decrement(1);
+            player.sendMessage(Text.translatable("message.realworldmod.plot_claimed",
+                    CurrencyFormatter.format(PRICE_CENTS)), true);
+            return ActionResult.SUCCESS;
         });
     }
 }

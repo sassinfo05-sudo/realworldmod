@@ -52,7 +52,7 @@ public final class RealWorldMod implements ModInitializer {
         ModItemGroups.register();
         PhoneUseHandler.register();
         new PropertyProtection(propertyService.registry()).register();
-        new DeedUseHandler(propertyService).register();
+        new DeedUseHandler(propertyService, bankService).register();
         BankNetworking.registerPayloadTypes();
         BankNetworking.registerServerReceiver(bankService);
         new JobUseHandler(jobService).register();

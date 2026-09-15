@@ -27,6 +27,11 @@ public final class CrimeService {
         return next;
     }
 
+    /** Resets a player's wanted level to zero (e.g. having served an arrest — see {@code ArrestService}). */
+    public void clear(UUID playerId) {
+        wantedLevels.remove(playerId);
+    }
+
     /** Call once per server tick; decays every tracked player's level by 1 once per {@code DECAY_INTERVAL_TICKS}. */
     public void tick(long currentTick) {
         long bucket = currentTick / DECAY_INTERVAL_TICKS;

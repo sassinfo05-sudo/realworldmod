@@ -1,5 +1,8 @@
 package com.realworldmod;
 
+import com.realworldmod.crime.ArrestHandler;
+import com.realworldmod.crime.ArrestOutcome;
+import com.realworldmod.crime.ArrestService;
 import com.realworldmod.crime.CrimeAccess;
 import com.realworldmod.crime.CrimeService;
 import com.realworldmod.crime.LawEnforcementService;
@@ -59,6 +62,7 @@ public final class RealWorldMod implements ModInitializer {
     private final CrimeService crimeService = new CrimeService();
     private final LawEnforcementService lawEnforcementService =
             new LawEnforcementService(crimeService, bankService);
+    private final ArrestService arrestService = new ArrestService(crimeService);
     private final UtilityService utilityService = new UtilityService(bankService);
     private final IllnessService illnessService = new IllnessService();
 
@@ -125,6 +129,9 @@ public final class RealWorldMod implements ModInitializer {
                     player.sendMessage(Text.translatable("message.realworldmod.power_shutoff"), true);
                 }
                 WeatherIllnessEffect.check(illnessService, player);
+
+                ArrestOutcome arrestOutcome = arrestService.tick(player.getUuid(), server.getOverworld().getTime());
+                ArrestHandler.apply(arrestOutcome, server, player);
             }
         });
 

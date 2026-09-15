@@ -275,15 +275,32 @@ compile, run, and review.
     constant, not really unit-test-worthy on its own) — Minecraft-glue
     slice, same category as `PropertyProtection`/`UtilityLampBlock`.
 
+- **Slice 16 — Arrest at max wanted level**: the "complete penitentiary
+  simulation loop" reduced to its smallest real shape.
+  - `CrimeService.clear`, `ArrestOutcome`, and `ArrestService`: pure,
+    unit-tested tick logic — hitting `WantedLevelMath.MAX` (5) detains a
+    player for `SENTENCE_TICKS` (1 minute), serving it clears their
+    wanted level via `CrimeService.clear`, and a fresh offense afterward
+    can trigger a new arrest (tested explicitly, alongside the
+    below-threshold no-op and mid-sentence "still detained" cases).
+  - `ArrestHandler`: the Minecraft-side consequence — teleports the
+    player to a fixed offset above world spawn (a stand-in "holding
+    area," no actual structure) and blinds them for the sentence, then
+    teleports them back to spawn and clears the effect on release.
+  - Wired into the same online-player loop as utility billing and
+    illness, so no new per-tick iteration cost.
+  - **Known gaps**: no real prison structure, cell, or yard — just a
+    teleport + Blindness. No sentence reduction (jobs, good behavior), no
+    breakout mechanic, and no court/trial step before the sentence — the
+    arrest is automatic and immediate at max wanted level.
+
 ## Not started yet (tracked, in priority order)
 
-1. **Police NPCs / arrest / court flow** for a wanted level that's
-   maxed out, beyond just fines (Section 7).
-2. **Wire `VehiclePhysics` into an actual rideable entity**: custom
+1. **Wire `VehiclePhysics` into an actual rideable entity**: custom
    `Entity`/`EntityType`, input capture, and a client-side model/renderer
    — the part of Section 4 that needs a running game client to verify.
-3. **Biome/wildlife AI overhaul** (Section 8).
-4. Rendering/PBR overhaul, aviation/ATC, space program — largest, latest.
+2. **Biome/wildlife AI overhaul** (Section 8).
+3. Rendering/PBR overhaul, aviation/ATC, space program — largest, latest.
 
 Each future slice will follow the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game client,

@@ -21,6 +21,8 @@
   "message.realworldmod.medicine_not_needed": "You're not sick or injured right now.",
   "message.realworldmod.medicine_purchased": "Bought medicine for %s.",
   "message.realworldmod.medicine_cannot_afford": "You can't afford medicine (%s).",
+  "message.realworldmod.arrested": "You've been arrested for repeat offenses and taken into custody.",
+  "message.realworldmod.released": "You've served your sentence and been released.",
   "gui.realworldmod.phone.unlock": "Unlock",
   "gui.realworldmod.phone.app.settings": "Settings",
   "gui.realworldmod.phone.app.messages": "Messages",

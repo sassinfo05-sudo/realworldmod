@@ -57,6 +57,17 @@ class CrimeServiceTest {
     }
 
     @Test
+    void clearResetsToZero() {
+        CrimeService service = new CrimeService();
+        UUID player = UUID.randomUUID();
+        service.recordCrime(player, 3);
+
+        service.clear(player);
+
+        assertEquals(0, service.getWantedLevel(player));
+    }
+
+    @Test
     void differentPlayersAreTrackedIndependently() {
         CrimeService service = new CrimeService();
         UUID first = UUID.randomUUID();

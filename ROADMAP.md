@@ -392,7 +392,9 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   pixel art from slice 18, and both entities use a scaled vanilla block
   as a body with no animation at all — no walk cycle, no idle animation,
   nothing); working window curtains, street lights, and other small
-  world-detail props that toggle/animate on their own.
+  world-detail props that toggle/animate on their own; emotes as their own
+  player-triggered animation/expression system, distinct from an NPC's own
+  idle/walk animations above.
 
 **Section 2 — Autonomous Citizen & NPC Engine (GOAP)**
 - Done: persistent SQLite citizen records, a deterministic (not GOAP)
@@ -429,7 +431,11 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   either the player or a random citizen); criminal organizations with
   NPC membership and player-vs-organization rivalry; "opponents" in the
   general sense (competing NPCs/businesses/rivals reacting to the
-  player's actions across systems, not just combat).
+  player's actions across systems, not just combat); conversation
+  awareness — an NPC remembering what a player said or did in an earlier
+  interaction and referencing it, rather than every `interactMob` call
+  being stateless (today's one-line greeting isn't even two-way dialogue,
+  let alone dialogue with memory).
 
 **Section 3 — Consumer Electronics, Computers & In-Game Internet**
 - Done: one smartphone item with battery, a 5-app OS shell (Settings,
@@ -501,7 +507,9 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   started**: hunger/thirst as an actual survival requirement (the mod
   doesn't touch vanilla hunger at all right now); steroids/muscle-building
   as a distinct mechanic from the general gym/fitness gap above; alcohol
-  and cigarettes as consumable items with real effects.
+  and cigarettes as consumable items with real effects; relationships that
+  can actually break up or involve cheating, once the marriage/dating-
+  affinity system above exists to break up in the first place.
 
 **Section 6 — Commercial Enterprises, Retail & Nightlife**
 - Done: three "shop" blocks with a withdraw-or-refuse purchase pattern
@@ -521,7 +529,11 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   a player being a "millionaire" or "billionaire" — `BankService` just
   stores an unbounded `long`); public parks as a distinct, purposeful
   location type; cigarettes and alcohol as sellable retail items (see
-  also Section 5).
+  also Section 5); a working kitchen — hireable NPC chefs, real cooking
+  with its own animation (not an instant craft), and hundreds of distinct
+  food items/recipes rather than reusing vanilla food, plus kitchen
+  utensils (knives, pots, pans, etc.) as the item category tied to that
+  cooking loop.
 
 **Section 7 — Government, Law Enforcement, Courts & Underworld**
 - Done: per-player wanted level with decay, fines at a threshold, and — as
@@ -560,7 +572,16 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   player or of a random citizen); a defined path for the player to
   "become a criminal" as a real career/reputation track, not just an
   accumulating wanted level; illuminati-style secret societies and cults
-  as a distinct faction type from ordinary criminal organizations.
+  as a distinct faction type from ordinary criminal organizations;
+  murder/assault as its own distinct, tracked crime type — today's
+  `CrimeService` only records trespassing- and poaching-style offenses,
+  nothing for actually attacking, hurting, or killing another player or
+  NPC — together with knives and other real melee weapons as the item
+  category enabling it (knives themselves double as a Section 6 kitchen
+  utensil; this is the weapon side of the same item); a full-scale
+  military branch — enlistment, ranks, deployable operations — distinct
+  from the individual military vehicles (tanks, military ships/planes)
+  already tracked in Section 4.
 
 **Section 8 — Biomes, Ecology, Wildlife & Zoos**
 - Done: as of slice 22, a real `DeerEntity` (`PathAwareEntity`) is the

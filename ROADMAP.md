@@ -224,14 +224,39 @@ updated with every slice so neither side ever has to guess.
     actually looks reasonable, whether the placeholder box silhouette
     reads as a person, and whether pathfinding behaves near the mod's own
     blocks (cash registers, lamps, etc.) is unconfirmed.
-  - **Known gaps**: the daily-schedule FSM still doesn't drive this
-    entity's *movement* — a "WORKING" citizen wanders in place near where
-    it spawned rather than walking to a real workplace structure (there
-    are no home/workplace structures to walk to yet); dialogue is one
+  - **Known gaps**: see slice 21 below for movement; dialogue is one
     fixed line per state, not a branching tree; no NPC behavioral AI
     (crime, mugging, reacting to the player); NPCs still can't get sick,
     injured, arrested, or paid — every other system this session built
     (medical, crime, economy) only ever touches players.
+
+- **Slice 21 — `CommuteGoal`: the daily schedule actually moves
+  `CitizenEntity`** (Section 2), closing slice 20's biggest known gap:
+  - `NpcProfile` gained six persisted `int` fields (`homeX/Y/Z`,
+    `workplaceX/Y/Z`), cascaded through `NpcDatabase`'s schema, `upsert`,
+    and `readRow`.
+  - `CommuteTarget`: a pure, unit-tested function mapping each
+    `DailyState` to `Destination.HOME`/`WORKPLACE`/`NONE`.
+  - `CommuteGoal extends Goal`: a new custom goal (verified against the
+    real `Goal`/`Goal.Control` mappings via `javap`, not guessed) that
+    reads the citizen's live `NpcProfile` through `NpcAccess` each tick,
+    calls `EntityNavigation.startMovingTo` toward the stored home or
+    workplace coordinate when `CommuteTarget` calls for one, and yields
+    (returns `false` from `canStart`/`shouldContinue`) once arrived or
+    during `LEISURE` so it doesn't fight the existing `WanderAroundGoal`
+    for navigation control. Registered in `CitizenEntity.initGoals()` at
+    priority 1 — below `SwimGoal` (0) so citizens still surface for air,
+    above `WanderAroundGoal` (now 2) so a schedule commute always wins
+    over free wandering.
+  - `CitizenSpawnHandler` now sets a new citizen's home to its spawn
+    position and its workplace to a fixed 24-block offset from it, so
+    every spawned citizen has somewhere real to commute to immediately.
+  - **Known gaps**: home/workplace are still bare coordinates, not actual
+    house/workplace structures (a "WORKING" citizen walks to an empty
+    point in the world); no arrival behavior beyond stopping (no sitting,
+    working animation, or job-task mini-behavior once at the workplace);
+    unverified without a running client whether the walk actually looks
+    right or whether citizens get stuck on the mod's own blocks en route.
 
 ### Cross-cutting things already true of the whole codebase
 
@@ -302,14 +327,21 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 
 **Section 2 — Autonomous Citizen & NPC Engine (GOAP)**
 - Done: persistent SQLite citizen records, a deterministic (not GOAP)
-  daily-schedule FSM cycling through 6 states, and — as of slice 20 — a
-  real, spawnable, wandering `CitizenEntity` in the world whose UUID
-  links back to that database row, with a one-line greeting that reflects
-  its current schedule state.
-- Missing: the daily schedule doesn't drive the entity's movement yet
-  (no home/workplace structures to path to, so a "WORKING" citizen just
-  wanders near its spawn point rather than commuting anywhere), no
-  fridge/breakfast/commute-by-vehicle animation, no job-task
+  daily-schedule FSM cycling through 6 states, a real, spawnable
+  `CitizenEntity` in the world whose UUID links back to that database row
+  with a one-line greeting that reflects its current schedule state, and —
+  as of slice 21 — a `CommuteGoal` that actually reads the live
+  `DailyState` and walks the entity to a stored home or workplace
+  coordinate (`CommuteTarget` maps SLEEPING/WAKING/COMMUTING_HOME→home,
+  COMMUTING_TO_WORK/WORKING→workplace, LEISURE→no destination, falling
+  back to the existing `WanderAroundGoal`), registered above wander but
+  below swim so Minecraft's own goal-control arbitration hands off
+  navigation cleanly.
+- Missing: home/workplace coordinates are still just the spawn point and a
+  fixed 24-block offset (there are no real home/workplace *structures* to
+  path to yet, so a "WORKING" citizen walks to an empty point in the
+  world, not into an actual building); no fridge/breakfast/commute-by-vehicle
+  animation, no job-task
   mini-behaviors (cashiering, patrols, factory work), no evening leisure
   destinations, no branching dialogue tree (one fixed line per state), no
   NPC behavioral AI (mugging, reacting to red-light running, independent
@@ -483,17 +515,17 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 
 ## Priority order for what's next
 
-1. **Make the daily schedule actually move `CitizenEntity`** — walk to a
-   real home/workplace position instead of wandering in place, the
-   natural next step now that both the entity and the schedule data
-   exist separately (Section 2).
-2. **Real wildlife AI** to replace the crime-system stand-in (Section 8).
-3. **Police NPCs / court/trial step** before an automatic arrest becomes
+1. **Real wildlife AI** to replace the crime-system stand-in (Section 8).
+2. **Police NPCs / court/trial step** before an automatic arrest becomes
    an adjudicated one (Section 7) — now buildable on the same
-   `PathAwareEntity` pattern `CitizenEntity` proved out.
-4. Everything else in the "missing" lists above, then finally
+   `PathAwareEntity` + custom-`Goal` pattern `CitizenEntity`/`CommuteGoal`
+   proved out.
+3. Everything else in the "missing" lists above, then finally
    rendering/PBR, aviation/ATC, and the space program — deliberately
    last, as the largest and least incrementally verifiable pieces.
+
+(Slice 21 closed out the previous top item — daily-schedule-driven
+`CitizenEntity` movement — see Section 2 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

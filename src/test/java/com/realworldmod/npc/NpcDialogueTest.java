@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class NpcDialogueTest {
     private NpcProfile profileInState(DailyState state) {
         return new NpcProfile(UUID.randomUUID(), "Alex Rivera", "12 Maple St", "Downtown Diner",
-                150_000L, 9, 17, state);
+                150_000L, 9, 17, 100, 64, 100, 124, 64, 100, state);
     }
 
     @Test

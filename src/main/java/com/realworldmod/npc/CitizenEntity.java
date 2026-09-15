@@ -16,14 +16,13 @@ import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 
 /**
- * A citizen as a real, visible, wandering entity in the world — Section
- * 2's NPCs given a body. This slice deliberately keeps the AI to vanilla's
- * off-the-shelf wander/look goals; the citizen's {@link NpcProfile} (its
- * name, job, current {@code DailyState}) still lives entirely in
- * {@link NpcDatabase}, keyed by this entity's own UUID — the "daily
- * schedule" from slice 1 does not yet drive this entity's *movement*
- * (walking to a real home/workplace position), only its dialogue. See
- * ROADMAP.md.
+ * A citizen as a real, visible entity in the world — Section 2's NPCs given
+ * a body. {@link CommuteGoal} drives this entity to its stored home or
+ * workplace coordinate whenever the slice-1 {@code DailyState} schedule
+ * calls for it, falling back to vanilla's off-the-shelf wander/look goals
+ * during {@code LEISURE}. The citizen's {@link NpcProfile} (its name, job,
+ * current {@code DailyState}, home/workplace coordinates) lives entirely in
+ * {@link NpcDatabase}, keyed by this entity's own UUID. See ROADMAP.md.
  */
 public final class CitizenEntity extends PathAwareEntity {
     public CitizenEntity(EntityType<? extends CitizenEntity> entityType, World world) {
@@ -39,9 +38,10 @@ public final class CitizenEntity extends PathAwareEntity {
     @Override
     protected void initGoals() {
         this.goalSelector.add(0, new SwimGoal(this));
-        this.goalSelector.add(1, new WanderAroundGoal(this, 0.6));
-        this.goalSelector.add(2, new LookAtEntityGoal(this, PlayerEntity.class, 6.0f));
-        this.goalSelector.add(3, new LookAroundGoal(this));
+        this.goalSelector.add(1, new CommuteGoal(this));
+        this.goalSelector.add(2, new WanderAroundGoal(this, 0.6));
+        this.goalSelector.add(3, new LookAtEntityGoal(this, PlayerEntity.class, 6.0f));
+        this.goalSelector.add(4, new LookAroundGoal(this));
     }
 
     @Override

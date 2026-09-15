@@ -54,6 +54,12 @@ public final class NpcDatabase implements AutoCloseable {
                     income_cents_per_pay_period INTEGER NOT NULL DEFAULT 0,
                     work_start_hour INTEGER NOT NULL DEFAULT 9,
                     work_end_hour INTEGER NOT NULL DEFAULT 17,
+                    home_x INTEGER NOT NULL DEFAULT 0,
+                    home_y INTEGER NOT NULL DEFAULT 0,
+                    home_z INTEGER NOT NULL DEFAULT 0,
+                    workplace_x INTEGER NOT NULL DEFAULT 0,
+                    workplace_y INTEGER NOT NULL DEFAULT 0,
+                    workplace_z INTEGER NOT NULL DEFAULT 0,
                     current_state TEXT NOT NULL DEFAULT 'SLEEPING'
                 )
                 """);
@@ -63,8 +69,9 @@ public final class NpcDatabase implements AutoCloseable {
     public void upsert(NpcProfile profile) {
         String sql = """
             INSERT INTO citizens (id, name, home_address, workplace_address,
-                income_cents_per_pay_period, work_start_hour, work_end_hour, current_state)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                income_cents_per_pay_period, work_start_hour, work_end_hour,
+                home_x, home_y, home_z, workplace_x, workplace_y, workplace_z, current_state)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 name = excluded.name,
                 home_address = excluded.home_address,
@@ -72,6 +79,12 @@ public final class NpcDatabase implements AutoCloseable {
                 income_cents_per_pay_period = excluded.income_cents_per_pay_period,
                 work_start_hour = excluded.work_start_hour,
                 work_end_hour = excluded.work_end_hour,
+                home_x = excluded.home_x,
+                home_y = excluded.home_y,
+                home_z = excluded.home_z,
+                workplace_x = excluded.workplace_x,
+                workplace_y = excluded.workplace_y,
+                workplace_z = excluded.workplace_z,
                 current_state = excluded.current_state
             """;
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
@@ -82,7 +95,13 @@ public final class NpcDatabase implements AutoCloseable {
             statement.setLong(5, profile.incomeCentsPerPayPeriod());
             statement.setInt(6, profile.workStartHour());
             statement.setInt(7, profile.workEndHour());
-            statement.setString(8, profile.currentState().name());
+            statement.setInt(8, profile.homeX());
+            statement.setInt(9, profile.homeY());
+            statement.setInt(10, profile.homeZ());
+            statement.setInt(11, profile.workplaceX());
+            statement.setInt(12, profile.workplaceY());
+            statement.setInt(13, profile.workplaceZ());
+            statement.setString(14, profile.currentState().name());
             statement.executeUpdate();
         } catch (SQLException e) {
             throw new IllegalStateException("Failed to upsert citizen " + profile.id(), e);
@@ -133,6 +152,12 @@ public final class NpcDatabase implements AutoCloseable {
                 rs.getLong("income_cents_per_pay_period"),
                 rs.getInt("work_start_hour"),
                 rs.getInt("work_end_hour"),
+                rs.getInt("home_x"),
+                rs.getInt("home_y"),
+                rs.getInt("home_z"),
+                rs.getInt("workplace_x"),
+                rs.getInt("workplace_y"),
+                rs.getInt("workplace_z"),
                 DailyState.valueOf(rs.getString("current_state"))
         );
     }

@@ -16,10 +16,18 @@ public final class NpcProfile {
     private long incomeCentsPerPayPeriod;
     private int workStartHour;
     private int workEndHour;
+    private int homeX;
+    private int homeY;
+    private int homeZ;
+    private int workplaceX;
+    private int workplaceY;
+    private int workplaceZ;
     private DailyState currentState;
 
     public NpcProfile(UUID id, String name, String homeAddress, String workplaceAddress,
                        long incomeCentsPerPayPeriod, int workStartHour, int workEndHour,
+                       int homeX, int homeY, int homeZ,
+                       int workplaceX, int workplaceY, int workplaceZ,
                        DailyState currentState) {
         this.id = id;
         this.name = name;
@@ -28,6 +36,12 @@ public final class NpcProfile {
         this.incomeCentsPerPayPeriod = incomeCentsPerPayPeriod;
         this.workStartHour = workStartHour;
         this.workEndHour = workEndHour;
+        this.homeX = homeX;
+        this.homeY = homeY;
+        this.homeZ = homeZ;
+        this.workplaceX = workplaceX;
+        this.workplaceY = workplaceY;
+        this.workplaceZ = workplaceZ;
         this.currentState = currentState;
     }
 
@@ -73,6 +87,30 @@ public final class NpcProfile {
 
     public int workEndHour() {
         return workEndHour;
+    }
+
+    public int homeX() {
+        return homeX;
+    }
+
+    public int homeY() {
+        return homeY;
+    }
+
+    public int homeZ() {
+        return homeZ;
+    }
+
+    public int workplaceX() {
+        return workplaceX;
+    }
+
+    public int workplaceY() {
+        return workplaceY;
+    }
+
+    public int workplaceZ() {
+        return workplaceZ;
     }
 
     public DailyState currentState() {

@@ -32,7 +32,7 @@ class NpcDatabaseTest {
     void upsertThenFindAllReturnsTheCitizen() {
         UUID id = UUID.randomUUID();
         NpcProfile profile = new NpcProfile(id, "Alex Rivera", "12 Maple St", "Downtown Diner",
-                150_000L, 9, 17, DailyState.SLEEPING);
+                150_000L, 9, 17, 100, 64, 100, 124, 64, 100, DailyState.SLEEPING);
 
         database.upsert(profile);
 
@@ -46,9 +46,9 @@ class NpcDatabaseTest {
     void upsertOnExistingIdUpdatesRatherThanDuplicates() {
         UUID id = UUID.randomUUID();
         database.upsert(new NpcProfile(id, "Jordan Lee", "1 Oak Ave", "Steel Mill",
-                200_000L, 22, 6, DailyState.WORKING));
+                200_000L, 22, 6, 100, 64, 100, 124, 64, 100, DailyState.WORKING));
         database.upsert(new NpcProfile(id, "Jordan Lee", "1 Oak Ave", "Steel Mill",
-                210_000L, 22, 6, DailyState.WORKING));
+                210_000L, 22, 6, 100, 64, 100, 124, 64, 100, DailyState.WORKING));
 
         List<NpcProfile> all = database.findAll();
         assertEquals(1, all.size());
@@ -59,7 +59,7 @@ class NpcDatabaseTest {
     void updateStatePersistsAcrossReload() {
         UUID id = UUID.randomUUID();
         database.upsert(new NpcProfile(id, "Sam Chen", "9 Birch Ln", "City Hall",
-                180_000L, 9, 17, DailyState.SLEEPING));
+                180_000L, 9, 17, 100, 64, 100, 124, 64, 100, DailyState.SLEEPING));
 
         database.updateState(id, DailyState.WAKING);
 
@@ -74,7 +74,7 @@ class NpcDatabaseTest {
     void findByIdReturnsTheMatchingCitizen() {
         UUID id = UUID.randomUUID();
         database.upsert(new NpcProfile(id, "Morgan Diaz", "5 Elm St", "City Hall",
-                160_000L, 9, 17, DailyState.LEISURE));
+                160_000L, 9, 17, 100, 64, 100, 124, 64, 100, DailyState.LEISURE));
 
         assertTrue(database.findById(id).isPresent());
         assertEquals("Morgan Diaz", database.findById(id).orElseThrow().name());

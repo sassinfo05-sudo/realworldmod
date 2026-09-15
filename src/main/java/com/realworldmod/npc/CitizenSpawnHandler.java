@@ -24,12 +24,18 @@ import java.util.Random;
  * at mod init, but the database itself is recreated every time a world is
  * (re)loaded via {@code SERVER_STARTING} — registering the event handler
  * again on every load would duplicate it.
+ *
+ * <p>The new citizen's home is set to its spawn position and its workplace
+ * to a fixed offset from it — a stand-in until real house/workplace
+ * structures exist for {@link CommuteGoal} to target instead (see
+ * ROADMAP.md).
  */
 public final class CitizenSpawnHandler {
     private static final List<String> NAME_POOL = List.of(
             "Alex Rivera", "Jordan Lee", "Sam Chen", "Morgan Diaz", "Casey Kim",
             "Taylor Brooks", "Riley Nguyen", "Jamie Patel");
     private static final Random RANDOM = new Random();
+    private static final int WORKPLACE_OFFSET_BLOCKS = 24;
 
     private CitizenSpawnHandler() {
     }
@@ -58,7 +64,10 @@ public final class CitizenSpawnHandler {
             ((ServerWorld) world).spawnEntity(citizen);
 
             npcDatabase.upsert(new NpcProfile(citizen.getUuid(), name, "Unassigned", "Unassigned",
-                    150_000L, 9, 17, DailyState.SLEEPING));
+                    150_000L, 9, 17,
+                    spawnPos.getX(), spawnPos.getY(), spawnPos.getZ(),
+                    spawnPos.getX() + WORKPLACE_OFFSET_BLOCKS, spawnPos.getY(), spawnPos.getZ(),
+                    DailyState.SLEEPING));
             return ActionResult.SUCCESS;
         });
     }

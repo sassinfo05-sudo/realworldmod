@@ -247,6 +247,10 @@ updated with every slice so neither side ever has to guess.
   withdraw-or-refuse pattern against `BankService`.
 - `gradle build` (compile + all unit tests) is run and passes before every
   commit; nothing is committed that doesn't build.
+- Nothing implemented requires a `/`-command to use — every system is
+  reached through normal gameplay (items, blocks, entity interaction,
+  the phone UI). This was raised explicitly as a requirement and already
+  holds; it stays a hard constraint for everything still to build.
 
 ## Everything else — full section-by-section status against the original brief
 
@@ -266,7 +270,18 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   no real-world-scale worldgen (no city grids, highways, airports,
   biome-accurate scale); no structural load-physics (no collapse
   simulation for removed load-bearing blocks); permits/municipal approval
-  for construction beyond owning a deed don't exist.
+  for construction beyond owning a deed don't exist. **Requested and
+  tracked, not started**: a working construction mechanic (actually
+  building/renovating a structure as its own gameplay loop, distinct from
+  just placing individual blocks); a single huge main city plus ten
+  smaller cities worldwide, surrounded by real terrain/nature, where
+  every single building and house has a defined in-game purpose and is
+  fully decorated (today the mod adds a handful of standalone functional
+  blocks — cash register, pharmacy counter, license office, lamp — with
+  no surrounding structures or city layout at all); random/special events
+  occurring over the course of play, beyond the systems already listed.
+  (The "no commands needed" requirement raised alongside this already
+  holds today — see the cross-cutting notes above.)
 
 **Section 1 — Rendering, Physics & Graphics Engine**
 - Done: nothing. This is explicitly the "largest, latest" bucket.
@@ -277,7 +292,13 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   placement) — not started; background-thread macro-economics/weather/
   commute simulation for unrendered regions — not started (today's
   simulation runs only for online players/loaded chunks via the normal
-  server tick, not a separate async layer).
+  server tick, not a separate async layer). **Requested and tracked, not
+  started**: full, high-quality realistic animations and textures for
+  every item/block/entity (today's textures are simple 16x16 placeholder
+  pixel art from slice 18, and both entities use a scaled vanilla block
+  as a body with no animation at all — no walk cycle, no idle animation,
+  nothing); working window curtains, street lights, and other small
+  world-detail props that toggle/animate on their own.
 
 **Section 2 — Autonomous Citizen & NPC Engine (GOAP)**
 - Done: persistent SQLite citizen records, a deterministic (not GOAP)
@@ -297,7 +318,17 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   earn, get sick, get hurt, or get arrested. True GOAP (goal-oriented
   action planning, i.e. dynamic plan search over actions) was never
   implemented — the FSM is a simpler deterministic rule tree, called out
-  as such in the code's own Javadoc from slice 1 onward.
+  as such in the code's own Javadoc from slice 1 onward. **Requested and
+  tracked, not started**: individual NPC personalities/dispositions
+  (some criminal, some predatory/"perverts", some kind, some rude, some
+  short-tempered, etc. — every `CitizenEntity` today is behaviorally
+  identical); children as a distinct NPC category with their own social
+  dynamics (bullies, a bullied child's parents getting involved); NPCs
+  that can be kidnapped (and a player-facing kidnapping mechanic, of
+  either the player or a random citizen); criminal organizations with
+  NPC membership and player-vs-organization rivalry; "opponents" in the
+  general sense (competing NPCs/businesses/rivals reacting to the
+  player's actions across systems, not just combat).
 
 **Section 3 — Consumer Electronics, Computers & In-Game Internet**
 - Done: one smartphone item with battery, a 5-app OS shell (Settings,
@@ -314,18 +345,38 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   Criminal Record app, but no court registry/filings), tax audit portal,
   BlockTube (record/edit/upload video, subscribers, ad revenue), dark web
   marketplace, game consoles/discs/arcades/claw machines/racing sims.
+  **Requested and tracked, not started**: every phone/PC app being a
+  genuinely custom-drawn UI rather than Minecraft's vanilla `Screen`/
+  `ButtonWidget` GUI toolkit (today's five apps *are* real client↔server
+  screens, but they're built from vanilla widgets, not a distinct in-game
+  "OS" look) — and this same "not vanilla Minecraft widgets" bar applies
+  to every other UI in the mod (banking, courts, casino, business
+  management, etc.), not just the phone; in-game "AI" chatbot-style
+  websites/apps; the ability for a player to build/code their own
+  website or business complete with simulated traffic, marketing, and
+  hireable NPC workers; becoming a multi-platform content creator (the
+  brief's BlockTube, above, generalized to several distinct platforms).
 
 **Section 4 — Automotive, Aviation & Global Transit**
 - Done: `VehiclePhysics` (pure drivetrain simulation) wired into a real,
   spawnable, rideable `CarEntity` with a placeholder visual — see slice
   19. One vehicle type exists; its feel/visuals are unverified without a
   running client (see slice 19's own caveat above).
-- Missing: the other 299+ vehicle types, mechanic
-  shops/tuning/paint/body-damage repair, garage capacity limits, any
-  aviation at all (airports, ticketing, TSA, boarding, airliners), ATC
-  job/radar minigame, subways/bullet trains/transit cards/timetables. The
-  one vehicle that exists also has no fuel gauge/speed HUD, no
-  suspension/tire-friction modeling, and no collision damage.
+- Missing: the other 299+ vehicle types (including, specifically
+  requested: motorcycles, bicycles, e-bikes, skateboards, rollerblades,
+  boats and kayaks, cargo ships, cargo/military planes, military ships,
+  tanks, helicopters, public buses), mechanic shops/tuning/paint/
+  body-damage repair, garage capacity limits, any aviation at all
+  (airports, ticketing, TSA, boarding, airliners), ATC job/radar
+  minigame, subways/bullet trains/transit cards/timetables. The one
+  vehicle that exists also has no fuel gauge/speed HUD, no suspension/
+  tire-friction modeling, and no collision damage. **Requested and
+  tracked, not started**: any AI-controlled traffic at all — no other
+  cars/planes/helicopters share the roads or sky with the player; no
+  speed-check/radar-gun mechanic, no bumper/collision-damage system
+  between vehicles, no hidden/undercover police vehicles, no in-vehicle
+  radio, and no mechanic for stealing cars or car keys from an NPC or
+  parked vehicle.
 
 **Section 5 — Biology, Medical, Fitness & Lineage**
 - Done: two damage/exposure sources (fall damage, rain exposure) each
@@ -345,7 +396,11 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   bars/coffee-shop affinity system, no marriage/joint-bank-account
   mechanic (bank accounts are per-player only), no children/parenting/
   aging/inheritance system. NPCs never get sick or injured — every medical
-  system implemented only affects players.
+  system implemented only affects players. **Requested and tracked, not
+  started**: hunger/thirst as an actual survival requirement (the mod
+  doesn't touch vanilla hunger at all right now); steroids/muscle-building
+  as a distinct mechanic from the general gym/fitness gap above; alcohol
+  and cigarettes as consumable items with real effects.
 
 **Section 6 — Commercial Enterprises, Retail & Nightlife**
 - Done: three "shop" blocks with a withdraw-or-refuse purchase pattern
@@ -358,7 +413,14 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   businesses (buying commercial plots, setting prices on a POS UI, hiring
   NPC cashiers, automatic Friday payroll), casinos (roulette/blackjack/
   slots/poker), strip clubs/VIP lounges/nightclubs/DJ booths with
-  proximity audio.
+  proximity audio. **Requested and tracked, not started**: a casino that
+  actually functions end-to-end (games with real rules and real payouts
+  against `BankService`, not just the category existing); real
+  wealth-tier recognition (nothing currently distinguishes or reacts to
+  a player being a "millionaire" or "billionaire" — `BankService` just
+  stores an unbounded `long`); public parks as a distinct, purposeful
+  location type; cigarettes and alcohol as sellable retail items (see
+  also Section 5).
 
 **Section 7 — Government, Law Enforcement, Courts & Underworld**
 - Done: the most fleshed-out non-economy system — per-player wanted level
@@ -376,7 +438,16 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   UI, no search warrants), no underworld/narcotics system (no dark web
   purchases, no chemical labs, no drug smuggling, no money laundering
   through front businesses) — the "dark web" referenced in Section 3 and
-  the "underworld" here are both entirely unbuilt.
+  the "underworld" here are both entirely unbuilt. **Requested and
+  tracked, not started**: running for and holding government office (up
+  to leading the whole in-game country); terrorism attacks that occur
+  dynamically as the game progresses and get repaired afterward (also
+  needs the "construction actually works" gap below); undercover police
+  NPCs indistinguishable from civilians until they act; kidnapping (of
+  the player or of a random citizen); a defined path for the player to
+  "become a criminal" as a real career/reputation track, not just an
+  accumulating wanted level; illuminati-style secret societies and cults
+  as a distinct faction type from ordinary criminal organizations.
 
 **Section 8 — Biomes, Ecology, Wildlife & Zoos**
 - Done: a hunting-license permit system and a poaching penalty that
@@ -390,7 +461,8 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   passive animal with no wildlife/livestock distinction and no warden NPCs
   — game wardens are simulated only as an automatic fine, not an agent),
   no zoo/safari system (no enclosures, HVAC, vet care, breeding, monorails,
-  ticketing, gift shops).
+  ticketing, gift shops). **Requested and tracked, not started**:
+  abandoned towns as a distinct, generated location type.
 
 **Section 9 — Utilities, Space & Industrial Supply Chains**
 - Done: the most complete slice-for-slice implementation of any single

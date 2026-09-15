@@ -20,6 +20,7 @@ public final class ModItemGroups {
                         entries.add(ModItems.SMARTPHONE);
                         entries.add(ModItems.LAND_DEED);
                         entries.add(ModBlocks.CASH_REGISTER);
+                        entries.add(ModBlocks.UTILITY_LAMP);
                     })
                     .build());
 

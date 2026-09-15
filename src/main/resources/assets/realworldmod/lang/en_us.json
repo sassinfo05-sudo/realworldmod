@@ -3,6 +3,7 @@
   "item.realworldmod.smartphone": "Smartphone",
   "item.realworldmod.land_deed": "Land Deed",
   "block.realworldmod.cash_register": "Cash Register",
+  "block.realworldmod.utility_lamp": "Utility Lamp",
   "message.realworldmod.wage_paid": "You earned %s for your shift.",
   "message.realworldmod.wage_cooldown": "You're not scheduled again for %s more seconds.",
   "message.realworldmod.phone_dead": "Battery dead. Plug in a charging cable.",

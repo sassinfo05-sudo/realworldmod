@@ -223,19 +223,36 @@ compile, run, and review.
     (no lights, no blocks that turn off) — "power" is currently a purely
     account-level flag exposed only through the phone.
 
+- **Slice 13 — Utility Lamp: power outages become visible**:
+  - `UtilityLampBlock`: a real light-emitting block (`Properties.LIT`,
+    `luminance` tied to that property, same pattern as vanilla's redstone
+    lamp) that self-schedules a check every 2 seconds
+    (`world.scheduleBlockTick`), looks up which claim it sits in via the
+    already-existing `ClaimRegistry.findClaimAt`, and reflects that
+    claim owner's `UtilityService` connection status — going dark within
+    seconds of their power being cut, no new per-block storage needed.
+  - `UtilityAccess`: the same static-holder pattern as `PropertyAccess`/
+    `CrimeAccess`, since the block's instance is created at
+    class-registration time, not through the mod's constructor-injected
+    services.
+  - No new pure logic in this slice (it's Minecraft-glue reusing
+    `ClaimRegistry` and `UtilityService` as-is), so no new unit tests —
+    same category as `PropertyProtection`/`JobUseHandler` before it.
+  - **Known gap**: lamps on unclaimed land are always lit (matching the
+    property system's existing "unclaimed = unrestricted" convention) —
+    only lamps inside an owned claim are actually billable.
+
 ## Not started yet (tracked, in priority order)
 
-1. **Give disconnected power a visible in-world effect** — lamps, minecart
-   stations, etc. that actually go dark, not just a phone-app flag.
-2. **Police NPCs / arrest / court flow** for a wanted level that's
+1. **Police NPCs / arrest / court flow** for a wanted level that's
    maxed out, beyond just fines (Section 7).
-3. **Wire `VehiclePhysics` into an actual rideable entity**: custom
+2. **Wire `VehiclePhysics` into an actual rideable entity**: custom
    `Entity`/`EntityType`, input capture, and a client-side model/renderer
    — the part of Section 4 that needs a running game client to verify.
-4. **Expand the medical system**: other body zones, illness/hospital
+3. **Expand the medical system**: other body zones, illness/hospital
    treatment, NPC injuries, persistence (Section 5).
-5. **Biome/wildlife AI overhaul** (Section 8).
-6. Rendering/PBR overhaul, aviation/ATC, space program — largest, latest.
+4. **Biome/wildlife AI overhaul** (Section 8).
+5. Rendering/PBR overhaul, aviation/ATC, space program — largest, latest.
 
 Each future slice will follow the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game client,

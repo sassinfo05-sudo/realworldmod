@@ -21,6 +21,7 @@ import com.realworldmod.property.DeedUseHandler;
 import com.realworldmod.property.PropertyAccess;
 import com.realworldmod.property.PropertyProtection;
 import com.realworldmod.property.PropertyService;
+import com.realworldmod.utilities.UtilityAccess;
 import com.realworldmod.utilities.UtilityService;
 import com.realworldmod.utilities.net.UtilityNetworking;
 import net.fabricmc.api.ModInitializer;
@@ -67,6 +68,7 @@ public final class RealWorldMod implements ModInitializer {
         PhoneUseHandler.register();
         PropertyAccess.set(propertyService.registry());
         CrimeAccess.set(lawEnforcementService);
+        UtilityAccess.set(utilityService);
         new PropertyProtection(propertyService.registry(), lawEnforcementService).register();
         new DeedUseHandler(propertyService, bankService).register();
         BankNetworking.registerPayloadTypes();

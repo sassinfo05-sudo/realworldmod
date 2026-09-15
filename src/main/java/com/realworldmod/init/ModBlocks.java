@@ -1,6 +1,7 @@
 package com.realworldmod.init;
 
 import com.realworldmod.RealWorldMod;
+import com.realworldmod.utilities.UtilityLampBlock;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.item.BlockItem;
@@ -13,6 +14,12 @@ public final class ModBlocks {
     /** A job site: interacting with it (empty hand) pays a wage — see {@code JobUseHandler}. */
     public static final Block CASH_REGISTER = register("cash_register",
             new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));
+
+    /** A light that actually goes dark when its claim owner's power is disconnected — see {@code UtilityLampBlock}. */
+    public static final Block UTILITY_LAMP = register("utility_lamp",
+            new UtilityLampBlock(AbstractBlock.Settings.create()
+                    .strength(0.3f)
+                    .luminance(state -> state.get(UtilityLampBlock.LIT) ? 15 : 0)));
 
     private ModBlocks() {
     }

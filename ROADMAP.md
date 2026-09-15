@@ -162,14 +162,36 @@ compile, run, and review.
     client), so it's left as its own follow-up rather than shipped
     half-working.
 
+- **Slice 10 — Wanted-level crime tracking** (first piece of Section 7):
+  - `WantedLevelMath`: pure clamp arithmetic (0-5), and
+    `WantedLevelDescriptions`: pure level -> translation-key mapping, both
+    unit tested.
+  - `CrimeService`: in-memory per-player wanted level, with a global
+    tick-bucket decay (same pattern as `NpcScheduleManager`) that fades
+    everyone's level by 1 roughly once a minute, removing the entry
+    entirely once it reaches zero.
+  - Trespassing is now a crime: both `PropertyProtection` (break) and
+    `BlockItemMixin` (place) call `CrimeService.recordCrime` when they
+    refuse a player, via the same `CrimeAccess` static-holder pattern
+    `PropertyAccess` established for mixins.
+  - A fourth `PhoneApp`, Criminal Record, reuses the exact
+    request/response `CustomPayload` pattern from the Banking app
+    (`WantedLevelRequestPayload`/`WantedLevelResponsePayload`) to show the
+    player's live wanted level and a plain-language description.
+  - **Known gaps**: no actual police NPCs or consequences yet (no arrest,
+    no chase, no fines) — a high wanted level is currently purely
+    informational. Not persisted across a relog. Only trespassing counts
+    as a crime so far; no other Section 7 offenses are wired up.
+
 ## Not started yet (tracked, in priority order)
 
-1. **Wire `VehiclePhysics` into an actual rideable entity**: custom
+1. **Give a high wanted level consequences**: police NPCs, an arrest/court
+   flow, fines withdrawn via `BankService` (Section 7).
+2. **Wire `VehiclePhysics` into an actual rideable entity**: custom
    `Entity`/`EntityType`, input capture, and a client-side model/renderer
    — the part of Section 4 that needs a running game client to verify.
-2. **Expand the medical system**: other body zones, illness/hospital
+3. **Expand the medical system**: other body zones, illness/hospital
    treatment, NPC injuries, persistence (Section 5).
-3. **Police/crime state machine + court flow** (Section 7).
 4. **Biome/wildlife AI overhaul** (Section 8).
 5. **Utilities (power/water/telecom) + waste** (Section 9).
 6. Rendering/PBR overhaul, aviation/ATC, space program — largest, latest.

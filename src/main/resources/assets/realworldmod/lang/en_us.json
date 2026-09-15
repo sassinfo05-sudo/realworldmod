@@ -18,6 +18,11 @@
   "gui.realworldmod.phone.app.banking": "Banking",
   "gui.realworldmod.phone.banking.title": "Your Balance",
   "gui.realworldmod.phone.banking.loading": "Loading...",
+  "gui.realworldmod.phone.app.criminal_record": "Criminal Record",
+  "gui.realworldmod.phone.crime.clean": "Clean record (%s/5)",
+  "gui.realworldmod.phone.crime.minor": "Minor infractions (%s/5)",
+  "gui.realworldmod.phone.crime.wanted": "Wanted (%s/5)",
+  "gui.realworldmod.phone.crime.most_wanted": "Most Wanted (%s/5)",
   "gui.realworldmod.phone.settings.battery": "Battery: %s%%",
   "gui.realworldmod.phone.settings.power_off": "Lock phone",
   "gui.realworldmod.phone.messages.empty": "No messages yet."

@@ -10,7 +10,8 @@ package com.realworldmod.phone;
 public enum PhoneApp {
     SETTINGS("Settings"),
     MESSAGES("Messages"),
-    BANKING("Banking");
+    BANKING("Banking"),
+    CRIMINAL_RECORD("Criminal Record");
 
     private final String displayName;
 

@@ -1,5 +1,8 @@
 package com.realworldmod;
 
+import com.realworldmod.crime.CrimeAccess;
+import com.realworldmod.crime.CrimeService;
+import com.realworldmod.crime.net.CrimeNetworking;
 import com.realworldmod.economy.BankService;
 import com.realworldmod.economy.JobService;
 import com.realworldmod.economy.JobUseHandler;
@@ -27,12 +30,10 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.Path;
 
 /**
- * Entry point for the RealWorld total-conversion mod.
- *
- * This is slice 1 of the design: a persistent, SQLite-backed citizen
- * population driven by a deterministic daily-schedule state machine.
- * Later slices (transit, economy, in-game internet, etc.) hook into the
- * same {@link NpcDatabase} and server tick lifecycle established here.
+ * Entry point for the RealWorld total-conversion mod. Wires together the
+ * per-system services (citizens, property, banking, jobs, medical, crime)
+ * built up slice by slice — see ROADMAP.md for what's implemented versus
+ * the much larger remaining design.
  */
 public final class RealWorldMod implements ModInitializer {
     public static final String MOD_ID = "realworldmod";
@@ -43,6 +44,7 @@ public final class RealWorldMod implements ModInitializer {
     private final PropertyService propertyService = new PropertyService(new ClaimRegistry());
     private final BankService bankService = new BankService();
     private final JobService jobService = new JobService(bankService);
+    private final CrimeService crimeService = new CrimeService();
 
     @Override
     public void onInitialize() {
@@ -54,10 +56,13 @@ public final class RealWorldMod implements ModInitializer {
         ModItemGroups.register();
         PhoneUseHandler.register();
         PropertyAccess.set(propertyService.registry());
-        new PropertyProtection(propertyService.registry()).register();
+        CrimeAccess.set(crimeService);
+        new PropertyProtection(propertyService.registry(), crimeService).register();
         new DeedUseHandler(propertyService, bankService).register();
         BankNetworking.registerPayloadTypes();
         BankNetworking.registerServerReceiver(bankService);
+        CrimeNetworking.registerPayloadTypes();
+        CrimeNetworking.registerServerReceiver(crimeService);
         new JobUseHandler(jobService).register();
         LegInjuryEffect.register();
 
@@ -85,6 +90,7 @@ public final class RealWorldMod implements ModInitializer {
                 long dayTime = server.getOverworld().getTimeOfDay();
                 scheduleManager.tick(dayTime);
             }
+            crimeService.tick(server.getOverworld().getTime());
         });
 
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {

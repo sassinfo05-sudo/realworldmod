@@ -19,6 +19,7 @@ public final class ClientPhoneApps {
             case SETTINGS -> new SettingsAppScreen(phoneStack);
             case MESSAGES -> new MessagesAppScreen(phoneStack);
             case BANKING -> new BankingAppScreen(phoneStack);
+            case CRIMINAL_RECORD -> new CriminalRecordAppScreen(phoneStack);
         };
     }
 }

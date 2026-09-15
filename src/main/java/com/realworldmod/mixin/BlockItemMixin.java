@@ -1,5 +1,7 @@
 package com.realworldmod.mixin;
 
+import com.realworldmod.crime.CrimeAccess;
+import com.realworldmod.crime.CrimeService;
 import com.realworldmod.property.ClaimRegistry;
 import com.realworldmod.property.PropertyAccess;
 import net.minecraft.entity.player.PlayerEntity;
@@ -40,6 +42,10 @@ abstract class BlockItemMixin {
         BlockPos pos = context.getBlockPos();
         if (!registry.canModify(player.getUuid(), pos.getX(), pos.getZ())) {
             player.sendMessage(Text.translatable("message.realworldmod.no_permit"), true);
+            CrimeService crimeService = CrimeAccess.get();
+            if (crimeService != null) {
+                crimeService.recordCrime(player.getUuid(), CrimeService.TRESPASS_SEVERITY);
+            }
             cir.setReturnValue(ActionResult.FAIL);
         }
     }

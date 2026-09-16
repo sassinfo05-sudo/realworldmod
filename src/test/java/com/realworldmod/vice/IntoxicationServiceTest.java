@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class IntoxicationServiceTest {
     @Test
@@ -73,5 +75,56 @@ class IntoxicationServiceTest {
         service.drink(first, 0);
 
         assertEquals(0, service.currentLevel(second, 0));
+    }
+
+    @Test
+    void noHangoverWithoutEverPeakingAtMaxLevel() {
+        IntoxicationService service = new IntoxicationService();
+        UUID player = UUID.randomUUID();
+        service.drink(player, 0);
+
+        assertFalse(service.checkHangover(player, IntoxicationService.DECAY_TICKS_PER_LEVEL * 10));
+    }
+
+    @Test
+    void noHangoverWhileStillSoberingUpFromMaxLevel() {
+        IntoxicationService service = new IntoxicationService();
+        UUID player = UUID.randomUUID();
+        service.drink(player, 0);
+        service.drink(player, 0);
+        service.drink(player, 0);
+
+        assertFalse(service.checkHangover(player, 0));
+    }
+
+    @Test
+    void hangoverTriggersExactlyOnceOnceFullySoberAfterPeaking() {
+        IntoxicationService service = new IntoxicationService();
+        UUID player = UUID.randomUUID();
+        service.drink(player, 0);
+        service.drink(player, 0);
+        service.drink(player, 0);
+
+        long soberTick = IntoxicationService.DECAY_TICKS_PER_LEVEL * IntoxicationCalculator.MAX_LEVEL;
+        assertTrue(service.checkHangover(player, soberTick));
+        assertFalse(service.checkHangover(player, soberTick + 1));
+    }
+
+    @Test
+    void drinkingAgainAfterAHangoverCanTriggerAnotherOne() {
+        IntoxicationService service = new IntoxicationService();
+        UUID player = UUID.randomUUID();
+        service.drink(player, 0);
+        service.drink(player, 0);
+        service.drink(player, 0);
+        long soberTick = IntoxicationService.DECAY_TICKS_PER_LEVEL * IntoxicationCalculator.MAX_LEVEL;
+        service.checkHangover(player, soberTick);
+
+        service.drink(player, soberTick);
+        service.drink(player, soberTick);
+        service.drink(player, soberTick);
+        long nextSoberTick = soberTick + IntoxicationService.DECAY_TICKS_PER_LEVEL * IntoxicationCalculator.MAX_LEVEL;
+
+        assertTrue(service.checkHangover(player, nextSoberTick));
     }
 }

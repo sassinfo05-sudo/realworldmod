@@ -64,6 +64,7 @@ import com.realworldmod.vehicle.CarSpawnHandler;
 import com.realworldmod.vehicle.GasPumpUseHandler;
 import com.realworldmod.vice.AlcoholUseHandler;
 import com.realworldmod.vice.CigaretteUseHandler;
+import com.realworldmod.vice.HangoverEffect;
 import com.realworldmod.vice.IntoxicationService;
 import com.realworldmod.vice.LiquorStoreUseHandler;
 import com.realworldmod.vice.NicotineService;
@@ -234,6 +235,7 @@ public final class RealWorldMod implements ModInitializer {
                     player.sendMessage(Text.translatable("message.realworldmod.water_shutoff"), true);
                 }
                 WeatherIllnessEffect.check(illnessService, player);
+                HangoverEffect.check(intoxicationService, player, server.getOverworld().getTime());
 
                 ArrestOutcome arrestOutcome = arrestService.tick(player.getUuid(), server.getOverworld().getTime());
                 ArrestHandler.apply(arrestOutcome, server, player);

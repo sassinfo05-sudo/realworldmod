@@ -1375,6 +1375,37 @@ updated with every slice so neither side ever has to guess.
     a killed deer still simply dies with no meat/hide drop or
     population-count consequence.
 
+- **Slice 60 — a real hangover effect for heavy drinking** (Section 5),
+  starting on slice 38's "alcohol/cigarettes need more variety" priority
+  item:
+  - `IntoxicationService` gains a `peakedAtMaxLevel` flag per player, set
+    whenever `drink` raises them to `IntoxicationCalculator.MAX_LEVEL`,
+    and a new `checkHangover(playerId, currentTick)` that returns true
+    exactly once — on the tick a player who peaked finishes sobering back
+    up to level 0 — the same "cross a threshold, trigger once, then
+    reset" shape `medical.IllnessService.tick` already established for
+    rain-exposure illness.
+  - A new `HangoverEffect.check`, called from the same per-online-player
+    loop in the server tick handler that already runs
+    `WeatherIllnessEffect.check`, applies real Nausea and Mining Fatigue
+    (a genuine "can't mine effectively, feel awful" hangover, not just a
+    repeat of the existing drunk Slowness) plus a chat message once
+    `checkHangover` triggers.
+  - Exhaustively unit tested at the service layer: `IntoxicationServiceTest`
+    gains cases for no hangover without ever peaking, no hangover while
+    still sobering up, the hangover triggering exactly once at the exact
+    tick a peaked player reaches level 0, and a second bender being able
+    to trigger a second hangover after the first one fires — 351 total,
+    all passing. `HangoverEffect` itself is untested like every other
+    status-effect-applying class in the mod (`WeatherIllnessEffect`
+    included), needing a running server/player to exercise.
+  - **Known gaps**: only one hangover severity regardless of how long a
+    player stayed at max level or how many times they re-drank while
+    hungover; still only one drink type and one cigarette type (no second
+    tier of either); no separate nicotine-withdrawal effect, and drinking
+    and smoking still don't interact with each other at all — the rest of
+    slice 38's "more variety" priority item, unstarted.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1646,7 +1677,12 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   slice 49, a sick or injured citizen no longer just waits it out either:
   `CitizenSelfMedicationHandler` pays for and applies the same Medicine
   cure a player buys at a Pharmacy Counter, out of the citizen's own
-  wages from slice 47.
+  wages from slice 47. As of slice 60, heavy drinking has a real
+  next-morning cost: `IntoxicationService.checkHangover` tracks whether a
+  player peaked at `IntoxicationCalculator.MAX_LEVEL` and, once they've
+  fully sobered back up, `HangoverEffect` applies a real Nausea+Mining
+  Fatigue hangover — sobering up from a bender is no longer completely
+  consequence-free.
 - Missing: this is a *health-bar replacement disguised as a status
   effect*, not a real localized zone model — there's no per-body-part
   (head/torso/arms/legs) data structure, no bone-fracture-requiring-cast
@@ -1667,11 +1703,14 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   relationships that can actually break up or involve cheating, once the
   marriage/dating-affinity system above exists to break up in the first
   place. (Alcohol/cigarettes themselves are no longer on this list — see
-  slice 38 above — but variety is: one drink type and one cigarette type,
-  no hangover/withdrawal effects beyond the single Nausea/Weakness
-  illness; NPCs can now catch a cold in the rain as of slice 46, but
-  still never drink, smoke, or get injured — the vice systems and fall
-  injury remain player-only, only the weather-illness system is shared.)
+  slice 38 above — but variety is: one drink type and one cigarette type;
+  a real hangover effect exists as of slice 60, but it's the only one —
+  no separate nicotine-withdrawal effect, and no interaction between the
+  two vice systems (getting drunk while already sick from smoking, for
+  instance, is just two independent effect sets); NPCs can now catch a
+  cold in the rain as of slice 46, but still never drink, smoke, or get
+  injured — the vice systems and fall injury remain player-only, only the
+  weather-illness system is shared.)
 
 **Section 6 — Commercial Enterprises, Retail & Nightlife**
 - Done: five "shop" blocks with a withdraw-or-refuse purchase pattern
@@ -1951,10 +1990,11 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 1. Everything in the "missing" lists above — expanding the underworld
    system slices 37/58 started (a second drug/lab type, rival dealer
    NPCs, or a distinct narcotics crime-severity tier), giving
-   alcohol/cigarettes from slice 38 more variety (a second
-   drink/cigarette tier, a hangover effect), a second vehicle type now
-   that slices 39/51/52 rounded out the first car's
-   fuel/ownership/speed, expanding the predator system slices 42/59
+   alcohol/cigarettes from slices 38/60 more variety (a second
+   drink/cigarette tier, or a nicotine-withdrawal effect to match the
+   new hangover), a second vehicle type now that slices 39/51/52 rounded
+   out the first car's fuel/ownership/speed, expanding the predator
+   system slices 42/59
    started (a second predator/prey pair, or a meat/hide drop and
    population-count consequence for a kill), extending the
    NPC-inclusion slices 46-49/55 started to another system (NPC
@@ -2011,7 +2051,8 @@ Registry app — see Section 3 above. Slice 57 closed out plaintiff name
 resolution in the Court Registry app — see Section 3 above. Slice 58
 scaled narcotics catch chance by the dealer's wanted level — see
 Section 7 above. Slice 59 closed out pack-hunting coordination between
-coyotes — see Section 8 above.)
+coyotes — see Section 8 above. Slice 60 gave heavy drinking a real
+hangover effect — see Section 5 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

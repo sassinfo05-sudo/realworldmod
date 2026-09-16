@@ -131,6 +131,7 @@
   "gui.realworldmod.phone.app.government": "Government",
   "gui.realworldmod.phone.government.title": "Treasury Balance",
   "gui.realworldmod.phone.government.loading": "Loading...",
+  "gui.realworldmod.phone.government.deer_population": "Deer Population: %s",
   "gui.realworldmod.phone.app.court_registry": "Court Registry",
   "gui.realworldmod.phone.court_registry.none": "No pending case",
   "gui.realworldmod.phone.court_registry.pending": "Claim by %s: %s",

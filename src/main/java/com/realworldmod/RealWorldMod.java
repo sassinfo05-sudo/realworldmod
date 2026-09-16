@@ -79,6 +79,7 @@ import com.realworldmod.wildlife.LicenseUseHandler;
 import com.realworldmod.wildlife.PoachingAccess;
 import com.realworldmod.wildlife.PoachingHandler;
 import com.realworldmod.wildlife.WildlifePopulationService;
+import com.realworldmod.wildlife.net.WildlifePopulationNetworking;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -151,6 +152,8 @@ public final class RealWorldMod implements ModInitializer {
         BankNetworking.registerServerReceiver(bankService);
         TreasuryNetworking.registerPayloadTypes();
         TreasuryNetworking.registerServerReceiver(bankService);
+        WildlifePopulationNetworking.registerPayloadTypes();
+        WildlifePopulationNetworking.registerServerReceiver(wildlifePopulationService);
         CrimeNetworking.registerPayloadTypes();
         CrimeNetworking.registerServerReceiver(crimeService);
         UtilityNetworking.registerPayloadTypes();

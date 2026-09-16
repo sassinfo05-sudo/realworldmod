@@ -11,6 +11,7 @@ import com.realworldmod.client.civil.ClientCourtRegistryState;
 import com.realworldmod.client.crime.ClientCrimeState;
 import com.realworldmod.client.economy.ClientBankState;
 import com.realworldmod.client.economy.ClientTreasuryState;
+import com.realworldmod.client.wildlife.ClientWildlifePopulationState;
 import com.realworldmod.client.phone.PhoneLockScreen;
 import com.realworldmod.client.utilities.ClientUtilityState;
 import com.realworldmod.client.utilities.ClientWaterState;
@@ -29,6 +30,7 @@ import com.realworldmod.civil.net.CourtRegistryStatusResponsePayload;
 import com.realworldmod.crime.net.WantedLevelResponsePayload;
 import com.realworldmod.economy.net.BankBalanceResponsePayload;
 import com.realworldmod.economy.net.TreasuryBalanceResponsePayload;
+import com.realworldmod.wildlife.net.WildlifePopulationResponsePayload;
 import com.realworldmod.init.ModBlocks;
 import com.realworldmod.init.ModDataComponents;
 import com.realworldmod.init.ModEntities;
@@ -60,6 +62,8 @@ public final class RealWorldModClient implements ClientModInitializer {
                 (payload, context) -> ClientBankState.set(payload.balanceCents()));
         ClientPlayNetworking.registerGlobalReceiver(TreasuryBalanceResponsePayload.ID,
                 (payload, context) -> ClientTreasuryState.set(payload.balanceCents()));
+        ClientPlayNetworking.registerGlobalReceiver(WildlifePopulationResponsePayload.ID,
+                (payload, context) -> ClientWildlifePopulationState.set(payload.deerPopulation()));
         ClientPlayNetworking.registerGlobalReceiver(WantedLevelResponsePayload.ID,
                 (payload, context) -> ClientCrimeState.set(payload.wantedLevel()));
         ClientPlayNetworking.registerGlobalReceiver(UtilityStatusResponsePayload.ID,

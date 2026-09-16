@@ -1,8 +1,10 @@
 package com.realworldmod.client.phone;
 
 import com.realworldmod.client.economy.ClientTreasuryState;
+import com.realworldmod.client.wildlife.ClientWildlifePopulationState;
 import com.realworldmod.economy.CurrencyFormatter;
 import com.realworldmod.economy.net.TreasuryBalanceRequestPayload;
+import com.realworldmod.wildlife.net.WildlifePopulationRequestPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -14,7 +16,10 @@ import net.minecraft.text.Text;
  * income, and property tax slices (29/31) all feed this account, but
  * until now nothing let a player see it. Same request/render shape as
  * {@link BankingAppScreen}, against the treasury account instead of the
- * player's own.
+ * player's own. As of slice 66, it also shows the current deer
+ * population from {@code wildlife.WildlifePopulationService} — a
+ * municipal wildlife-management stat, closing "the population count
+ * isn't surfaced anywhere yet" from slice 63.
  */
 public final class GovernmentAppScreen extends Screen {
     @SuppressWarnings("unused")
@@ -28,6 +33,7 @@ public final class GovernmentAppScreen extends Screen {
     @Override
     protected void init() {
         ClientPlayNetworking.send(new TreasuryBalanceRequestPayload());
+        ClientPlayNetworking.send(new WildlifePopulationRequestPayload());
     }
 
     @Override
@@ -45,6 +51,13 @@ public final class GovernmentAppScreen extends Screen {
                 : Text.translatable("gui.realworldmod.phone.government.loading");
         context.drawCenteredTextWithShadow(this.textRenderer, balanceText,
                 this.width / 2, this.height / 2, 0x55FF55);
+
+        Integer deerPopulation = ClientWildlifePopulationState.get();
+        Text populationText = deerPopulation != null
+                ? Text.translatable("gui.realworldmod.phone.government.deer_population", deerPopulation)
+                : Text.translatable("gui.realworldmod.phone.government.loading");
+        context.drawCenteredTextWithShadow(this.textRenderer, populationText,
+                this.width / 2, this.height / 2 + 14, 0xAAFFAA);
     }
 
     @Override

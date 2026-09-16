@@ -1501,13 +1501,13 @@ updated with every slice so neither side ever has to guess.
     death, and flooring at zero — 363 total, all passing. `DeerDropHandler`
     itself is untested like every other Fabric event handler in the mod,
     needing a running world to exercise.
-  - **Known gaps**: the population count isn't surfaced anywhere yet (no
-    phone app, no command, no in-world display) and nothing in the mod
-    reacts to it — a population of zero doesn't stop poaching, change
-    coyote behavior, or trigger any consequence; drop quantities are
-    fixed (always 2 meat, 1 hide) regardless of cause of death or any
-    other factor. (As of slice 65, the meat and hide do have a real use —
-    see below.)
+  - **Known gaps**: nothing in the mod reacts to the population count —
+    a population of zero doesn't stop poaching, change coyote behavior,
+    or trigger any consequence; drop quantities are fixed (always 2
+    meat, 1 hide) regardless of cause of death or any other factor. (As
+    of slice 65, the meat and hide do have a real use, and as of slice
+    66 the population count is visible in the Government phone app —
+    see below for both.)
 
 - **Slice 64 — a filing-history archive for the Court Registry** (Section 3),
   closing "no filing history or past-case archive," the gap every Court
@@ -1575,8 +1575,30 @@ updated with every slice so neither side ever has to guess.
   - **Known gaps**: `COOKED_DEER_MEAT` has no distinct use beyond eating
     it (no recipe consumes it); `DEER_HIDE`'s only use is converting to
     vanilla leather at a fixed 4:1 ratio, not a hide-specific item of its
-    own (a hide bag, a leather-crafting discount, tanning); the deer
-    population count from slice 63 still isn't surfaced anywhere.
+    own (a hide bag, a leather-crafting discount, tanning).
+
+- **Slice 66 — the deer population count, surfaced** (Section 8/3),
+  closing the rest of slice 63's "the population count isn't surfaced
+  anywhere yet" gap:
+  - A new `WildlifePopulationRequestPayload`/`WildlifePopulationResponsePayload`
+    pair and `WildlifePopulationNetworking`, mirroring
+    `economy.net.TreasuryNetworking` exactly (same request-on-open,
+    single-int-response shape) — the response carries
+    `WildlifePopulationService.getDeerPopulation()` straight through.
+  - The Government phone app — already showing the treasury balance —
+    now also requests and renders "Deer Population: N" via a new
+    `ClientWildlifePopulationState`, a real municipal wildlife-management
+    stat grouped with the treasury rather than a dedicated app (there's
+    no other natural home for a single number yet).
+  - No new unit tests, matching every other phone-app slice (32, 44, 53,
+    56, 57, 64): `WildlifePopulationService`'s own counting logic was
+    already exhaustively tested in slice 63 and didn't change; only the
+    networking/screen wiring is new, needing a running client/server pair
+    to exercise — 369 total, unchanged, all still passing.
+  - **Known gaps**: still just a single number with no history/trend, no
+    breakdown by cause of death, and no reaction anywhere else in the mod
+    to a high or low count; the Government app is a thematic stand-in for
+    a dedicated wildlife/wardens app that doesn't exist yet.
 
 ### Cross-cutting things already true of the whole codebase
 
@@ -2000,8 +2022,11 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   wage before it reaches the player) and `PropertyTaxService` (a periodic,
   once-per-in-game-day charge on every land claim proportional to its
   area) — all three tax types now feed the same account, and as of
-  slice 32 a Government phone app shows the treasury's live balance. As
-  of slice 36, a real (if minimal) civil court exists too, deliberately
+  slice 32 a Government phone app shows the treasury's live balance —
+  joined, as of slice 66, by the deer population count from
+  `wildlife.WildlifePopulationService` (a municipal wildlife-management
+  stat, thematically grouped with the treasury rather than a dedicated
+  app). As of slice 36, a real (if minimal) civil court exists too, deliberately
   separate from the criminal system above: `CivilCourtService` lets one
   player file a small-claims case against another via a `COURTHOUSE`
   block, and if the defendant doesn't contest it within a fixed response
@@ -2200,8 +2225,8 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    nicotine patch/gum item, or letting the two vice systems interact), a
    second vehicle type now that slices 39/51/52 rounded out the first
    car's fuel/ownership/speed, expanding the predator
-   system slices 42/59/63/65 started (a second predator/prey pair, or
-   showing the deer population count somewhere), extending the
+   system slices 42/59/63/65/66 started (a second predator/prey pair
+   remains the biggest open piece), extending the
    NPC-inclusion slices 46-49/55/61 started to another system (an
    NPC-specific arrest/detainment flow now that citizens can be
    assault/murder victims, or reusing slice 61's pathfinding pattern for
@@ -2265,7 +2290,9 @@ quitting cigarettes a real withdrawal effect — see Section 5 above.
 Slice 63 gave a killed deer a real meat/hide drop and population-count
 consequence — see Section 8 above. Slice 64 gave the Court Registry a
 real filing-history archive — see Section 3 above. Slice 65 gave deer
-meat and hide a real crafting/cooking use — see Section 8 above.)
+meat and hide a real crafting/cooking use — see Section 8 above. Slice
+66 surfaced the deer population count in the Government phone app —
+see Sections 3/8 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

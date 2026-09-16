@@ -42,8 +42,12 @@ public final class ModItems {
     public static final Item DEER_MEAT = register("deer_meat", new Item(new Item.Settings()
             .food(new FoodComponent.Builder().nutrition(3).saturationModifier(0.3f).build())));
 
-    /** Dropped alongside {@link #DEER_MEAT} — a real crafting-material byproduct of a kill, not consumed by anything yet. */
+    /** Dropped alongside {@link #DEER_MEAT} — a real crafting-material byproduct of a kill, craftable into vanilla leather as of slice 65. */
     public static final Item DEER_HIDE = register("deer_hide", new Item(new Item.Settings()));
+
+    /** Smelting/smoking/campfire-cooking {@link #DEER_MEAT} yields this — better nutrition, matching vanilla cooked beef. */
+    public static final Item COOKED_DEER_MEAT = register("cooked_deer_meat", new Item(new Item.Settings()
+            .food(new FoodComponent.Builder().nutrition(8).saturationModifier(0.8f).build())));
 
     private ModItems() {
     }

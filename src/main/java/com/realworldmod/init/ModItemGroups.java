@@ -45,6 +45,7 @@ public final class ModItemGroups {
                         entries.add(ModBlocks.WATER_OUTLET);
                         entries.add(ModItems.DEER_MEAT);
                         entries.add(ModItems.DEER_HIDE);
+                        entries.add(ModItems.COOKED_DEER_MEAT);
                     })
                     .build());
 

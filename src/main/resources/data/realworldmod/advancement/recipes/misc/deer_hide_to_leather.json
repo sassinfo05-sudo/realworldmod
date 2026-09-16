@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_deer_hide": {
+      "conditions": {
+        "items": [
+          {
+            "items": "realworldmod:deer_hide"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "realworldmod:deer_hide_to_leather"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_deer_hide"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "realworldmod:deer_hide_to_leather"
+    ]
+  }
+}

@@ -1506,9 +1506,8 @@ updated with every slice so neither side ever has to guess.
     reacts to it — a population of zero doesn't stop poaching, change
     coyote behavior, or trigger any consequence; drop quantities are
     fixed (always 2 meat, 1 hide) regardless of cause of death or any
-    other factor; the meat and hide themselves don't do anything beyond
-    existing as items — meat is edible but not used in any recipe, and
-    hide isn't craftable into anything.
+    other factor. (As of slice 65, the meat and hide do have a real use —
+    see below.)
 
 - **Slice 64 — a filing-history archive for the Court Registry** (Section 3),
   closing "no filing history or past-case archive," the gap every Court
@@ -1546,6 +1545,38 @@ updated with every slice so neither side ever has to guess.
     joined this server still shows as a raw UUID string; contesting
     still just dismisses the claim outright with no counter-argument or
     real adjudication, the same limitation slices 56/57 already noted.
+
+- **Slice 65 — a real use for meat and hide** (Section 8), closing the
+  rest of slice 63's "meat is edible but not used in any recipe, and
+  hide isn't craftable into anything" gap with real, data-driven Minecraft
+  recipes rather than new Java logic:
+  - A new `COOKED_DEER_MEAT` item (better nutrition/saturation than raw
+    `DEER_MEAT`, matching vanilla cooked beef's 8/0.8 stats) plus three
+    real recipes — `minecraft:smelting`, `minecraft:smoking`, and
+    `minecraft:campfire_cooking` — turning `DEER_MEAT` into it, mirroring
+    vanilla's own raw-beef-to-cooked-beef recipe trio exactly (same
+    `cookingtime`/`experience` values).
+  - A `minecraft:crafting_shaped` recipe turns four `DEER_HIDE` (a 2x2
+    pattern) into one vanilla `LEATHER`, mirroring vanilla's own
+    rabbit-hide-to-leather recipe — a real, useful conversion rather than
+    a new invented item, so venison hunting now feeds directly into
+    vanilla's existing leather-goods crafting (armor, books, item
+    frames).
+  - Each new recipe ships its own `minecraft:recipes/root`-parented
+    unlock advancement (triggered by first picking up the matching raw
+    ingredient), matching vanilla's own recipe-unlock convention exactly
+    so all four recipes appear in the recipe book once discovered.
+  - No new unit tests: this is pure data-driven content (items, a food
+    component, and JSON recipes/advancements) with no new Java service or
+    logic class to test — 369 total, unchanged, all still passing. The
+    recipes themselves are unverified in a running client, needing an
+    actual furnace/smoker/campfire/crafting-table interaction to confirm
+    they load and resolve correctly.
+  - **Known gaps**: `COOKED_DEER_MEAT` has no distinct use beyond eating
+    it (no recipe consumes it); `DEER_HIDE`'s only use is converting to
+    vanilla leather at a fixed 4:1 ratio, not a hide-specific item of its
+    own (a hide bag, a leather-crafting discount, tanning); the deer
+    population count from slice 63 still isn't surfaced anywhere.
 
 ### Cross-cutting things already true of the whole codebase
 
@@ -2169,15 +2200,15 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    nicotine patch/gum item, or letting the two vice systems interact), a
    second vehicle type now that slices 39/51/52 rounded out the first
    car's fuel/ownership/speed, expanding the predator
-   system slices 42/59/63 started (a second predator/prey pair, showing
-   the new deer population count somewhere, or giving meat/hide an
-   actual use), extending the NPC-inclusion slices 46-49/55/61 started to
-   another system (an NPC-specific arrest/detainment flow now that
-   citizens can be assault/murder victims, or reusing slice 61's
-   pathfinding pattern for a job site's actual task or a non-medicine
-   shop trip), turning slice 64's Court Registry history summary into a
-   real scrollable list of every past case, or bringing Slots/Roulette
-   up to the other three tables' slice-54
+   system slices 42/59/63/65 started (a second predator/prey pair, or
+   showing the deer population count somewhere), extending the
+   NPC-inclusion slices 46-49/55/61 started to another system (an
+   NPC-specific arrest/detainment flow now that citizens can be
+   assault/murder victims, or reusing slice 61's pathfinding pattern for
+   a job site's actual task or a non-medicine shop trip), turning slice
+   64's Court Registry history summary into a real scrollable list of
+   every past case, or bringing Slots/Roulette up to the other three
+   tables' slice-54
    wager-selection bar (they'd need a real screen first, since both are
    still a single block right-click) are all reasonable next picks.
    Aviation/ATC and the space program stay deliberately last, as the
@@ -2233,7 +2264,8 @@ pathfinding to a real pharmacy — see Section 2 above. Slice 62 gave
 quitting cigarettes a real withdrawal effect — see Section 5 above.
 Slice 63 gave a killed deer a real meat/hide drop and population-count
 consequence — see Section 8 above. Slice 64 gave the Court Registry a
-real filing-history archive — see Section 3 above.)
+real filing-history archive — see Section 3 above. Slice 65 gave deer
+meat and hide a real crafting/cooking use — see Section 8 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

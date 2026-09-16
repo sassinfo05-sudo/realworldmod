@@ -20,14 +20,17 @@ import java.util.Random;
  * other crime in the mod uses — dealing enough raises the player's
  * wanted level just like any other offense, which means the
  * {@code crime.PoliceEntity} from slice 23 will come looking for a
- * repeat dealer the same way it would for anyone else. Section 7's
+ * repeat dealer the same way it would for anyone else. As of slice 58,
+ * the catch chance itself is no longer a flat 30% for everyone —
+ * {@link NarcoticsCatchChance} scales it by the dealer's wanted level at
+ * the moment they deal, so a five-star repeat offender is far more
+ * likely to get caught than someone with a clean record. Section 7's
  * underworld/narcotics gap, reduced to its smallest real shape: an
  * illegal, higher-paying alternative to a legal job, with actual risk
  * attached rather than none.
  */
 public final class NarcoticsHandler {
     public static final int DEALING_SEVERITY = 2;
-    public static final double CATCH_CHANCE = 0.3;
 
     private final NarcoticsService narcoticsService;
     private final LawEnforcementService lawEnforcementService;
@@ -74,7 +77,9 @@ public final class NarcoticsHandler {
         player.sendMessage(Text.translatable("message.realworldmod.narcotics_dealt",
                 CurrencyFormatter.format(NarcoticsService.DEAL_PAYOUT_CENTS)), true);
 
-        if (random.nextDouble() < CATCH_CHANCE) {
+        int wantedLevel = lawEnforcementService.crimeService().getWantedLevel(player.getUuid());
+        double catchChance = NarcoticsCatchChance.forWantedLevel(wantedLevel);
+        if (random.nextDouble() < catchChance) {
             player.sendMessage(Text.translatable("message.realworldmod.narcotics_caught"), true);
             OffenseOutcome outcome = lawEnforcementService.recordOffense(player.getUuid(), DEALING_SEVERITY);
             if (outcome.fined()) {

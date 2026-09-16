@@ -1315,6 +1315,35 @@ updated with every slice so neither side ever has to guess.
     real adjudication — the same limitations slice 56 already noted,
     just with the plaintiff-visibility gap itself now closed.
 
+- **Slice 58 — narcotics catch chance scales with wanted level**
+  (Section 7), starting on slice 37's "expanding the underworld system"
+  priority item by replacing its flat, identical-for-everyone 30% catch
+  chance:
+  - `NarcoticsCatchChance`, a new pure-arithmetic class matching the
+    shape of `WantedLevelMath`/`BetSizing`, maps a wanted level (0-5,
+    `WantedLevelMath`'s own range) to a catch probability: a 15% base
+    chance plus 15 percentage points per wanted level, capped at 90% so
+    even the most wanted dealer never faces a guaranteed catch.
+  - `NarcoticsHandler.handleDeal` reads the dealer's current wanted level
+    from `lawEnforcementService.crimeService().getWantedLevel(...)`
+    *before* rolling against `NarcoticsCatchChance.forWantedLevel(...)`,
+    replacing the old hardcoded `CATCH_CHANCE` constant — a repeat
+    offender now runs a real, escalating risk every time they deal,
+    rather than the same 30% roll a first-time dealer gets.
+  - Exhaustively unit tested: `NarcoticsCatchChanceTest` covers the base
+    chance at wanted level 0, chance scaling at levels 1-2, clamping at
+    the maximum for `WantedLevelMath.MAX` (5), and clamping even for a
+    level far outside the real 0-5 range — 342 total, all passing.
+    `NarcoticsHandler`'s own wiring is untested like every other Fabric
+    event handler in the mod, needing a running server to exercise.
+  - **Known gaps**: dealing is still recorded at the same fixed
+    `DEALING_SEVERITY` regardless of wanted level or amount dealt — only
+    the *catch* odds scale, not the offense's severity; still a single
+    cook/deal loop at one block type, with no second drug/lab type, no
+    rival dealer NPCs or turf, no dark web purchases, and no drug
+    smuggling or money-laundering mechanic — the rest of slice 37's
+    "expanding the underworld system" priority item, unstarted.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1714,14 +1743,20 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   block that a player can cook a stash unit from (`NarcoticsService`,
   cooldown-gated like `JobService`'s wage shifts) and then deal for real
   money — a genuinely higher-paying, faster-cycling alternative to a
-  legal `CASH_REGISTER` job, but with a real 30% chance per deal of being
+  legal `CASH_REGISTER` job, but with a real chance per deal of being
   caught and recorded through the *existing* `LawEnforcementService`
   pipeline, the same one every other crime in the mod uses, so a repeat
   dealer's wanted level climbs and the already-built `PoliceEntity` will
   eventually come looking for them exactly as it would for any other
   offense — the underworld system was deliberately wired into the crime
   system that already exists rather than given its own isolated
-  wanted/consequence mechanic. As of slice 40, hurting another player is
+  wanted/consequence mechanic. As of slice 58, that catch chance is no
+  longer a flat 30% for every dealer: `NarcoticsCatchChance` scales it
+  from a 15% base up to a 90% cap in proportion to the dealer's own
+  wanted level at the moment they deal, read from the same
+  `CrimeService` every other offense already shares — a clean-record
+  first-timer and a five-star repeat offender no longer face identical
+  odds. As of slice 40, hurting another player is
   finally a tracked crime too: `AssaultHandler` hooks the same
   player-on-player damage event `medical.LegInjuryEffect` already uses
   for fall damage and, on any hit one player lands on another, records an
@@ -1875,8 +1910,9 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 ## Priority order for what's next
 
 1. Everything in the "missing" lists above — expanding the underworld
-   system slice 37 started (a second drug/lab type, rival dealer NPCs, or
-   scaling catch chance by wanted level), giving alcohol/cigarettes from
+   system slices 37/58 started (a second drug/lab type, rival dealer
+   NPCs, or a distinct narcotics crime-severity tier), giving
+   alcohol/cigarettes from
    slice 38 more variety (a second drink/cigarette tier, a hangover
    effect), a second vehicle type now that slices 39/51/52 rounded out
    the first car's fuel/ownership/speed, expanding the predator system
@@ -1932,7 +1968,9 @@ tables a real player-chosen wager — see Section 6 above. Slice 55
 extended assault and murder to protect `CitizenEntity` victims too —
 see Section 7 above. Slice 56 added a Contest button to the Court
 Registry app — see Section 3 above. Slice 57 closed out plaintiff name
-resolution in the Court Registry app — see Section 3 above.)
+resolution in the Court Registry app — see Section 3 above. Slice 58
+scaled narcotics catch chance by the dealer's wanted level — see
+Section 7 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

@@ -5,8 +5,6 @@ import org.junit.jupiter.api.Test;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class IntoxicationServiceTest {
     @Test
@@ -83,7 +81,7 @@ class IntoxicationServiceTest {
         UUID player = UUID.randomUUID();
         service.drink(player, 0);
 
-        assertFalse(service.checkHangover(player, IntoxicationService.DECAY_TICKS_PER_LEVEL * 10));
+        assertEquals(0, service.checkHangover(player, IntoxicationService.DECAY_TICKS_PER_LEVEL * 10));
     }
 
     @Test
@@ -94,11 +92,11 @@ class IntoxicationServiceTest {
         service.drink(player, 0);
         service.drink(player, 0);
 
-        assertFalse(service.checkHangover(player, 0));
+        assertEquals(0, service.checkHangover(player, 0));
     }
 
     @Test
-    void hangoverTriggersExactlyOnceOnceFullySoberAfterPeaking() {
+    void firstHangoverTriggersExactlyOnceAtSeverityOne() {
         IntoxicationService service = new IntoxicationService();
         UUID player = UUID.randomUUID();
         service.drink(player, 0);
@@ -106,8 +104,8 @@ class IntoxicationServiceTest {
         service.drink(player, 0);
 
         long soberTick = IntoxicationService.DECAY_TICKS_PER_LEVEL * IntoxicationCalculator.MAX_LEVEL;
-        assertTrue(service.checkHangover(player, soberTick));
-        assertFalse(service.checkHangover(player, soberTick + 1));
+        assertEquals(1, service.checkHangover(player, soberTick));
+        assertEquals(0, service.checkHangover(player, soberTick + 1));
     }
 
     @Test
@@ -125,6 +123,41 @@ class IntoxicationServiceTest {
         service.drink(player, soberTick);
         long nextSoberTick = soberTick + IntoxicationService.DECAY_TICKS_PER_LEVEL * IntoxicationCalculator.MAX_LEVEL;
 
-        assertTrue(service.checkHangover(player, nextSoberTick));
+        assertEquals(2, service.checkHangover(player, nextSoberTick));
+    }
+
+    @Test
+    void repeatedHangoversEscalateUpToTheMaximumSeverity() {
+        IntoxicationService service = new IntoxicationService();
+        UUID player = UUID.randomUUID();
+        long tick = 0;
+        int lastSeverity = 0;
+        for (int i = 0; i < HangoverSeverity.MAX_SEVERITY + 2; i++) {
+            service.drink(player, tick);
+            service.drink(player, tick);
+            service.drink(player, tick);
+            tick += IntoxicationService.DECAY_TICKS_PER_LEVEL * IntoxicationCalculator.MAX_LEVEL;
+            lastSeverity = service.checkHangover(player, tick);
+        }
+        assertEquals(HangoverSeverity.MAX_SEVERITY, lastSeverity);
+    }
+
+    @Test
+    void aHangoverStreakResetsAfterGoingLongEnoughWithoutAnother() {
+        IntoxicationService service = new IntoxicationService();
+        UUID player = UUID.randomUUID();
+        service.drink(player, 0);
+        service.drink(player, 0);
+        service.drink(player, 0);
+        long firstSoberTick = IntoxicationService.DECAY_TICKS_PER_LEVEL * IntoxicationCalculator.MAX_LEVEL;
+        assertEquals(1, service.checkHangover(player, firstSoberTick));
+
+        long farLaterDrinkTick = firstSoberTick + HangoverSeverity.STREAK_RESET_TICKS + 1;
+        service.drink(player, farLaterDrinkTick);
+        service.drink(player, farLaterDrinkTick);
+        service.drink(player, farLaterDrinkTick);
+        long secondSoberTick = farLaterDrinkTick + IntoxicationService.DECAY_TICKS_PER_LEVEL * IntoxicationCalculator.MAX_LEVEL;
+
+        assertEquals(1, service.checkHangover(player, secondSoberTick));
     }
 }

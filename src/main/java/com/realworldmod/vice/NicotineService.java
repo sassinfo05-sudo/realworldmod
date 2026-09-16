@@ -15,13 +15,17 @@ import java.util.UUID;
  * trigger real withdrawal symptoms once a dependent player goes too long
  * without one — the same "cross a threshold, trigger once" shape
  * {@code vice.IntoxicationService#checkHangover} already established for
- * alcohol.
+ * alcohol. As of slice 67, repeated withdrawal episodes within
+ * {@link WithdrawalSeverity#STREAK_RESET_TICKS} of each other escalate in
+ * severity, mirroring {@code IntoxicationService}'s own hangover streak.
  */
 public final class NicotineService {
     private final Map<UUID, Integer> cigaretteCount = new HashMap<>();
     private final Map<UUID, Integer> totalSmoked = new HashMap<>();
     private final Map<UUID, Long> lastSmokeTick = new HashMap<>();
     private final Map<UUID, Boolean> withdrawalApplied = new HashMap<>();
+    private final Map<UUID, Integer> withdrawalStreak = new HashMap<>();
+    private final Map<UUID, Long> lastWithdrawalTick = new HashMap<>();
 
     /** Call once per cigarette smoked; returns true exactly on the smoke that triggers illness. */
     public boolean smoke(UUID playerId, long currentTick) {
@@ -35,17 +39,28 @@ public final class NicotineService {
         return triggered;
     }
 
-    /** Call once per server tick per online player; returns true exactly on the tick a dependent player's withdrawal kicks in. */
-    public boolean checkWithdrawal(UUID playerId, long currentTick) {
+    /**
+     * Call once per server tick per online player. Returns 0 on every tick except the one a dependent
+     * player's withdrawal kicks in, when it returns the withdrawal's severity (1 or higher) — escalating
+     * with each withdrawal episode that follows a previous one within {@link WithdrawalSeverity#STREAK_RESET_TICKS}.
+     */
+    public int checkWithdrawal(UUID playerId, long currentTick) {
         if (!NicotineWithdrawalRisk.isDependent(totalSmoked.getOrDefault(playerId, 0))
                 || withdrawalApplied.getOrDefault(playerId, false)) {
-            return false;
+            return 0;
         }
         Long last = lastSmokeTick.get(playerId);
         if (last == null || !NicotineWithdrawalRisk.causesWithdrawal(currentTick - last)) {
-            return false;
+            return 0;
         }
         withdrawalApplied.put(playerId, true);
-        return true;
+
+        Long lastWithdrawal = lastWithdrawalTick.get(playerId);
+        boolean streakContinues = lastWithdrawal != null
+                && currentTick - lastWithdrawal < WithdrawalSeverity.STREAK_RESET_TICKS;
+        int nextStreak = streakContinues ? withdrawalStreak.getOrDefault(playerId, 0) + 1 : 1;
+        withdrawalStreak.put(playerId, nextStreak);
+        lastWithdrawalTick.put(playerId, currentTick);
+        return WithdrawalSeverity.forStreak(nextStreak);
     }
 }

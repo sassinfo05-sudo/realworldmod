@@ -1600,6 +1600,40 @@ updated with every slice so neither side ever has to guess.
     to a high or low count; the Government app is a thematic stand-in for
     a dedicated wildlife/wardens app that doesn't exist yet.
 
+- **Slice 67 — escalating hangover/withdrawal severity** (Section 5),
+  closing the rest of slices 60/62's "each fires at one fixed threshold
+  with one fixed severity" gap:
+  - Two new pure classes, `HangoverSeverity` and `WithdrawalSeverity`
+    (identical shape, one per vice system, matching how `NicotineRisk`
+    and `IntoxicationCalculator` already stay separate despite
+    structural similarity), map a 1-indexed consecutive-episode streak to
+    a severity level 1-3, capped at `MAX_SEVERITY`.
+  - `IntoxicationService.checkHangover` and `NicotineService.checkWithdrawal`
+    both changed from returning a boolean to returning an `int` severity
+    (0 = no episode this tick): each now tracks the tick of the player's
+    last episode and increments their streak when the new one falls
+    within `STREAK_RESET_TICKS` of the last, or resets to 1 otherwise.
+  - `HangoverEffect` and `NicotineWithdrawalEffect` both scale their
+    status effects' amplifier and duration directly off that severity
+    instead of always applying the same fixed effect — a player who
+    keeps binge-drinking or keeps relapsing gets a worse Nausea+Mining
+    Fatigue/Nausea+Slowness combo each time, not an identical one.
+  - Exhaustively unit tested: new `HangoverSeverityTest`/`WithdrawalSeverityTest`
+    cover the streak-to-severity mapping directly (first episode, scaling,
+    clamping at the maximum, and the streak-of-zero edge case), and
+    `IntoxicationServiceTest`/`NicotineServiceTest` gained cases for
+    escalation across repeated episodes, capping at the maximum severity,
+    and the streak resetting after going long enough without another
+    episode — 381 total, all passing. The existing boolean-returning
+    assertions in both test files were updated to check the returned
+    severity instead.
+  - **Known gaps**: no way to ease withdrawal short of smoking again
+    (still no nicotine patch/gum item); the two vice systems still don't
+    interact with each other at all; the streak-reset window is a single
+    fixed constant per system, not tunable or visible to the player in
+    any way (no in-game indicator of "how close to a worse hangover" they
+    are).
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1899,7 +1933,13 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   `checkWithdrawal` fires once they go `WITHDRAWAL_TICKS` without
   another, and `NicotineWithdrawalEffect` applies Nausea+Slowness — a
   distinct symptom set from the alcohol hangover, so the two vice
-  systems don't feel identical.
+  systems don't feel identical. As of slice 67, neither consequence is a
+  single fixed severity anymore: `HangoverSeverity`/`WithdrawalSeverity`
+  map a consecutive-streak count (reset after
+  `STREAK_RESET_TICKS` without another episode) to a severity that
+  scales both the status effect's amplifier and its duration, so a
+  player who keeps binge-drinking or keeps relapsing gets meaningfully
+  worse effects each time, up to a capped maximum.
 - Missing: this is a *health-bar replacement disguised as a status
   effect*, not a real localized zone model — there's no per-body-part
   (head/torso/arms/legs) data structure, no bone-fracture-requiring-cast
@@ -1922,12 +1962,13 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   place. (Alcohol/cigarettes themselves are no longer on this list — see
   slice 38 above — but variety is: one drink type and one cigarette type;
   a real hangover effect exists as of slice 60 and nicotine withdrawal as
-  of slice 62, but each fires at one fixed threshold with one fixed
-  severity — no escalation for repeat benders/quit-attempts, no way to
-  ease withdrawal short of smoking again (there's no nicotine patch/gum
-  item), and the two vice systems still don't interact with each other
-  at all (getting drunk while withdrawing from nicotine, for instance, is
-  just two independent effect sets); NPCs can now catch a cold in the
+  of slice 62, and as of slice 67 both escalate in severity for repeat
+  benders/quit-attempts within a rolling window — but there's still no
+  way to ease withdrawal short of smoking again (there's no nicotine
+  patch/gum item), and the two vice systems still don't interact with
+  each other at all (getting drunk while withdrawing from nicotine, for
+  instance, is just two independent effect sets); NPCs can now catch a
+  cold in the
   rain as of slice 46, but still never drink, smoke, or get injured — the
   vice systems and fall injury remain player-only, only the
   weather-illness system is shared.)
@@ -2220,10 +2261,10 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 1. Everything in the "missing" lists above — expanding the underworld
    system slices 37/58 started (a second drug/lab type, rival dealer
    NPCs, or a distinct narcotics crime-severity tier), giving
-   alcohol/cigarettes from slices 38/60/62 more variety (a second
-   drink/cigarette tier, escalating hangover/withdrawal severity, a
-   nicotine patch/gum item, or letting the two vice systems interact), a
-   second vehicle type now that slices 39/51/52 rounded out the first
+   alcohol/cigarettes from slices 38/60/62/67 more variety (a second
+   drink/cigarette tier, a nicotine patch/gum item, or letting the two
+   vice systems interact), a second vehicle type now that slices
+   39/51/52 rounded out the first
    car's fuel/ownership/speed, expanding the predator
    system slices 42/59/63/65/66 started (a second predator/prey pair
    remains the biggest open piece), extending the
@@ -2292,7 +2333,8 @@ consequence — see Section 8 above. Slice 64 gave the Court Registry a
 real filing-history archive — see Section 3 above. Slice 65 gave deer
 meat and hide a real crafting/cooking use — see Section 8 above. Slice
 66 surfaced the deer population count in the Government phone app —
-see Sections 3/8 above.)
+see Sections 3/8 above. Slice 67 gave hangovers and nicotine withdrawal
+escalating severity — see Section 5 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

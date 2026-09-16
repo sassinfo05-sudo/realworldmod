@@ -103,4 +103,42 @@ class NarcoticsServiceTest {
         assertEquals(1, narcoticsService.stashCount(first));
         assertEquals(1, narcoticsService.stashCount(second));
     }
+
+    @Test
+    void dealStreakIsZeroBeforeAnyDeal() {
+        assertEquals(0, narcoticsService.getDealStreak(UUID.randomUUID()));
+    }
+
+    @Test
+    void firstDealStartsTheStreakAtOne() {
+        UUID player = UUID.randomUUID();
+        narcoticsService.tryCook(player, 0);
+        narcoticsService.tryDeal(player, 0);
+
+        assertEquals(1, narcoticsService.getDealStreak(player));
+    }
+
+    @Test
+    void aSecondDealWithinTheWindowExtendsTheStreak() {
+        UUID player = UUID.randomUUID();
+        narcoticsService.tryCook(player, 0);
+        narcoticsService.tryDeal(player, 0);
+        narcoticsService.tryCook(player, NarcoticsService.COOK_COOLDOWN_TICKS);
+        narcoticsService.tryDeal(player, NarcoticsService.COOK_COOLDOWN_TICKS);
+
+        assertEquals(2, narcoticsService.getDealStreak(player));
+    }
+
+    @Test
+    void aDealStreakResetsAfterGoingLongEnoughWithoutAnotherDeal() {
+        UUID player = UUID.randomUUID();
+        narcoticsService.tryCook(player, 0);
+        narcoticsService.tryDeal(player, 0);
+
+        long farLaterTick = NarcoticsSeverity.STREAK_RESET_TICKS + 1;
+        narcoticsService.tryCook(player, farLaterTick);
+        narcoticsService.tryDeal(player, farLaterTick);
+
+        assertEquals(1, narcoticsService.getDealStreak(player));
+    }
 }

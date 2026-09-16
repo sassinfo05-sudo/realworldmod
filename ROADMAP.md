@@ -1663,6 +1663,40 @@ updated with every slice so neither side ever has to guess.
     (no side effect, no cooldown between uses beyond the price); the two
     vice systems still don't interact with each other at all.
 
+- **Slice 69 — a distinct narcotics crime-severity tier** (Section 7),
+  closing the rest of slice 37/58's "no distinct narcotics crime
+  severity tier" gap:
+  - `NarcoticsService` gains a consecutive-deal streak counter, tracked
+    the same way `tryDeal` already tracks `lastDealTick`: a deal within
+    `NarcoticsSeverity.STREAK_RESET_TICKS` of the previous one extends
+    the streak, a deal after a longer gap resets it to 1. A new
+    `getDealStreak(playerId)` exposes it.
+  - A new `NarcoticsSeverity.forStreak` (the same "map a streak to an
+    escalating value, capped at a maximum" shape
+    `vice.HangoverSeverity`/`vice.WithdrawalSeverity` already
+    established) maps that streak to a severity from a base of 2 (the
+    same value dealing always recorded at before this slice) up to a
+    capped 4 — between assault's severity 3 and murder's maximum of 5,
+    and now genuinely distinguishable from a single stolen car (also
+    severity 2) once a dealer is mid-spree.
+  - `NarcoticsHandler.handleDeal` now computes this severity right before
+    calling `LawEnforcementService.recordOffense`, replacing the old
+    flat `DEALING_SEVERITY` constant — a repeat dealer caught mid-spree
+    now gets hit harder than a first-timer.
+  - Exhaustively unit tested: new `NarcoticsSeverityTest` covers the base
+    severity, scaling, and clamping directly, and `NarcoticsServiceTest`
+    gained cases for the streak starting at zero, a first deal starting
+    it at one, a second deal within the window extending it, and the
+    streak resetting after a long enough gap — 392 total, all passing
+    (aside from `BlackjackServiceTest`'s pre-existing, unrelated RNG
+    flake — see slice 54's known gaps). `NarcoticsHandler`'s own wiring
+    remains untested like every other Fabric event handler in the mod.
+  - **Known gaps**: still a single drug/lab type with no rival dealer
+    NPCs or turf; the streak resets are purely time-based, with no way
+    for a player to see their own current streak or severity before
+    being caught; the severity cap (4) is a fixed constant, not tied to
+    wanted level or amount dealt in the session.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -2128,7 +2162,14 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   wanted level at the moment they deal, read from the same
   `CrimeService` every other offense already shares — a clean-record
   first-timer and a five-star repeat offender no longer face identical
-  odds. As of slice 40, hurting another player is
+  odds. As of slice 69, a caught dealer's offense severity is no longer
+  the same flat value auto theft also uses either: `NarcoticsService`
+  tracks a consecutive-deal streak (reset after going
+  `NarcoticsSeverity.STREAK_RESET_TICKS` without another deal), and
+  `NarcoticsSeverity.forStreak` scales the recorded severity from a
+  base of 2 up to a capped 4 — a real, distinct narcotics crime-severity
+  tier instead of sharing the generic value. As of slice 40, hurting
+  another player is
   finally a tracked crime too: `AssaultHandler` hooks the same
   player-on-player damage event `medical.LegInjuryEffect` already uses
   for fall damage and, on any hit one player lands on another, records an
@@ -2172,9 +2213,8 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   narcotics system built in slice 37 is a single cook/deal loop at one
   block type — no dark web purchases, no variety of drugs/effects, no
   drug smuggling routes, no money laundering through front businesses,
-  no rival dealer NPCs or turf, and no distinct "narcotics" crime
-  severity tier (dealing is recorded at a fixed severity through the
-  same generic offense pipeline as trespassing or poaching) — the "dark
+  and no rival dealer NPCs or turf (dealing does get its own escalating
+  crime-severity tier as of slice 69, closing that half of the gap) — the "dark
   web" referenced in Section 3 is still entirely unbuilt. **Requested and
   tracked, not started**: running for and holding government office (up to
   leading the whole in-game country); terrorism attacks that occur
@@ -2297,8 +2337,8 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 ## Priority order for what's next
 
 1. Everything in the "missing" lists above — expanding the underworld
-   system slices 37/58 started (a second drug/lab type, rival dealer
-   NPCs, or a distinct narcotics crime-severity tier), giving
+   system slices 37/58/69 started (a second drug/lab type, or rival
+   dealer NPCs/turf), giving
    alcohol/cigarettes from slices 38/60/62/67/68 more variety (a second
    drink/cigarette tier, an item easing an alcohol hangover to mirror
    the nicotine patch, or letting the two vice systems interact), a
@@ -2373,7 +2413,9 @@ meat and hide a real crafting/cooking use — see Section 8 above. Slice
 66 surfaced the deer population count in the Government phone app —
 see Sections 3/8 above. Slice 67 gave hangovers and nicotine withdrawal
 escalating severity — see Section 5 above. Slice 68 added a real
-nicotine patch item to ease withdrawal — see Sections 5/6 above.)
+nicotine patch item to ease withdrawal — see Sections 5/6 above. Slice
+69 gave narcotics dealing its own escalating crime-severity tier — see
+Section 7 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

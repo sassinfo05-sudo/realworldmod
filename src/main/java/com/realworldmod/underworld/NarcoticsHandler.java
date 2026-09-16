@@ -24,13 +24,15 @@ import java.util.Random;
  * the catch chance itself is no longer a flat 30% for everyone —
  * {@link NarcoticsCatchChance} scales it by the dealer's wanted level at
  * the moment they deal, so a five-star repeat offender is far more
- * likely to get caught than someone with a clean record. Section 7's
- * underworld/narcotics gap, reduced to its smallest real shape: an
- * illegal, higher-paying alternative to a legal job, with actual risk
- * attached rather than none.
+ * likely to get caught than someone with a clean record. As of slice 69,
+ * a caught dealer is also recorded at a severity that escalates with
+ * {@link NarcoticsService#getDealStreak}, via {@link NarcoticsSeverity}
+ * — a distinct crime-severity tier instead of sharing the flat
+ * severity-2 value auto theft also uses. Section 7's underworld/narcotics
+ * gap, reduced to its smallest real shape: an illegal, higher-paying
+ * alternative to a legal job, with actual risk attached rather than none.
  */
 public final class NarcoticsHandler {
-    public static final int DEALING_SEVERITY = 2;
 
     private final NarcoticsService narcoticsService;
     private final LawEnforcementService lawEnforcementService;
@@ -81,7 +83,8 @@ public final class NarcoticsHandler {
         double catchChance = NarcoticsCatchChance.forWantedLevel(wantedLevel);
         if (random.nextDouble() < catchChance) {
             player.sendMessage(Text.translatable("message.realworldmod.narcotics_caught"), true);
-            OffenseOutcome outcome = lawEnforcementService.recordOffense(player.getUuid(), DEALING_SEVERITY);
+            int severity = NarcoticsSeverity.forStreak(narcoticsService.getDealStreak(player.getUuid()));
+            OffenseOutcome outcome = lawEnforcementService.recordOffense(player.getUuid(), severity);
             if (outcome.fined()) {
                 player.sendMessage(Text.translatable("message.realworldmod.fine_issued",
                         CurrencyFormatter.format(LawEnforcementService.FINE_CENTS)), true);

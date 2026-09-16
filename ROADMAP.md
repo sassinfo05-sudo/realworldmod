@@ -1010,6 +1010,32 @@ updated with every slice so neither side ever has to guess.
     once per workday rather than per hour worked or scaled by any kind of
     job performance.
 
+- **Slice 48 — fall injuries apply to any living entity, not just
+  players** (Sections 2 and 5), the smallest possible continuation of the
+  NPC-inclusion theme slices 46/47 started:
+  - `LegInjuryEffect` hooks `ServerLivingEntityEvents.AFTER_DAMAGE`, whose
+    `entity` parameter was *already* typed as `LivingEntity` — the
+    `instanceof PlayerEntity` check restricting the leg-injury Slowness
+    effect to players was never load-bearing, just an explicit early
+    return nobody had removed yet. Deleting it means any living entity
+    that takes fall damage above the bruise/fracture thresholds — a
+    `CitizenEntity`, a `DeerEntity`, a `CoyoteEntity`, even an unrelated
+    vanilla cow — gets the exact same `FallInjuryCalculator`-driven
+    Slowness effect a player does. Only the chat message announcing the
+    injury stays player-only, since nothing else in the mod has chat to
+    read it.
+  - No new unit tests: `FallInjuryCalculatorTest` already exhaustively
+    covers the threshold/severity logic this reuses completely unchanged;
+    only the guard clause removal is new, and `LegInjuryEffect` itself was
+    never unit tested to begin with (it needs a running Minecraft
+    entity/world), so this doesn't add a new untested surface, it widens
+    an existing one (304 tests total, unchanged, all still passing).
+  - **Known gaps**: see the updated Section 2/5 status above — NPCs still
+    can't get assaulted as a distinct offense or arrested, and a citizen's
+    leg injury has no visible limping animation, only the Slowness
+    effect's speed reduction, the same caveat every status-effect-driven
+    injury in the mod shares.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1126,6 +1152,11 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   through the same `IncomeTax` every player wage already goes through and
   deposited into a real `BankService` account keyed by the citizen's own
   UUID, the tax landing in the same treasury account players' wages feed.
+  As of slice 48, a citizen can also get hurt: `LegInjuryEffect`'s
+  restriction to `PlayerEntity` was an artificial one (the underlying
+  Fabric event already hands back any `LivingEntity`), so removing it
+  means a citizen that takes a bad fall limps with the same Slowness
+  effect a player would get.
 - Missing: every citizen's building is identical (one fixed 5x5 room
   shape, walls-and-roof only, no interior furniture/rooms/windows), placed
   block-by-block with no check for terrain, water, or overlap with an
@@ -1134,12 +1165,14 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   mini-behaviors (cashiering, patrols, factory work), no evening leisure
   destinations, no branching dialogue tree (one fixed line per state), no
   NPC behavioral AI (mugging, reacting to red-light running, independent
-  crime, police chases); NPCs can now get sick and earn a wage, but still
-  can't spend it — there's no NPC purchase of any kind (medicine, a
-  meal, a hunting license) — and still can't get hurt or get arrested;
-  fall damage, assault, and wanted levels are all still player-only, and
-  a sick citizen has no way to recover early since it never spends its
-  own income on medicine. True GOAP (goal-oriented
+  crime, police chases); NPCs can now get sick, earn a wage, and get hurt
+  from a fall, but still can't spend that wage — there's no NPC purchase
+  of any kind (medicine, a meal, a hunting license) — and still can't be
+  assaulted as a distinct offense or get arrested; a sick or injured
+  citizen has no way to recover early since it never spends its own
+  income on medicine, and — like every other status effect the mod
+  applies — the leg injury has no visible limping *animation*, only the
+  Slowness effect's speed reduction. True GOAP (goal-oriented
   action planning, i.e. dynamic plan search over actions) was never
   implemented — the FSM is a simpler deterministic rule tree, called out
   as such in the code's own Javadoc from slice 1 onward. **Requested and
@@ -1231,7 +1264,11 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   player-exclusive: `WeatherIllnessEffect.checkEntity` applies the exact
   same check and consequence to every `CitizenEntity` too, sharing the
   same `IllnessService` state players use — not a parallel NPC-specific
-  system.
+  system. As of slice 48, fall-damage leg injuries followed the same
+  path: `LegInjuryEffect`'s player-only restriction was never load-bearing
+  (the Fabric event it hooks already hands back any `LivingEntity`), so
+  removing it means any living entity in the mod — a citizen, a deer, a
+  vanilla cow — limps from a bad fall exactly like a player does.
 - Missing: this is a *health-bar replacement disguised as a status
   effect*, not a real localized zone model — there's no per-body-part
   (head/torso/arms/legs) data structure, no bone-fracture-requiring-cast
@@ -1506,11 +1543,12 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    continuing to round out automotive now that slice 39 added fuel
    visibility (a speed HUD, a second vehicle type), expanding the
    predator system slice 42 started (a second predator/prey pair, pack
-   hunting), or extending the NPC-inclusion slices 46/47 started to
+   hunting), or extending the NPC-inclusion slices 46-48 started to
    another system (an NPC actually spending its new income on medicine,
-   or fall-damage injuries) are all reasonable next picks. Aviation/ATC
-   and the space program stay deliberately last, as the largest and least
-   incrementally verifiable pieces.
+   which would let a sick or injured citizen finally recover early) are
+   all reasonable next picks. Aviation/ATC and the space program stay
+   deliberately last, as the largest and least incrementally verifiable
+   pieces.
 
 (Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
 Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
@@ -1539,7 +1577,9 @@ above. Slice 45 gave the casino its fourth real table, Three Card Poker —
 see Section 6 above. Slice 46 closed the first crack in "NPCs are exempt
 from every other system," sharing the illness system with players — see
 Sections 2/5 above. Slice 47 gave NPCs real income through the same
-wage-and-tax pipeline players use — see Section 2 above.)
+wage-and-tax pipeline players use — see Section 2 above. Slice 48
+extended fall injuries to every living entity, not just players — see
+Sections 2/5 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

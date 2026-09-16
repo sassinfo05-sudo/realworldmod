@@ -58,6 +58,10 @@ public final class ModBlocks {
     public static final Block NARCOTICS_LAB = register("narcotics_lab",
             new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));
 
+    /** A second, harsher-risk drug/lab loop — see {@code MethHandler}. */
+    public static final Block METH_LAB = register("meth_lab",
+            new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));
+
     /** Sells {@code ALCOHOL} and {@code CIGARETTE} for real money — see {@code LiquorStoreUseHandler}. */
     public static final Block LIQUOR_STORE = register("liquor_store",
             new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));

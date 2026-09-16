@@ -52,6 +52,8 @@ import com.realworldmod.property.PropertyAccess;
 import com.realworldmod.property.PropertyProtection;
 import com.realworldmod.property.PropertyService;
 import com.realworldmod.property.PropertyTaxService;
+import com.realworldmod.underworld.MethHandler;
+import com.realworldmod.underworld.MethService;
 import com.realworldmod.underworld.NarcoticsHandler;
 import com.realworldmod.underworld.NarcoticsService;
 import com.realworldmod.utilities.UtilityAccess;
@@ -129,6 +131,7 @@ public final class RealWorldMod implements ModInitializer {
     private final CrapsService crapsService = new CrapsService(bankService);
     private final CivilCourtService civilCourtService = new CivilCourtService(bankService);
     private final NarcoticsService narcoticsService = new NarcoticsService(bankService);
+    private final MethService methService = new MethService(bankService);
     private final IntoxicationService intoxicationService = new IntoxicationService();
     private final NicotineService nicotineService = new NicotineService();
 
@@ -179,6 +182,7 @@ public final class RealWorldMod implements ModInitializer {
         CourtRegistryNetworking.registerServerReceiver(civilCourtService);
         new CivilCourtHandler(civilCourtService).register();
         new NarcoticsHandler(narcoticsService, lawEnforcementService).register();
+        new MethHandler(methService, lawEnforcementService).register();
         new LiquorStoreUseHandler(bankService).register();
         new AlcoholUseHandler(intoxicationService).register();
         new CigaretteUseHandler(nicotineService).register();

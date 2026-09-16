@@ -37,6 +37,7 @@ public final class ModItemGroups {
                         entries.add(ModBlocks.CRAPS_TABLE);
                         entries.add(ModBlocks.COURTHOUSE);
                         entries.add(ModBlocks.NARCOTICS_LAB);
+                        entries.add(ModBlocks.METH_LAB);
                         entries.add(ModBlocks.LIQUOR_STORE);
                         entries.add(ModItems.ALCOHOL);
                         entries.add(ModItems.CIGARETTE);

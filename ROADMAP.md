@@ -1789,6 +1789,36 @@ updated with every slice so neither side ever has to guess.
     no interruption if a player interacts with the citizen's register
     while it's "at work."
 
+- **Slice 73 — a second drug/lab type for the underworld** (Section 7),
+  closing part of "the underworld/narcotics system built in slice 37 is
+  a single cook/deal loop at one block type":
+  - `MethService` mirrors `NarcoticsService`'s cook/deal/stash/streak
+    shape exactly but with its own numbers — a 45-second cook cooldown
+    (vs. 30), a 15-second deal cooldown (vs. 10), and a 7000-cent payout
+    (vs. 4000) — tracked in entirely separate maps, so a player can have
+    an independent stash and deal streak in both drug economies at once.
+  - `MethCatchChance` and `MethSeverity` mirror `NarcoticsCatchChance`/
+    `NarcoticsSeverity`'s "scale by wanted level"/"escalate by deal
+    streak" shapes, but start and cap higher (25%-95% catch chance vs.
+    15%-90%; severity 3-5 vs. 2-4) — a genuinely harsher risk/reward
+    curve for the harder drug, not the same numbers under a new name.
+  - A new `METH_LAB` block and `MethHandler`, wired identically to
+    `NarcoticsHandler` (empty-hand cooks, sneak-right-click deals,
+    recording a caught deal through the same `LawEnforcementService`
+    pipeline every other crime uses).
+  - Exhaustively unit tested: new `MethServiceTest` mirrors every
+    `NarcoticsServiceTest` case plus one confirming the two services
+    don't share state; `MethCatchChanceTest`/`MethSeverityTest` mirror
+    their narcotics counterparts plus a direct "meth is always at least
+    as harsh as narcotics at every level/streak" comparison test — 418
+    total, all passing. `MethHandler`'s own wiring is untested like
+    every other Fabric event handler in the mod.
+  - **Known gaps**: still just two near-identical cook/deal loops with
+    no other variety (no distinct drug *effects* on the player, no
+    smuggling routes, no money laundering); no rival dealer NPCs or
+    turf for either lab; a player can run both labs' cooldowns in
+    parallel with no interaction or diminishing-returns between them.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -2275,8 +2305,13 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   `NarcoticsSeverity.STREAK_RESET_TICKS` without another deal), and
   `NarcoticsSeverity.forStreak` scales the recorded severity from a
   base of 2 up to a capped 4 — a real, distinct narcotics crime-severity
-  tier instead of sharing the generic value. As of slice 40, hurting
-  another player is
+  tier instead of sharing the generic value. As of slice 73, the
+  underworld has a second, distinct drug/lab type: a `METH_LAB` block
+  with its own independently-tracked `MethService`/`MethCatchChance`/
+  `MethSeverity` — a genuinely harsher risk/reward loop (a higher
+  payout, a longer cook cycle, and both a steeper catch chance and a
+  higher severity ceiling than the original narcotics lab), not a
+  reskin of the same numbers. As of slice 40, hurting another player is
   finally a tracked crime too: `AssaultHandler` hooks the same
   player-on-player damage event `medical.LegInjuryEffect` already uses
   for fall damage and, on any hit one player lands on another, records an
@@ -2317,12 +2352,15 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   actual adjudication — "contest" currently just means "show up in time,"
   not a real defense; no real prison — no cell block, no yard, no
   prison jobs, no faction/contraband/breakout mechanics; the underworld/
-  narcotics system built in slice 37 is a single cook/deal loop at one
-  block type — no dark web purchases, no variety of drugs/effects, no
-  drug smuggling routes, no money laundering through front businesses,
-  and no rival dealer NPCs or turf (dealing does get its own escalating
-  crime-severity tier as of slice 69, closing that half of the gap) — the "dark
-  web" referenced in Section 3 is still entirely unbuilt. **Requested and
+  narcotics system built in slice 37 was a single cook/deal loop at one
+  block type until slice 73 added a second, `METH_LAB` — still just two
+  near-identical cook/deal loops with no other drug variety or distinct
+  effects on the player, no dark web purchases, no drug smuggling
+  routes, no money laundering through front businesses, and no rival
+  dealer NPCs or turf (dealing does get its own escalating
+  crime-severity tier per lab as of slices 69/73, closing that half of
+  the gap) — the "dark web" referenced in Section 3 is still entirely
+  unbuilt. **Requested and
   tracked, not started**: running for and holding government office (up to
   leading the whole in-game country); terrorism attacks that occur
   dynamically as the game progresses and get repaired afterward (also
@@ -2444,8 +2482,9 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 ## Priority order for what's next
 
 1. Everything in the "missing" lists above — expanding the underworld
-   system slices 37/58/69 started (a second drug/lab type, or rival
-   dealer NPCs/turf), giving
+   system slices 37/58/69/73 started (rival dealer NPCs/turf remains the
+   biggest open piece, plus drug variety beyond two near-identical
+   cook/deal loops), giving
    alcohol/cigarettes from slices 38/60/62/67/68/71 more variety (a
    second drink/cigarette tier, a way to clear an already-active
    hangover/withdrawal rather than only prevent one, or letting the two
@@ -2528,7 +2567,8 @@ Section 7 above. Slice 70 gave the Court Registry a real bounded
 history list — see Section 3 above. Slice 71 added a recovery drink to
 prevent an alcohol hangover — see Section 5 above. Slice 72 kept a
 citizen anchored at its workplace during `WORKING` instead of wandering
-off — see Section 2 above.)
+off — see Section 2 above. Slice 73 gave the underworld a second
+drug/lab type, the Meth Lab — see Section 7 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

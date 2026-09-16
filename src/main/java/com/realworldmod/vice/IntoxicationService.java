@@ -18,6 +18,11 @@ import java.util.UUID;
  * shape {@code medical.IllnessService#tick} already established. As of
  * slice 67, repeated hangovers within {@link HangoverSeverity#STREAK_RESET_TICKS}
  * of each other escalate in severity instead of always being identical.
+ * As of slice 71, a player can head one off before it starts:
+ * {@link #useRecoveryDrink} cancels an impending hangover and resets its
+ * escalation streak, the same preventive shape
+ * {@code vice.NicotineService#usePatch} already established for
+ * withdrawal.
  */
 public final class IntoxicationService {
     public static final long DECAY_TICKS_PER_LEVEL = 20L * 60L;
@@ -65,5 +70,15 @@ public final class IntoxicationService {
         hangoverStreak.put(playerId, nextStreak);
         lastHangoverTick.put(playerId, currentTick);
         return HangoverSeverity.forStreak(nextStreak);
+    }
+
+    /** Cancels an impending hangover and resets its escalation streak; returns whether there was one pending. */
+    public boolean useRecoveryDrink(UUID playerId) {
+        if (!peakedAtMaxLevel.getOrDefault(playerId, false)) {
+            return false;
+        }
+        peakedAtMaxLevel.put(playerId, false);
+        hangoverStreak.put(playerId, 0);
+        return true;
     }
 }

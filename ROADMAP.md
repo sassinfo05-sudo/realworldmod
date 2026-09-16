@@ -1726,6 +1726,38 @@ updated with every slice so neither side ever has to guess.
     click-to-expand or per-case detail view, just the same
     opponent/amount/outcome summary line repeated per entry.
 
+- **Slice 71 — a recovery drink to prevent a hangover** (Section 5),
+  closing the rest of slice 68's "no equivalent item exists to ease an
+  alcohol hangover" gap:
+  - `IntoxicationService.useRecoveryDrink(playerId)` mirrors
+    `NicotineService.usePatch` exactly, but for the other direction: it
+    clears `peakedAtMaxLevel` and resets `hangoverStreak` to zero,
+    canceling an impending hangover before `checkHangover` would ever
+    fire it — returning false (and doing nothing) if there wasn't one
+    pending, so a sober player drinking one wastes it for nothing.
+  - A new `RECOVERY_DRINK` item, deliberately *crafted* rather than
+    purchased (a `minecraft:crafting_shapeless` recipe combining
+    `MEDICINE` and vanilla `milk_bucket`, mirroring vanilla's own
+    milk-clears-effects folk logic) since both existing shop blocks
+    already use their empty-hand/sneak two-branch split for other items
+    — reusing slice 65's "give it a use via a real recipe" pattern
+    instead of inventing a third shop gesture. Used via a new
+    `RecoveryDrinkUseHandler`, the same shape `NicotinePatchUseHandler`
+    already established.
+  - Exhaustively unit tested: `IntoxicationServiceTest` gains cases for
+    a recovery drink doing nothing without ever peaking, canceling a
+    pending hangover outright, and resetting the escalation streak so
+    the *next* real hangover starts back at severity 1 instead of
+    continuing the old streak — 395 total, all passing. The
+    purchase-free crafting recipe and use handler are untested like
+    every other Fabric-event-driven consumable/recipe in the mod.
+  - **Known gaps**: only cancels a *pending* hangover, not an
+    already-active one (there's no way to clear Nausea+Mining Fatigue
+    once it's already applied, short of waiting it out); the two vice
+    systems still don't interact with each other at all; drinking a
+    Recovery Drink while sober is simply wasted, with no partial credit
+    or stockpiling benefit.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -2039,7 +2071,13 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   (sneak-right-click instead of the normal right-click), delays the next
   withdrawal and resets its escalation streak via
   `NicotineService.usePatch` — without the illness risk or buzz an
-  actual cigarette carries.
+  actual cigarette carries. As of slice 71, alcohol has its own
+  preventive item too: `RECOVERY_DRINK`, crafted from Medicine and milk
+  (mirroring the "prevent it before it starts" shape the nicotine patch
+  established), cancels an impending hangover via
+  `IntoxicationService.useRecoveryDrink` and resets its escalation
+  streak, closing the "no equivalent item exists to ease an alcohol
+  hangover" gap slice 68 left open.
 - Missing: this is a *health-bar replacement disguised as a status
   effect*, not a real localized zone model — there's no per-body-part
   (head/torso/arms/legs) data structure, no bone-fracture-requiring-cast
@@ -2064,13 +2102,14 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   a real hangover effect exists as of slice 60 and nicotine withdrawal as
   of slice 62, and as of slice 67 both escalate in severity for repeat
   benders/quit-attempts within a rolling window — as of slice 68 there's
-  finally a way to ease withdrawal short of smoking again, a real
-  `NICOTINE_PATCH` item sold at the Pharmacy Counter — but the two vice
+  a way to ease withdrawal short of smoking again (`NICOTINE_PATCH`,
+  sold at the Pharmacy Counter) and as of slice 71 an equivalent
+  preventive item exists for the other vice system too
+  (`RECOVERY_DRINK`, crafted rather than purchased) — but the two vice
   systems still don't interact with each other at all (getting drunk
   while withdrawing from nicotine, for instance, is just two independent
-  effect sets), and there's no equivalent item easing an alcohol
-  hangover; NPCs can now catch a
-  cold in the
+  effect sets), and neither preventive item cures an *already-applied*
+  effect, only one still pending; NPCs can now catch a cold in the
   rain as of slice 46, but still never drink, smoke, or get injured — the
   vice systems and fall injury remain player-only, only the
   weather-illness system is shared.)
@@ -2370,10 +2409,11 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 1. Everything in the "missing" lists above — expanding the underworld
    system slices 37/58/69 started (a second drug/lab type, or rival
    dealer NPCs/turf), giving
-   alcohol/cigarettes from slices 38/60/62/67/68 more variety (a second
-   drink/cigarette tier, an item easing an alcohol hangover to mirror
-   the nicotine patch, or letting the two vice systems interact), a
-   second vehicle type now that slices 39/51/52 rounded out the first
+   alcohol/cigarettes from slices 38/60/62/67/68/71 more variety (a
+   second drink/cigarette tier, a way to clear an already-active
+   hangover/withdrawal rather than only prevent one, or letting the two
+   vice systems interact), a second vehicle type now that slices
+   39/51/52 rounded out the first
    car's fuel/ownership/speed, expanding the predator
    system slices 42/59/63/65/66 started (a second predator/prey pair
    remains the biggest open piece), extending the
@@ -2447,7 +2487,8 @@ escalating severity — see Section 5 above. Slice 68 added a real
 nicotine patch item to ease withdrawal — see Sections 5/6 above. Slice
 69 gave narcotics dealing its own escalating crime-severity tier — see
 Section 7 above. Slice 70 gave the Court Registry a real bounded
-history list — see Section 3 above.)
+history list — see Section 3 above. Slice 71 added a recovery drink to
+prevent an alcohol hangover — see Section 5 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

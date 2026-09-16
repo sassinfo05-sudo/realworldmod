@@ -70,6 +70,7 @@ import com.realworldmod.vice.LiquorStoreUseHandler;
 import com.realworldmod.vice.NicotinePatchUseHandler;
 import com.realworldmod.vice.NicotineService;
 import com.realworldmod.vice.NicotineWithdrawalEffect;
+import com.realworldmod.vice.RecoveryDrinkUseHandler;
 import com.realworldmod.wildlife.CoyoteSpawnHandler;
 import com.realworldmod.wildlife.DeerDropHandler;
 import com.realworldmod.wildlife.DeerSpawnHandler;
@@ -182,6 +183,7 @@ public final class RealWorldMod implements ModInitializer {
         new AlcoholUseHandler(intoxicationService).register();
         new CigaretteUseHandler(nicotineService).register();
         new NicotinePatchUseHandler(nicotineService).register();
+        new RecoveryDrinkUseHandler(intoxicationService).register();
         new GasPumpUseHandler(bankService).register();
         new AssaultHandler(lawEnforcementService).register();
         new MurderHandler(lawEnforcementService).register();

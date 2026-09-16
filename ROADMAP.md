@@ -910,6 +910,48 @@ updated with every slice so neither side ever has to guess.
     layout and button behavior are unverified without a running client,
     the same caveat as every other UI in the mod.
 
+- **Slice 45 — Three Card Poker, the casino's fourth real game**
+  (Section 6), the next item on the priority list after blackjack:
+  - `Card`/`Card.Rank`/`Card.Suit`: a fresh, self-contained model rather
+    than reusing `BlackjackGame.Rank` — poker hand evaluation needs suits
+    (for flushes), which blackjack's rank-only representation never
+    tracked.
+  - `ThreeCardPokerHandRank`/`ThreeCardPokerHand`/`ThreeCardPokerHandEvaluator`:
+    real hand evaluation recognizing every category (high card, pair,
+    flush, straight, three of a kind, straight flush) including the
+    Ace-2-3 "wheel" as the lowest straight, and the genuine, real Three
+    Card Poker quirk that a straight outranks a flush — the *opposite* of
+    five-card poker, because a straight is the statistically rarer hand
+    once a hand is only three cards.
+  - `ThreeCardPokerGame`: real Ante/Play structure — deal, then the
+    player folds (forfeiting the ante, dealer hand never even needs to be
+    compared) or plays (matching the ante with an equal play bet,
+    revealing the dealer's hand). The dealer must qualify with Queen-high
+    or better; if it doesn't, the ante still pays even money and the play
+    bet simply pushes — a real rule, not a simplification, and why
+    `anteMultiplier`/`playMultiplier` are two separate functions rather
+    than one shared payout table like blackjack's.
+  - `ThreeCardPokerService` + full networking (state/deal/fold/play/
+    response) + `ThreeCardPokerScreen`: the same withdraw-then-settle
+    session shape `BlackjackService`/`BlackjackNetworking`/
+    `BlackjackScreen` established, adapted for the two-stage ante-then-
+    play bet instead of a single stake.
+  - Exhaustively unit tested: `CardTest` (ordinal round-trip), 12
+    `ThreeCardPokerHandEvaluatorTest` cases (every hand category, the
+    wheel, the straight-beats-flush rule, tiebreak comparisons), 9
+    `ThreeCardPokerGameTest` cases (dealer qualification both ways, win/
+    lose/push/fold, resolution guards), and 10 `ThreeCardPokerServiceTest`
+    cases (ante withdrawal, fold forfeiture, play-bet withdrawal and
+    payout, insufficient-funds handling) — 34 new tests, 299 total, all
+    passing.
+  - **Known gaps**: no Pair Plus side bet or 6-card bonus (the real
+    game's optional extra wagers), single-player against the dealer only
+    (no multiplayer poker room), draws with replacement from an infinite
+    shoe like every other card game in the mod, one fixed bet size, and a
+    player who can't afford the play bet is simply stuck (the UI has no
+    dedicated message for it, just an unchanged screen) rather than being
+    auto-folded; unverified without a running client.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1142,7 +1184,7 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   (Cash Register pays a wage rather than sells anything, Pharmacy Counter
   sells Medicine, License Office sells a hunting permit, and — as of
   slice 38 — a Liquor Store sells Alcohol and Cigarettes) — a narrow slice
-  of "retail," not general commerce — plus three real casino games. As of
+  of "retail," not general commerce — plus four real casino games. As of
   slice 33, `SlotMachine`: three reels over a fixed symbol set and an
   actual payout table (three sevens pays 10x the bet, bars 5x, bells 3x,
   cherries 2x, any two matching is a push, no match loses the bet). As of
@@ -1154,21 +1196,30 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   screen, not a single right-click) — real hand scoring (Aces count 11
   unless that would bust, then drop to 1), a dealer that hits below 17
   and stands otherwise, a hidden hole card until the round resolves, and
-  a genuine 3:2 natural-blackjack payout. All three are unit-tested
-  exhaustively against every outcome, not just the category existing
-  with no game underneath.
+  a genuine 3:2 natural-blackjack payout. As of slice 45, `ThreeCardPokerGame`:
+  a fourth real interactive game (a Deal/Fold/Play screen) with a real
+  Ante/Play betting structure, actual hand evaluation via `Card`/
+  `ThreeCardPokerHandEvaluator` (including the genuine, counterintuitive
+  Three Card Poker rule that a straight outranks a flush — the opposite
+  of five-card poker, since a straight is the rarer hand with only three
+  cards), and a dealer that must qualify with Queen-high or better before
+  the hand comparison even happens. All four are unit-tested exhaustively
+  against every outcome, not just the category existing with no game
+  underneath.
 - Missing: grocery stores/shopping carts, furniture stores, clothing
   boutiques with a layered fashion/customization engine, bakeries, gun/
   ammo shops, phone/PC retail beyond the two items that exist, player-run
   businesses (buying commercial plots, setting prices on a POS UI, hiring
   NPC cashiers, automatic Friday payroll), the rest of a real casino
-  (poker/craps — three games exist now, not the whole floor; roulette
-  itself is color-betting only, no number/split/street bets; blackjack
-  has no double-down/split-pairs/insurance, no multi-deck penetration
-  tracking, and draws with replacement from an infinite shoe rather than
-  a finite deck), strip clubs/VIP lounges/nightclubs/DJ booths with
-  proximity audio; all three games' losing bets simply vanish rather
-  than reaching a tracked "house" account, and each is a single fixed
+  (craps — four games exist now, not the whole floor; roulette itself is
+  color-betting only, no number/split/street bets; blackjack has no
+  double-down/split-pairs/insurance, no multi-deck penetration tracking;
+  poker has no Pair Plus side bet, no 6-card bonus, and only Ante/Play,
+  not a full poker room with other players; all four games draw with
+  replacement from an infinite shoe rather than a finite deck), strip
+  clubs/VIP lounges/nightclubs/DJ booths with proximity audio; all four
+  games' losing bets simply vanish rather than reaching a tracked "house"
+  account, and each is a single fixed
   bet size with no way to wager more or less. **Requested and tracked,
   not started**: real wealth-tier
   recognition (nothing currently distinguishes or reacts to
@@ -1368,18 +1419,17 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 
 ## Priority order for what's next
 
-1. Everything in the "missing" lists above — a fourth casino game (poker
-   or craps) alongside slots/roulette/blackjack, expanding the underworld
-   system slice 37 started (a second drug/lab type, rival dealer NPCs,
-   or scaling catch chance by wanted level), giving alcohol/cigarettes
-   from slice 38 more variety (a second drink/cigarette tier, a
-   hangover effect), continuing to round out automotive now that
-   slice 39 added fuel visibility (a speed HUD, a second vehicle type),
-   expanding the predator system slice 42 started (a second
-   predator/prey pair, pack hunting), or a fourth casino game to
-   further round out Section 6 are all reasonable next picks. Aviation/
-   ATC and the space program stay deliberately last, as the largest and
-   least incrementally verifiable pieces.
+1. Everything in the "missing" lists above — a fifth casino game (craps)
+   now that poker rounds out four, expanding the underworld system slice
+   37 started (a second drug/lab type, rival dealer NPCs, or scaling
+   catch chance by wanted level), giving alcohol/cigarettes from slice 38
+   more variety (a second drink/cigarette tier, a hangover effect),
+   continuing to round out automotive now that slice 39 added fuel
+   visibility (a speed HUD, a second vehicle type), or expanding the
+   predator system slice 42 started (a second predator/prey pair, pack
+   hunting) are all reasonable next picks. Aviation/ATC and the space
+   program stay deliberately last, as the largest and least incrementally
+   verifiable pieces.
 
 (Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
 Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
@@ -1404,7 +1454,8 @@ murder crime tier — see Section 7 above. Slice 42 closed out predator AI
 with `CoyoteEntity` hunting `DeerEntity` — see Section 8 above. Slice 43
 closed out water as a second, independent billed utility — see Section 9
 above. Slice 44 closed out water's phone-app visibility — see Section 9
-above.)
+above. Slice 45 gave the casino its fourth real table, Three Card Poker —
+see Section 6 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

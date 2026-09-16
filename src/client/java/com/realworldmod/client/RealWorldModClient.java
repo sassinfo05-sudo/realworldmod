@@ -2,6 +2,8 @@ package com.realworldmod.client;
 
 import com.realworldmod.client.commerce.BlackjackScreen;
 import com.realworldmod.client.commerce.ClientBlackjackState;
+import com.realworldmod.client.commerce.ClientThreeCardPokerState;
+import com.realworldmod.client.commerce.ThreeCardPokerScreen;
 import com.realworldmod.client.crime.ClientCrimeState;
 import com.realworldmod.client.economy.ClientBankState;
 import com.realworldmod.client.economy.ClientTreasuryState;
@@ -15,6 +17,7 @@ import com.realworldmod.client.wildlife.CoyoteEntityRenderer;
 import com.realworldmod.client.wildlife.DeerEntityRenderer;
 import com.realworldmod.client.wildlife.GameWardenEntityRenderer;
 import com.realworldmod.commerce.net.BlackjackStateResponsePayload;
+import com.realworldmod.commerce.net.ThreeCardPokerStateResponsePayload;
 import com.realworldmod.crime.net.WantedLevelResponsePayload;
 import com.realworldmod.economy.net.BankBalanceResponsePayload;
 import com.realworldmod.economy.net.TreasuryBalanceResponsePayload;
@@ -57,6 +60,10 @@ public final class RealWorldModClient implements ClientModInitializer {
                 (payload, context) -> ClientBlackjackState.set(new ClientBlackjackState.State(
                         payload.hasActiveGame(), payload.playerHandOrdinals(), payload.dealerHandOrdinals(),
                         payload.resolved(), payload.outcomeOrdinal(), payload.payoutCents())));
+        ClientPlayNetworking.registerGlobalReceiver(ThreeCardPokerStateResponsePayload.ID,
+                (payload, context) -> ClientThreeCardPokerState.set(new ClientThreeCardPokerState.State(
+                        payload.hasActiveGame(), payload.playerHandOrdinals(), payload.dealerHandOrdinals(),
+                        payload.resolved(), payload.outcomeOrdinal(), payload.payoutCents())));
 
         EntityRendererRegistry.register(ModEntities.CAR, CarEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.CITIZEN, CitizenEntityRenderer::new);
@@ -87,11 +94,15 @@ public final class RealWorldModClient implements ClientModInitializer {
             if (!world.isClient || hand != Hand.MAIN_HAND) {
                 return ActionResult.PASS;
             }
-            if (!world.getBlockState(hitResult.getBlockPos()).isOf(ModBlocks.BLACKJACK_TABLE)) {
-                return ActionResult.PASS;
+            if (world.getBlockState(hitResult.getBlockPos()).isOf(ModBlocks.BLACKJACK_TABLE)) {
+                MinecraftClient.getInstance().setScreen(new BlackjackScreen());
+                return ActionResult.SUCCESS;
             }
-            MinecraftClient.getInstance().setScreen(new BlackjackScreen());
-            return ActionResult.SUCCESS;
+            if (world.getBlockState(hitResult.getBlockPos()).isOf(ModBlocks.POKER_TABLE)) {
+                MinecraftClient.getInstance().setScreen(new ThreeCardPokerScreen());
+                return ActionResult.SUCCESS;
+            }
+            return ActionResult.PASS;
         });
     }
 }

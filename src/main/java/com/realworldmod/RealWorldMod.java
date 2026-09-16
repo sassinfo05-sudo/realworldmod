@@ -3,9 +3,11 @@ package com.realworldmod;
 import com.realworldmod.civil.CivilCourtHandler;
 import com.realworldmod.civil.CivilCourtService;
 import com.realworldmod.commerce.BlackjackService;
+import com.realworldmod.commerce.ThreeCardPokerService;
 import com.realworldmod.commerce.RouletteUseHandler;
 import com.realworldmod.commerce.SlotMachineUseHandler;
 import com.realworldmod.commerce.net.BlackjackNetworking;
+import com.realworldmod.commerce.net.ThreeCardPokerNetworking;
 import com.realworldmod.crime.ArrestAccess;
 import com.realworldmod.crime.ArrestHandler;
 import com.realworldmod.crime.ArrestOutcome;
@@ -109,6 +111,7 @@ public final class RealWorldMod implements ModInitializer {
     private final PropertyTaxService propertyTaxService =
             new PropertyTaxService(propertyService.registry(), bankService);
     private final BlackjackService blackjackService = new BlackjackService(bankService);
+    private final ThreeCardPokerService pokerService = new ThreeCardPokerService(bankService);
     private final CivilCourtService civilCourtService = new CivilCourtService(bankService);
     private final NarcoticsService narcoticsService = new NarcoticsService(bankService);
     private final IntoxicationService intoxicationService = new IntoxicationService();
@@ -151,6 +154,8 @@ public final class RealWorldMod implements ModInitializer {
         new RouletteUseHandler(bankService).register();
         BlackjackNetworking.registerPayloadTypes();
         BlackjackNetworking.registerServerReceivers(blackjackService);
+        ThreeCardPokerNetworking.registerPayloadTypes();
+        ThreeCardPokerNetworking.registerServerReceivers(pokerService);
         new CivilCourtHandler(civilCourtService).register();
         new NarcoticsHandler(narcoticsService, lawEnforcementService).register();
         new LiquorStoreUseHandler(bankService).register();

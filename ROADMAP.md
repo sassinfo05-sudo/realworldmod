@@ -1095,6 +1095,35 @@ updated with every slice so neither side ever has to guess.
     replacement rather than modeling physical dice; unverified without a
     running client.
 
+- **Slice 51 — car ownership and auto theft as a tracked crime**
+  (Section 4), closing part of "no mechanic for stealing cars or car keys
+  from an NPC or parked vehicle":
+  - `CarEntity` gains a real, NBT-persisted owner (`ownerId`), set by
+    `CarSpawnHandler` to the player who spawns it via `CAR_KEY`. Riding
+    someone else's car is no longer free: `CarEntity.interact` now
+    records real auto theft through the *existing*
+    `LawEnforcementService.recordOffense` pipeline (via the already-wired
+    `CrimeAccess` static holder) at a severity between poaching and
+    assault, rather than a parallel vehicle-specific consequence system —
+    the theft still succeeds mechanically (the thief can still drive
+    away), it's just genuinely illegal now, with real wanted-level and
+    fine consequences.
+  - An unowned car (any car spawned before this slice, since the field
+    defaults to `null`) stays drivable by anyone with no consequence,
+    matching `ClaimRegistry`'s own "unclaimed is unrestricted" convention
+    rather than retroactively criminalizing existing saves.
+  - No new unit tests, for the same reason slices 40/41's crime-hook
+    additions had none: `LawEnforcementServiceTest`/`CrimeServiceTest`
+    already exhaustively cover `recordOffense` for any severity value;
+    only the ownership check and event wiring inside `CarEntity` are new,
+    and `CarEntity` itself has never been unit tested — it needs a
+    running Minecraft entity/world, the same documented caveat since
+    slice 19 (324 tests total, unchanged, all still passing).
+  - **Known gaps**: see the updated Section 4 status above — no NPC-owned
+    vehicles yet (citizens don't own cars at all), and theft is only
+    detected at the moment of riding, not of taking a spare `CAR_KEY`
+    item.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1296,7 +1325,15 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   empty: sneak-right-clicking your car reads out its exact fuel level,
   and a `GAS_PUMP` retail block refuels it for real money — a partial
   refill, not a failed interaction, if the player can't afford a full
-  tank.
+  tank. As of slice 51, a car has a real owner too: `CarSpawnHandler` now
+  assigns the spawning player as owner, persisted through relog via NBT,
+  and anyone else who starts riding it commits real, tracked auto theft
+  through the *existing* `LawEnforcementService.recordOffense` pipeline —
+  the same reused-not-parallel pattern every crime-adjacent system in the
+  mod follows — closing part of "no mechanic for stealing cars." An
+  unowned car (spawned before this slice) is still drivable by anyone
+  with no consequence, matching the property system's own "unclaimed is
+  unrestricted" convention.
 - Missing: the other 299+ vehicle types (including, specifically
   requested: motorcycles, bicycles, e-bikes, skateboards, rollerblades,
   boats and kayaks, cargo ships, cargo/military planes, military ships,
@@ -1306,13 +1343,16 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   minigame, subways/bullet trains/transit cards/timetables. The one
   vehicle that exists still has no speed HUD, no suspension/tire-friction
   modeling, no collision damage, and the fuel gauge is a chat message on
-  request rather than a persistent HUD element. **Requested and
+  request rather than a persistent HUD element; car theft only exists for
+  a player-owned car — an NPC-owned vehicle isn't possible yet since
+  citizens don't own cars at all, and there's still no way to steal a
+  spare `CAR_KEY` item itself (theft is only detected at the moment of
+  riding, not of key possession). **Requested and
   tracked, not started**: any AI-controlled traffic at all — no other
   cars/planes/helicopters share the roads or sky with the player; no
   speed-check/radar-gun mechanic, no bumper/collision-damage system
   between vehicles, no hidden/undercover police vehicles, no in-vehicle
-  radio, and no mechanic for stealing cars or car keys from an NPC or
-  parked vehicle.
+  radio.
 
 **Section 5 — Biology, Medical, Fitness & Lineage**
 - Done: two damage/exposure sources (fall damage, rain exposure) each
@@ -1622,10 +1662,11 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    predator system slice 42 started (a second predator/prey pair, pack
    hunting), extending the NPC-inclusion slices 46-49 started to another
    system (NPC pathfinding to a real shop, or a distinct NPC-victim
-   assault/arrest consequence), or giving the casino a wagerable bet size
-   now that all five tables exist are all reasonable next picks.
-   Aviation/ATC and the space program stay deliberately last, as the
-   largest and least incrementally verifiable pieces.
+   assault/arrest consequence), giving the casino a wagerable bet size
+   now that all five tables exist, or a speed HUD/second vehicle type to
+   build further on slice 51's car ownership are all reasonable next
+   picks. Aviation/ATC and the space program stay deliberately last, as
+   the largest and least incrementally verifiable pieces.
 
 (Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
 Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
@@ -1659,7 +1700,9 @@ extended fall injuries to every living entity, not just players — see
 Sections 2/5 above. Slice 49 closed the loop by having a sick or injured
 citizen actually spend that income on medicine — see Sections 2/5
 above. Slice 50 gave the casino its fifth real table, Craps — see
-Section 6 above.)
+Section 6 above. Slice 51 closed part of "no mechanic for stealing
+cars" with real car ownership and tracked auto theft — see Section 4
+above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

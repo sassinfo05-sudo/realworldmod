@@ -147,6 +147,7 @@
   "message.realworldmod.gas_pump_refueled": "Filled up %s liters for %s.",
   "message.realworldmod.gas_pump_partial_refuel": "You could only afford %s liters for %s.",
   "message.realworldmod.assault_recorded": "Assault reported. Your wanted level has increased.",
+  "message.realworldmod.car_theft_recorded": "That's not your car. Auto theft reported.",
   "message.realworldmod.murder_recorded": "Murder reported. You are now Most Wanted.",
   "gui.realworldmod.phone.settings.battery": "Battery: %s%%",
   "gui.realworldmod.phone.settings.power_off": "Lock phone",

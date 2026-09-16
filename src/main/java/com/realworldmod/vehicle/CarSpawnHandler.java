@@ -8,7 +8,11 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 
-/** Right-clicking any block with a {@code CAR_KEY} in hand spawns a {@link CarEntity} on top of it. */
+/**
+ * Right-clicking any block with a {@code CAR_KEY} in hand spawns a
+ * {@link CarEntity} on top of it, owned by the spawning player — see
+ * {@link CarEntity#setOwner} for what that ownership actually enforces.
+ */
 public final class CarSpawnHandler {
     private CarSpawnHandler() {
     }
@@ -26,6 +30,7 @@ public final class CarSpawnHandler {
             CarEntity car = new CarEntity(ModEntities.CAR, world);
             car.refreshPositionAndAngles(
                     spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, player.getYaw(), 0.0f);
+            car.setOwner(player.getUuid());
             ((ServerWorld) world).spawnEntity(car);
             return ActionResult.SUCCESS;
         });

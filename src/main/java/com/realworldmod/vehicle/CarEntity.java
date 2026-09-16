@@ -1,5 +1,9 @@
 package com.realworldmod.vehicle;
 
+import com.realworldmod.crime.CrimeAccess;
+import com.realworldmod.crime.LawEnforcementService;
+import com.realworldmod.crime.OffenseOutcome;
+import com.realworldmod.economy.CurrencyFormatter;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -15,6 +19,8 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 
+import java.util.UUID;
+
 /**
  * The first real, rideable wrapper around {@link VehiclePhysics} (Section
  * 4). Movement is server-authoritative and deliberately simple: no
@@ -25,10 +31,20 @@ import net.minecraft.world.World;
  * driveable, is the model oriented/scaled right) cannot be verified by
  * inspecting bytecode or a generated refmap; it needs a running game
  * client.
+ *
+ * <p>As of slice 51, a car has a real owner (the player who spawned it via
+ * {@code CarSpawnHandler}, see {@link #setOwner}): anyone else who starts
+ * riding it commits real, tracked auto theft through the same
+ * {@link LawEnforcementService#recordOffense} pipeline every other crime
+ * in the mod uses — closing part of the "no mechanic for stealing cars"
+ * gap. An unowned car (spawned before this slice, or never claimed) can
+ * still be driven by anyone with no consequence, matching the property
+ * system's own "unclaimed is unrestricted" convention.
  */
 public class CarEntity extends Entity {
     /** Also the tank capacity — a car spawns with a full tank, see {@link #refuel}. */
     public static final double MAX_FUEL_LITERS = 100.0;
+    public static final int CAR_THEFT_SEVERITY = 2;
     private static final double STARTING_FUEL_LITERS = MAX_FUEL_LITERS;
     private static final float TURN_DEGREES_PER_TICK = 3.0f;
     private static final double GRAVITY_PER_TICK = 0.04;
@@ -38,6 +54,7 @@ public class CarEntity extends Entity {
             DataTracker.registerData(CarEntity.class, TrackedDataHandlerRegistry.FLOAT);
 
     private VehicleState vehicleState = VehicleState.atRestWithFuel(STARTING_FUEL_LITERS);
+    private UUID ownerId;
 
     public CarEntity(EntityType<? extends CarEntity> entityType, World world) {
         super(entityType, world);
@@ -45,6 +62,15 @@ public class CarEntity extends Entity {
 
     public VehicleState vehicleState() {
         return vehicleState;
+    }
+
+    public UUID ownerId() {
+        return ownerId;
+    }
+
+    /** Sets this car's owner — see {@code CarSpawnHandler}, called once when the car is first spawned. */
+    public void setOwner(UUID ownerId) {
+        this.ownerId = ownerId;
     }
 
     /** Adds fuel, capped at {@link #MAX_FUEL_LITERS} — see {@code vehicle.GasPumpUseHandler}. */
@@ -68,12 +94,16 @@ public class CarEntity extends Entity {
         double fuel = nbt.contains("Fuel") ? nbt.getDouble("Fuel") : STARTING_FUEL_LITERS;
         double speed = nbt.contains("Speed") ? nbt.getDouble("Speed") : 0.0;
         vehicleState = new VehicleState(speed, fuel);
+        ownerId = nbt.containsUuid("Owner") ? nbt.getUuid("Owner") : null;
     }
 
     @Override
     protected void writeCustomDataToNbt(NbtCompound nbt) {
         nbt.putDouble("Fuel", vehicleState.fuelLiters());
         nbt.putDouble("Speed", vehicleState.speedBlocksPerTick());
+        if (ownerId != null) {
+            nbt.putUuid("Owner", ownerId);
+        }
     }
 
     @Override
@@ -87,9 +117,25 @@ public class CarEntity extends Entity {
             return ActionResult.SUCCESS;
         }
         if (this.getPassengerList().isEmpty()) {
+            if (ownerId != null && !ownerId.equals(player.getUuid())) {
+                reportTheft(player);
+            }
             return player.startRiding(this) ? ActionResult.SUCCESS : ActionResult.PASS;
         }
         return ActionResult.PASS;
+    }
+
+    private void reportTheft(PlayerEntity player) {
+        LawEnforcementService lawEnforcementService = CrimeAccess.get();
+        if (lawEnforcementService == null) {
+            return;
+        }
+        OffenseOutcome outcome = lawEnforcementService.recordOffense(player.getUuid(), CAR_THEFT_SEVERITY);
+        player.sendMessage(Text.translatable("message.realworldmod.car_theft_recorded"), true);
+        if (outcome.fined()) {
+            player.sendMessage(Text.translatable("message.realworldmod.fine_issued",
+                    CurrencyFormatter.format(LawEnforcementService.FINE_CENTS)), true);
+        }
     }
 
     @Override

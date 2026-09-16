@@ -49,6 +49,8 @@ import com.realworldmod.underworld.NarcoticsHandler;
 import com.realworldmod.underworld.NarcoticsService;
 import com.realworldmod.utilities.UtilityAccess;
 import com.realworldmod.utilities.UtilityService;
+import com.realworldmod.utilities.WaterAccess;
+import com.realworldmod.utilities.WaterService;
 import com.realworldmod.utilities.net.UtilityNetworking;
 import com.realworldmod.vehicle.CarSpawnHandler;
 import com.realworldmod.vehicle.GasPumpUseHandler;
@@ -99,6 +101,7 @@ public final class RealWorldMod implements ModInitializer {
     private final TrialService trialService = new TrialService();
     private final ArrestService arrestService = new ArrestService(crimeService, trialService);
     private final UtilityService utilityService = new UtilityService(bankService);
+    private final WaterService waterService = new WaterService(bankService);
     private final IllnessService illnessService = new IllnessService();
     private final HuntingLicenseService huntingLicenseService = new HuntingLicenseService();
     private final GameWardenService gameWardenService = new GameWardenService(bankService);
@@ -125,6 +128,7 @@ public final class RealWorldMod implements ModInitializer {
         TrialAccess.set(trialService);
         ArrestAccess.set(arrestService);
         UtilityAccess.set(utilityService);
+        WaterAccess.set(waterService);
         new PropertyProtection(propertyService.registry(), lawEnforcementService).register();
         new DeedUseHandler(propertyService, bankService).register();
         BankNetworking.registerPayloadTypes();
@@ -183,6 +187,10 @@ public final class RealWorldMod implements ModInitializer {
             Path utilityDbPath = saveRoot.resolve("realworldmod").resolve("utilities.sqlite");
             utilityService.open(utilityDbPath);
             LOGGER.info("[RealWorldMod] Utility database opened at {}", utilityDbPath);
+
+            Path waterDbPath = saveRoot.resolve("realworldmod").resolve("water.sqlite");
+            waterService.open(waterDbPath);
+            LOGGER.info("[RealWorldMod] Water database opened at {}", waterDbPath);
         });
 
         ServerTickEvents.END_SERVER_TICK.register(server -> {
@@ -197,9 +205,14 @@ public final class RealWorldMod implements ModInitializer {
             List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
             List<UUID> disconnected = utilityService.tick(
                     server.getOverworld().getTime(), onlinePlayers.stream().map(ServerPlayerEntity::getUuid).toList());
+            List<UUID> waterDisconnected = waterService.tick(
+                    server.getOverworld().getTime(), onlinePlayers.stream().map(ServerPlayerEntity::getUuid).toList());
             for (ServerPlayerEntity player : onlinePlayers) {
                 if (disconnected.contains(player.getUuid())) {
                     player.sendMessage(Text.translatable("message.realworldmod.power_shutoff"), true);
+                }
+                if (waterDisconnected.contains(player.getUuid())) {
+                    player.sendMessage(Text.translatable("message.realworldmod.water_shutoff"), true);
                 }
                 WeatherIllnessEffect.check(illnessService, player);
 
@@ -215,6 +228,7 @@ public final class RealWorldMod implements ModInitializer {
             propertyService.close();
             bankService.close();
             utilityService.close();
+            waterService.close();
         });
     }
 }

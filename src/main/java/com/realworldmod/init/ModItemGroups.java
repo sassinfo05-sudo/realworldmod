@@ -40,6 +40,7 @@ public final class ModItemGroups {
                         entries.add(ModItems.CIGARETTE);
                         entries.add(ModBlocks.GAS_PUMP);
                         entries.add(ModItems.KNIFE);
+                        entries.add(ModBlocks.WATER_OUTLET);
                     })
                     .build());
 

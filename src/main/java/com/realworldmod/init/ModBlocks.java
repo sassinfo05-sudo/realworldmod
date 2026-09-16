@@ -2,6 +2,7 @@ package com.realworldmod.init;
 
 import com.realworldmod.RealWorldMod;
 import com.realworldmod.utilities.UtilityLampBlock;
+import com.realworldmod.utilities.WaterOutletBlock;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.item.BlockItem;
@@ -56,6 +57,10 @@ public final class ModBlocks {
     /** Refuels the rider's parked car for real money — see {@code vehicle.GasPumpUseHandler}. */
     public static final Block GAS_PUMP = register("gas_pump",
             new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));
+
+    /** A sink whose flowing state actually reflects water billing — see {@code utilities.WaterOutletBlock}. */
+    public static final Block WATER_OUTLET = register("water_outlet",
+            new WaterOutletBlock(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));
 
     private ModBlocks() {
     }

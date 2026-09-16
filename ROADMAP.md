@@ -851,6 +851,41 @@ updated with every slice so neither side ever has to guess.
     predator/prey pair, no pack coordination, no drops or population
     consequence from a kill, item-spawned only.
 
+- **Slice 43 — water as a second, fully independent billed utility**
+  (Section 9), closing "no water-tower hookups or consequence for
+  missing one (no sinks that dry up)":
+  - `WaterState`/`WaterBillingMath`/`WaterService`/`WaterDatabase`: a
+    deliberate, near-identical mirror of `UtilityState`/
+    `UtilityBillingMath`/`UtilityService`/`UtilityDatabase` — same
+    billing-cycle-tick-bucket shape, same withdraw-or-disconnect logic,
+    same SQLite open/cache/persist pattern — but a wholly separate class
+    hierarchy and database table rather than a shared "utility type"
+    abstraction, matching the codebase's established convention of
+    separate concrete classes for structurally-similar concerns (see
+    `SalesTax`/`IncomeTax`/`PropertyTaxService`, or `ArrestService`/
+    `TrialService`/`CivilCourtService`). This means water bills, connects,
+    and disconnects entirely independently of power — a household can
+    lose one without the other, the real-world case a single shared
+    "connected" flag can't represent.
+  - `WaterOutletBlock` + `ModBlocks.WATER_OUTLET`: a sink whose `FLOWING`
+    state reflects its claim owner's water connection, the same
+    self-scheduling `ClaimRegistry`-lookup pattern `UtilityLampBlock`
+    already established for the power lamp — two textures (a full basin
+    with water, a dry rusty one) swapped via blockstate rather than a
+    single texture with a tint.
+  - Deliberately scoped down from power's own current state: no phone-app
+    visibility or manual pay button yet, only the automatic billing cycle
+    and the sink's visible state — mirroring power's own history, where
+    slice 12 shipped billing alone and slice 32 added the phone app
+    twenty slices later.
+  - Exhaustively unit tested: `WaterBillingMathTest` (5 cases) and
+    `WaterServiceTest` (8 cases, including SQLite persistence-and-reload)
+    mirror `UtilityBillingMathTest`/`UtilityServiceTest` case-for-case.
+  - **Known gaps**: see the updated Section 9 status above — no phone
+    app, no water-tower structure or reservoir capacity, flat-rate
+    billing only; unverified without a running client for the block's
+    visible states.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1277,13 +1312,25 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 
 **Section 9 — Utilities, Space & Industrial Supply Chains**
 - Done: the most complete slice-for-slice implementation of any single
-  section — real billing that can disconnect an account, and a lamp block
-  that visibly goes dark within seconds of nonpayment, both exposed
-  through a phone app with a manual pay option.
+  section — real power billing that can disconnect an account, and a lamp
+  block that visibly goes dark within seconds of nonpayment, exposed
+  through a phone app with a manual pay option. As of slice 43, water is
+  a second, fully independent utility: `WaterService`/`WaterDatabase`
+  mirror the power stack's exact billing shape (`WaterBillingMath` is the
+  same afterBillingAttempt/afterManualPayment transitions as
+  `UtilityBillingMath`) but with their own SQLite table and billing
+  cycle, so a household can lose water without losing power or vice
+  versa — the real-world case a single shared "connected" flag couldn't
+  represent. `WaterOutletBlock` (a sink) visibly goes dry the same way
+  `UtilityLampBlock` visibly goes dark, closing "no sinks that dry up".
 - Missing: no power *generation* (no plants of any kind — nuclear/solar/
   fossil — and no city-wide grid-stability simulation, "power" is purely
-  an account flag, not a simulated grid), no water-tower hookups or
-  consequence for missing one (no sinks that dry up), no cell-tower/phone-
+  an account flag, not a simulated grid); water has no phone-app
+  visibility or manual pay button yet — only the automatic billing cycle
+  and the sink's connected state, the same order power's own history
+  followed (slice 12 shipped billing before slice 32 added the phone
+  app) — and no real water-tower *structure*, reservoir capacity, or
+  usage-based (rather than flat-rate) billing; no cell-tower/phone-
   signal consequence for unpaid bills (the phone's battery/lock system
   from slice 2 is entirely separate from the utility system), no waste
   management (no trash generation, no garbage trucks, no landfills/
@@ -1301,10 +1348,12 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    from slice 38 more variety (a second drink/cigarette tier, a
    hangover effect), continuing to round out automotive now that
    slice 39 added fuel visibility (a speed HUD, a second vehicle type),
-   or expanding the predator system slice 42 started (a second
-   predator/prey pair, pack hunting) are all reasonable next picks.
-   Aviation/ATC and the space program stay deliberately last, as the
-   largest and least incrementally verifiable pieces.
+   expanding the predator system slice 42 started (a second
+   predator/prey pair, pack hunting), or giving the water utility slice
+   43 added phone-app visibility the way power got in slice 32 are all
+   reasonable next picks. Aviation/ATC and the space program stay
+   deliberately last, as the largest and least incrementally verifiable
+   pieces.
 
 (Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
 Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
@@ -1326,7 +1375,9 @@ visibility and refueling for `CarEntity` — see Section 4 above. Slice 40
 closed out assault as a tracked crime type and added a real knife
 weapon — see Section 7 above. Slice 41 closed out a separate, harsher
 murder crime tier — see Section 7 above. Slice 42 closed out predator AI
-with `CoyoteEntity` hunting `DeerEntity` — see Section 8 above.)
+with `CoyoteEntity` hunting `DeerEntity` — see Section 8 above. Slice 43
+closed out water as a second, independent billed utility — see Section 9
+above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

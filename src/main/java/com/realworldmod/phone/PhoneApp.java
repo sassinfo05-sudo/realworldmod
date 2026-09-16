@@ -13,7 +13,8 @@ public enum PhoneApp {
     BANKING("Banking"),
     CRIMINAL_RECORD("Criminal Record"),
     UTILITIES("Utilities"),
-    GOVERNMENT("Government");
+    GOVERNMENT("Government"),
+    COURT_REGISTRY("Court Registry");
 
     private final String displayName;
 

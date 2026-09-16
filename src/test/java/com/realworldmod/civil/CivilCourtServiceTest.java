@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -104,6 +105,24 @@ class CivilCourtServiceTest {
 
         assertFalse(civilCourtService.hasPendingCase(defendant));
         assertEquals(0, bankService.getBalance(plaintiff));
+    }
+
+    @Test
+    void getCaseReturnsTheDefendantsPendingCase() {
+        UUID plaintiff = UUID.randomUUID();
+        UUID defendant = UUID.randomUUID();
+        civilCourtService.fileClaim(plaintiff, defendant, 0);
+
+        Optional<CivilCourtService.Case> result = civilCourtService.getCase(defendant);
+
+        assertTrue(result.isPresent());
+        assertEquals(plaintiff, result.get().plaintiffId());
+        assertEquals(CivilCourtService.CLAIM_AMOUNT_CENTS, result.get().amountCents());
+    }
+
+    @Test
+    void getCaseIsEmptyWithNoPendingCase() {
+        assertTrue(civilCourtService.getCase(UUID.randomUUID()).isEmpty());
     }
 
     @Test

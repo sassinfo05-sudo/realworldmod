@@ -4,6 +4,7 @@ import com.realworldmod.economy.BankService;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -32,6 +33,11 @@ public final class CivilCourtService {
 
     public boolean hasPendingCase(UUID defendantId) {
         return casesByDefendant.containsKey(defendantId);
+    }
+
+    /** The defendant's pending case, if any — see {@code civil.net.CourtRegistryNetworking}. */
+    public Optional<Case> getCase(UUID defendantId) {
+        return Optional.ofNullable(casesByDefendant.get(defendantId));
     }
 
     /** Files a claim against {@code defendantId} if they don't already have one pending and aren't the plaintiff themselves. */

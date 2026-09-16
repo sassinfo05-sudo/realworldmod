@@ -1151,6 +1151,37 @@ updated with every slice so neither side ever has to guess.
     unverified without a running client for the actual on-screen
     rendering.
 
+- **Slice 53 — a Court Registry phone app** (Section 3), closing part of
+  "civil/criminal court registry as a web UI... no court registry/
+  filings" for the civil side:
+  - `CivilCourtService` gains a read-only `getCase(UUID): Optional<Case>`
+    query alongside the existing `hasPendingCase`/`fileClaim`/`contest`,
+    so a defendant's pending case (plaintiff, amount, deadline tick) can
+    be read without mutating anything.
+  - A seventh `PhoneApp`, Court Registry, follows the exact same
+    request/cache/render shape as Criminal Record and Government: a
+    `CourtRegistryStatusRequestPayload` (C2S, sent on app open) and
+    `CourtRegistryStatusResponsePayload` (S2C, carrying `hasPendingCase`,
+    `amountCents`, and `ticksRemaining` computed server-side from the
+    case's `deadlineTick` minus the current world tick) registered
+    through a new `CourtRegistryNetworking`, cached client-side in
+    `ClientCourtRegistryState`, and rendered by `CourtRegistryAppScreen` —
+    "No pending case" in green when clear, or the claimed amount and
+    seconds left to contest in red/white otherwise.
+  - No new unit tests for the networking/screen classes, matching every
+    prior phone-app slice (32, 44): they need a running client/server
+    pair to exercise, while the query method they depend on is covered
+    directly. `CivilCourtServiceTest` gains two new cases for `getCase`
+    (returns the pending case's fields; empty with no case) — 331 total,
+    all passing.
+  - **Known gaps**: read-only — no in-app contest button, so a defendant
+    still has to use the in-world court flow to dismiss a claim before
+    the deadline; no plaintiff name shown (`CivilCourtService.Case` only
+    stores a UUID, and nothing in the mod yet resolves an offline UUID to
+    a display name); no filing history or archive of past, already-closed
+    cases; no equivalent registry app yet for the criminal side beyond
+    the existing Criminal Record wanted-level display.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1315,19 +1346,22 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   let alone dialogue with memory).
 
 **Section 3 — Consumer Electronics, Computers & In-Game Internet**
-- Done: one smartphone item with battery, a 6-app OS shell (Settings,
-  Messages, Banking, Criminal Record, Utilities, and — as of slice 32 —
-  Government, showing the tax treasury's balance) over a real
-  client↔server networking pattern.
+- Done: one smartphone item with battery, a 7-app OS shell (Settings,
+  Messages, Banking, Criminal Record, Utilities, Government, and — as of
+  slice 53 — Court Registry, showing whether the player has a pending
+  civil case against them, the claimed amount, and the seconds left to
+  contest it) over a real client↔server networking pattern.
 - Missing: PearOS vs. OpenDroid distinction (rooting, sideloading,
   terminal access), cracked screens/repair shops, charging cables as a
   physical item, PC building (motherboard/CPU/GPU/RAM/PSU parts, physical
   assembly), any resource-intensive task tied to PC specs (crypto mining,
   video rendering, hacking), an actual in-game *browser* rendering
   web-page-like content (today's apps are native screens, not pages), real
-  estate portal, credit score dashboard, stock/forex exchange, civil/
-  criminal court registry as a web UI (a start exists as the native
-  Criminal Record app, but no court registry/filings), tax audit portal,
+  estate portal, credit score dashboard, stock/forex exchange, a criminal
+  court registry as a web UI (the Criminal Record app is that start; the
+  new Court Registry app in slice 53 covers the civil side, read-only —
+  no plaintiff name shown, no in-app contest button, no filing history or
+  past-case archive), tax audit portal,
   BlockTube (record/edit/upload video, subscribers, ad revenue), dark web
   marketplace, game consoles/discs/arcades/claw machines/racing sims.
   **Requested and tracked, not started**: every phone/PC app being a
@@ -1698,10 +1732,12 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    slice 42 started (a second predator/prey pair, pack hunting),
    extending the NPC-inclusion slices 46-49 started to another system
    (NPC pathfinding to a real shop, or a distinct NPC-victim
-   assault/arrest consequence), or giving the casino a wagerable bet size
-   now that all five tables exist are all reasonable next picks.
-   Aviation/ATC and the space program stay deliberately last, as the
-   largest and least incrementally verifiable pieces.
+   assault/arrest consequence), giving the casino a wagerable bet size
+   now that all five tables exist, or adding an in-app contest button
+   and plaintiff name resolution to slice 53's Court Registry are all
+   reasonable next picks. Aviation/ATC and the space program stay
+   deliberately last, as the largest and least incrementally verifiable
+   pieces.
 
 (Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
 Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
@@ -1738,7 +1774,8 @@ above. Slice 50 gave the casino its fifth real table, Craps — see
 Section 6 above. Slice 51 closed part of "no mechanic for stealing
 cars" with real car ownership and tracked auto theft — see Section 4
 above. Slice 52 gave `CarEntity` a real persistent speed HUD — see
-Section 4 above.)
+Section 4 above. Slice 53 gave the civil court a Court Registry phone
+app — see Section 3 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

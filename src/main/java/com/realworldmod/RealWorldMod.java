@@ -22,6 +22,7 @@ import com.realworldmod.crime.MurderHandler;
 import com.realworldmod.crime.PoliceSpawnHandler;
 import com.realworldmod.crime.TrialAccess;
 import com.realworldmod.crime.TrialService;
+import com.realworldmod.civil.net.CourtRegistryNetworking;
 import com.realworldmod.crime.net.CrimeNetworking;
 import com.realworldmod.economy.BankService;
 import com.realworldmod.economy.JobService;
@@ -164,6 +165,8 @@ public final class RealWorldMod implements ModInitializer {
         ThreeCardPokerNetworking.registerServerReceivers(pokerService);
         CrapsNetworking.registerPayloadTypes();
         CrapsNetworking.registerServerReceivers(crapsService);
+        CourtRegistryNetworking.registerPayloadTypes();
+        CourtRegistryNetworking.registerServerReceiver(civilCourtService);
         new CivilCourtHandler(civilCourtService).register();
         new NarcoticsHandler(narcoticsService, lawEnforcementService).register();
         new LiquorStoreUseHandler(bankService).register();

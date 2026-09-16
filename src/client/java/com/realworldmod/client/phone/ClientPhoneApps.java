@@ -22,6 +22,7 @@ public final class ClientPhoneApps {
             case CRIMINAL_RECORD -> new CriminalRecordAppScreen(phoneStack);
             case UTILITIES -> new UtilitiesAppScreen(phoneStack);
             case GOVERNMENT -> new GovernmentAppScreen(phoneStack);
+            case COURT_REGISTRY -> new CourtRegistryAppScreen(phoneStack);
         };
     }
 }

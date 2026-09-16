@@ -549,8 +549,26 @@ updated with every slice so neither side ever has to guess.
     reuse it directly.
   - **Known gaps**: see the updated Section 7 status above — still one
     flat rate everywhere for all three tax types, no forfeiture/seizure
-    for unpaid property tax, and the treasury balance still isn't exposed
-    anywhere a player can see it.
+    for unpaid property tax; the treasury balance itself wasn't exposed
+    anywhere a player could see it until slice 32.
+
+- **Slice 32 — a Government phone app exposing the treasury balance**
+  (Section 3/7), closing the gap slices 29 and 31 both called out:
+  - `PhoneApp.GOVERNMENT` + `GovernmentAppScreen`: requests and displays
+    `BankService.TREASURY_ACCOUNT_ID`'s balance — the exact same
+    request/render shape `BankingAppScreen` already used, just pointed at
+    the government account instead of the player's own.
+  - `TreasuryBalanceRequestPayload`/`ResponsePayload` +
+    `TreasuryNetworking`: mirror `BankNetworking`'s payload/handler
+    shape exactly, registered alongside it in `RealWorldMod.onInitialize`.
+  - `ClientTreasuryState`: the client-side cache, same shape as
+    `ClientBankState`.
+  - **Known gaps**: read-only — a player can see the treasury total but
+    there's still no admin/government UI to spend it on anything, no
+    breakdown by tax type (sales vs. income vs. property), and no way for
+    a non-government player to interact with it at all; unverified
+    without a running client whether the screen actually renders
+    correctly (same caveat as every other phone app in the mod).
 
 ### Cross-cutting things already true of the whole codebase
 
@@ -685,9 +703,10 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   let alone dialogue with memory).
 
 **Section 3 — Consumer Electronics, Computers & In-Game Internet**
-- Done: one smartphone item with battery, a 5-app OS shell (Settings,
-  Messages, Banking, Criminal Record, Utilities) over a real client↔server
-  networking pattern.
+- Done: one smartphone item with battery, a 6-app OS shell (Settings,
+  Messages, Banking, Criminal Record, Utilities, and — as of slice 32 —
+  Government, showing the tax treasury's balance) over a real
+  client↔server networking pattern.
 - Missing: PearOS vs. OpenDroid distinction (rooting, sideloading,
   terminal access), cracked screens/repair shops, charging cables as a
   physical item, PC building (motherboard/CPU/GPU/RAM/PSU parts, physical
@@ -912,7 +931,9 @@ rendering backlog across every entity, and slice 25 added LabPBR maps for
 every texture — see Section 1 above. Slice 28 closed out the game-warden
 NPC — see Section 8 above. Slices 29/31 closed out sales, income, and
 property tax — see Section 7 above. Slice 30 closed out real
-home/workplace structures for `CitizenEntity` — see Section 2 above.)
+home/workplace structures for `CitizenEntity` — see Section 2 above.
+Slice 32 closed out treasury visibility with a Government phone app —
+see Sections 3/7 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

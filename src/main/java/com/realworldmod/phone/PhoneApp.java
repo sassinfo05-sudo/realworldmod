@@ -12,7 +12,8 @@ public enum PhoneApp {
     MESSAGES("Messages"),
     BANKING("Banking"),
     CRIMINAL_RECORD("Criminal Record"),
-    UTILITIES("Utilities");
+    UTILITIES("Utilities"),
+    GOVERNMENT("Government");
 
     private final String displayName;
 

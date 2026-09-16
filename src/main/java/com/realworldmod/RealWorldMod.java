@@ -15,6 +15,7 @@ import com.realworldmod.economy.BankService;
 import com.realworldmod.economy.JobService;
 import com.realworldmod.economy.JobUseHandler;
 import com.realworldmod.economy.net.BankNetworking;
+import com.realworldmod.economy.net.TreasuryNetworking;
 import com.realworldmod.init.ModBlocks;
 import com.realworldmod.init.ModDataComponents;
 import com.realworldmod.init.ModEntities;
@@ -106,6 +107,8 @@ public final class RealWorldMod implements ModInitializer {
         new DeedUseHandler(propertyService, bankService).register();
         BankNetworking.registerPayloadTypes();
         BankNetworking.registerServerReceiver(bankService);
+        TreasuryNetworking.registerPayloadTypes();
+        TreasuryNetworking.registerServerReceiver(bankService);
         CrimeNetworking.registerPayloadTypes();
         CrimeNetworking.registerServerReceiver(crimeService);
         UtilityNetworking.registerPayloadTypes();

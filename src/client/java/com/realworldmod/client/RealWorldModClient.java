@@ -2,6 +2,7 @@ package com.realworldmod.client;
 
 import com.realworldmod.client.crime.ClientCrimeState;
 import com.realworldmod.client.economy.ClientBankState;
+import com.realworldmod.client.economy.ClientTreasuryState;
 import com.realworldmod.client.phone.PhoneLockScreen;
 import com.realworldmod.client.utilities.ClientUtilityState;
 import com.realworldmod.client.crime.PoliceEntityRenderer;
@@ -11,6 +12,7 @@ import com.realworldmod.client.wildlife.DeerEntityRenderer;
 import com.realworldmod.client.wildlife.GameWardenEntityRenderer;
 import com.realworldmod.crime.net.WantedLevelResponsePayload;
 import com.realworldmod.economy.net.BankBalanceResponsePayload;
+import com.realworldmod.economy.net.TreasuryBalanceResponsePayload;
 import com.realworldmod.init.ModDataComponents;
 import com.realworldmod.init.ModEntities;
 import com.realworldmod.init.ModItems;
@@ -34,6 +36,8 @@ public final class RealWorldModClient implements ClientModInitializer {
     public void onInitializeClient() {
         ClientPlayNetworking.registerGlobalReceiver(BankBalanceResponsePayload.ID,
                 (payload, context) -> ClientBankState.set(payload.balanceCents()));
+        ClientPlayNetworking.registerGlobalReceiver(TreasuryBalanceResponsePayload.ID,
+                (payload, context) -> ClientTreasuryState.set(payload.balanceCents()));
         ClientPlayNetworking.registerGlobalReceiver(WantedLevelResponsePayload.ID,
                 (payload, context) -> ClientCrimeState.set(payload.wantedLevel()));
         ClientPlayNetworking.registerGlobalReceiver(UtilityStatusResponsePayload.ID,

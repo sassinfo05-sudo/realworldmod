@@ -25,7 +25,10 @@ import net.minecraft.world.World;
  * {@link NpcDatabase}, keyed by this entity's own UUID. As of slice 61,
  * {@link WalkToPharmacyGoal} pre-empts the normal commute whenever this
  * citizen is sick or injured, walking it to a real pharmacy counter before
- * {@link CitizenSelfMedicationHandler} will treat it. See ROADMAP.md.
+ * {@link CitizenSelfMedicationHandler} will treat it. As of slice 72,
+ * {@link WorkTaskGoal} keeps this entity anchored at its workplace for the
+ * whole {@code WORKING} state instead of wandering off once
+ * {@link CommuteGoal} finishes walking it there. See ROADMAP.md.
  */
 public final class CitizenEntity extends PathAwareEntity {
     public CitizenEntity(EntityType<? extends CitizenEntity> entityType, World world) {
@@ -43,9 +46,10 @@ public final class CitizenEntity extends PathAwareEntity {
         this.goalSelector.add(0, new SwimGoal(this));
         this.goalSelector.add(1, new WalkToPharmacyGoal(this));
         this.goalSelector.add(2, new CommuteGoal(this));
-        this.goalSelector.add(3, new WanderAroundGoal(this, 0.6));
-        this.goalSelector.add(4, new LookAtEntityGoal(this, PlayerEntity.class, 6.0f));
-        this.goalSelector.add(5, new LookAroundGoal(this));
+        this.goalSelector.add(3, new WorkTaskGoal(this));
+        this.goalSelector.add(4, new WanderAroundGoal(this, 0.6));
+        this.goalSelector.add(5, new LookAtEntityGoal(this, PlayerEntity.class, 6.0f));
+        this.goalSelector.add(6, new LookAroundGoal(this));
     }
 
     @Override

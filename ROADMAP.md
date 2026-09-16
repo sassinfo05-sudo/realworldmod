@@ -1758,6 +1758,37 @@ updated with every slice so neither side ever has to guess.
     Recovery Drink while sober is simply wasted, with no partial credit
     or stockpiling benefit.
 
+- **Slice 72 — a citizen stays at its post while working** (Section 2),
+  closing a real crack in "no job-task mini-behaviors" spotted while
+  reviewing what happens after `CommuteGoal` finishes:
+  - Before this slice, once a citizen arrived at its workplace during
+    `DailyState.WORKING`, `CommuteGoal.canStart()` correctly returned
+    false (already at the destination) — but nothing else claimed
+    `Goal.Control.MOVE` for the rest of the shift, so the lower-priority
+    `WanderAroundGoal` immediately took over and sent the citizen
+    wandering away from its own job site mid-shift.
+  - A new `WorkTaskGoal`, registered above `WanderAroundGoal` but below
+    `CommuteGoal` (so commuting there still wins first), claims
+    `Goal.Control.MOVE`/`Goal.Control.LOOK` for the entire `WORKING`
+    state: the citizen stops drifting and periodically faces its
+    `CASH_REGISTER` (placed at `workplaceY + 1` by `StructureBuilder`
+    since slice 30) — a real, visible "at work" cue, short of a full
+    cashiering animation.
+  - No new unit tests, matching every other `Goal`-only class in the
+    `npc` package (`CommuteGoal`, `WalkToPharmacyGoal`): the only new
+    logic is "is this citizen's `DailyState` currently `WORKING`," which
+    `NpcScheduleManagerTest`/`CommuteTargetTest`-style pure tests already
+    exercise indirectly through `DailyState` itself — the goal wiring
+    needs a running world with a scheduled citizen to verify visually —
+    395 total, unchanged, all still passing.
+  - **Known gaps**: still no actual cashiering/patrol/factory-work
+    behavior, just staying put and facing the register — claiming LOOK
+    control also means a working citizen no longer turns to look at a
+    nearby player (`LookAtEntityGoal`) or idly look around
+    (`LookAroundGoal`) during work hours, a minor behavioral trade-off;
+    no interruption if a player interacts with the citizen's register
+    while it's "at work."
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1891,13 +1922,19 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   `CitizenSelfMedicationHandler` only treats a citizen once it's actually
   standing at one — the first real NPC pathfinding-to-a-shop behavior in
   the mod, closing a gap slice 49's own javadoc had called out since it
-  was written.
+  was written. As of slice 72, a citizen also has a first real job-task
+  mini-behavior: `WorkTaskGoal` keeps it anchored at its workplace and
+  periodically facing its `CASH_REGISTER` for the entire `WORKING` state,
+  closing a real (if small) bug where `CommuteGoal` finishing its walk
+  there used to just hand control to the generic wander goal, sending a
+  citizen wandering away from its own job mid-shift.
 - Missing: every citizen's building is identical (one fixed 5x5 room
   shape, walls-and-roof only, no interior furniture/rooms/windows), placed
   block-by-block with no check for terrain, water, or overlap with an
   existing claim/structure/another citizen's building first; no
-  fridge/breakfast/commute-by-vehicle animation, no job-task
-  mini-behaviors (cashiering, patrols, factory work), no evening leisure
+  fridge/breakfast/commute-by-vehicle animation; `WorkTaskGoal` keeps a
+  citizen at its post but doesn't actually cashier, patrol, or do
+  factory work — no evening leisure
   destinations, no branching dialogue tree (one fixed line per state), no
   NPC behavioral AI (mugging, reacting to red-light running, independent
   crime, police chases); NPCs can now get sick, earn a wage, get hurt from
@@ -2417,10 +2454,11 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    car's fuel/ownership/speed, expanding the predator
    system slices 42/59/63/65/66 started (a second predator/prey pair
    remains the biggest open piece), extending the
-   NPC-inclusion slices 46-49/55/61 started to another system (an
+   NPC-inclusion slices 46-49/55/61/72 started to another system (an
    NPC-specific arrest/detainment flow now that citizens can be
-   assault/murder victims, or reusing slice 61's pathfinding pattern for
-   a job site's actual task or a non-medicine shop trip), turning slice
+   assault/murder victims, giving `WorkTaskGoal` an actual cashiering
+   behavior instead of just staying put, or reusing slice 61's
+   pathfinding pattern for a non-medicine shop trip), turning slice
    64/70's Court Registry history into a real scrollable widget with no
    fixed cap, or bringing Slots/Roulette up to the other three tables'
    slice-54
@@ -2488,7 +2526,9 @@ nicotine patch item to ease withdrawal — see Sections 5/6 above. Slice
 69 gave narcotics dealing its own escalating crime-severity tier — see
 Section 7 above. Slice 70 gave the Court Registry a real bounded
 history list — see Section 3 above. Slice 71 added a recovery drink to
-prevent an alcohol hangover — see Section 5 above.)
+prevent an alcohol hangover — see Section 5 above. Slice 72 kept a
+citizen anchored at its workplace during `WORKING` instead of wandering
+off — see Section 2 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

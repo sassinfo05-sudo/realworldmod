@@ -181,7 +181,7 @@ public final class RealWorldMod implements ModInitializer {
             Path npcDbPath = saveRoot.resolve("realworldmod").resolve("citizens.sqlite");
             npcDatabase = new NpcDatabase(npcDbPath);
             npcDatabase.open();
-            scheduleManager = new NpcScheduleManager(npcDatabase);
+            scheduleManager = new NpcScheduleManager(npcDatabase, bankService);
             NpcAccess.set(npcDatabase);
             LOGGER.info("[RealWorldMod] Citizen database opened at {}", npcDbPath);
 

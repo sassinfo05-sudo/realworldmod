@@ -978,6 +978,38 @@ updated with every slice so neither side ever has to guess.
     recover early since it can't buy medicine, so its illness only ever
     resolves by the effect's duration expiring.
 
+- **Slice 47 — NPCs earn real wages through the same income pipeline as
+  players** (Section 2), the direct follow-up to slice 46's own "still
+  can't earn" gap:
+  - `NpcProfile.incomeCentsPerPayPeriod` has existed since slice 1,
+    persisted to SQLite on every upsert — and was never once read by any
+    other code in the mod until this slice. `NpcScheduleManager` now pays
+    it the instant a citizen's own `DailyScheduleFSM` transitions it into
+    `WORKING`, the same real state-transition event the schedule manager
+    already detects to persist the state change and log it.
+  - The wage is withheld through the *existing* `IncomeTax` — the same
+    5% every player's `JobService` wage already pays — and the net amount
+    deposited into a real `BankService` account keyed by the citizen's
+    own UUID, with the withheld tax landing in the same treasury account
+    every other tax in the mod feeds. NPCs earning through the identical
+    pipeline players use, not a parallel NPC-specific ledger.
+  - `NpcScheduleManager` gained a `BankService` constructor dependency
+    (previously just `NpcDatabase`) to make this possible.
+  - Exhaustively unit tested: `NpcScheduleManagerTest` verifies the
+    transition-triggers-payment behavior, correct tax withholding into
+    the treasury, no double-payment while remaining in `WORKING`, no
+    payment on transitioning to any other state, and independent crediting
+    across multiple citizens — 5 new tests, 304 total, all passing. Unlike
+    most of this mod's NPC/entity code, this was fully testable without a
+    running Minecraft world, since `NpcScheduleManager` only ever touches
+    `NpcDatabase` and `BankService`, both already SQLite-file-backed and
+    already tested that way.
+  - **Known gaps**: see the updated Section 2 status above — a citizen
+    still can't spend its own income on anything (no NPC purchases of any
+    kind), still can't get hurt or arrested, and is paid a flat amount
+    once per workday rather than per hour worked or scaled by any kind of
+    job performance.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1087,7 +1119,13 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   each tick, through the exact same `IllnessService` instance players
   already share — a citizen caught out in the rain gets sick exactly like
   a player does, the first crack in "only players can earn, get sick, get
-  hurt, or get arrested."
+  hurt, or get arrested." As of slice 47, that same citizen also earns:
+  `NpcProfile.incomeCentsPerPayPeriod` — a field that has existed since
+  slice 1 but was never once read — now actually gets paid the moment
+  `NpcScheduleManager` transitions a citizen into `WORKING`, withheld
+  through the same `IncomeTax` every player wage already goes through and
+  deposited into a real `BankService` account keyed by the citizen's own
+  UUID, the tax landing in the same treasury account players' wages feed.
 - Missing: every citizen's building is identical (one fixed 5x5 room
   shape, walls-and-roof only, no interior furniture/rooms/windows), placed
   block-by-block with no check for terrain, water, or overlap with an
@@ -1096,10 +1134,12 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   mini-behaviors (cashiering, patrols, factory work), no evening leisure
   destinations, no branching dialogue tree (one fixed line per state), no
   NPC behavioral AI (mugging, reacting to red-light running, independent
-  crime, police chases); NPCs can now get sick but still can't earn, get
-  hurt, or get arrested — fall damage, assault, medicine, bank accounts,
-  and wanted levels are all still player-only, and a sick citizen has no
-  way to recover early since it can't buy medicine. True GOAP (goal-oriented
+  crime, police chases); NPCs can now get sick and earn a wage, but still
+  can't spend it — there's no NPC purchase of any kind (medicine, a
+  meal, a hunting license) — and still can't get hurt or get arrested;
+  fall damage, assault, and wanted levels are all still player-only, and
+  a sick citizen has no way to recover early since it never spends its
+  own income on medicine. True GOAP (goal-oriented
   action planning, i.e. dynamic plan search over actions) was never
   implemented — the FSM is a simpler deterministic rule tree, called out
   as such in the code's own Javadoc from slice 1 onward. **Requested and
@@ -1466,10 +1506,11 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    continuing to round out automotive now that slice 39 added fuel
    visibility (a speed HUD, a second vehicle type), expanding the
    predator system slice 42 started (a second predator/prey pair, pack
-   hunting), or extending the NPC-inclusion slice 46 started to another
-   system (NPC bank accounts, or fall-damage injuries) are all reasonable
-   next picks. Aviation/ATC and the space program stay deliberately last,
-   as the largest and least incrementally verifiable pieces.
+   hunting), or extending the NPC-inclusion slices 46/47 started to
+   another system (an NPC actually spending its new income on medicine,
+   or fall-damage injuries) are all reasonable next picks. Aviation/ATC
+   and the space program stay deliberately last, as the largest and least
+   incrementally verifiable pieces.
 
 (Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
 Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
@@ -1497,7 +1538,8 @@ above. Slice 44 closed out water's phone-app visibility — see Section 9
 above. Slice 45 gave the casino its fourth real table, Three Card Poker —
 see Section 6 above. Slice 46 closed the first crack in "NPCs are exempt
 from every other system," sharing the illness system with players — see
-Sections 2/5 above.)
+Sections 2/5 above. Slice 47 gave NPCs real income through the same
+wage-and-tax pipeline players use — see Section 2 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

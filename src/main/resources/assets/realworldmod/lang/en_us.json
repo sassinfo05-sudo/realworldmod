@@ -148,6 +148,7 @@
   "message.realworldmod.alcohol_drunk": "You're drunk — everything feels unsteady.",
   "message.realworldmod.alcohol_very_drunk": "You're very drunk. This was a bad idea.",
   "message.realworldmod.hangover": "You wake up with a pounding hangover.",
+  "message.realworldmod.nicotine_withdrawal": "You're craving a cigarette. Your hands won't stop shaking.",
   "message.realworldmod.smoking_sickness": "The smoking has caught up with you. You feel sick.",
   "message.realworldmod.car_fuel_gauge": "Fuel: %s / %s liters.",
   "message.realworldmod.gas_pump_no_vehicle": "You need to be in a vehicle to refuel.",

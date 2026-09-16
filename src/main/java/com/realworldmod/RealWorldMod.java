@@ -68,6 +68,7 @@ import com.realworldmod.vice.HangoverEffect;
 import com.realworldmod.vice.IntoxicationService;
 import com.realworldmod.vice.LiquorStoreUseHandler;
 import com.realworldmod.vice.NicotineService;
+import com.realworldmod.vice.NicotineWithdrawalEffect;
 import com.realworldmod.wildlife.CoyoteSpawnHandler;
 import com.realworldmod.wildlife.DeerSpawnHandler;
 import com.realworldmod.wildlife.GameWardenService;
@@ -236,6 +237,7 @@ public final class RealWorldMod implements ModInitializer {
                 }
                 WeatherIllnessEffect.check(illnessService, player);
                 HangoverEffect.check(intoxicationService, player, server.getOverworld().getTime());
+                NicotineWithdrawalEffect.check(nicotineService, player, server.getOverworld().getTime());
 
                 ArrestOutcome arrestOutcome = arrestService.tick(player.getUuid(), server.getOverworld().getTime());
                 ArrestHandler.apply(arrestOutcome, server, player);

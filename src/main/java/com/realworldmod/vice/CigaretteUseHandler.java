@@ -36,7 +36,7 @@ public final class CigaretteUseHandler {
 
             player.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, BUZZ_DURATION_TICKS, 0));
 
-            if (nicotineService.smoke(player.getUuid())) {
+            if (nicotineService.smoke(player.getUuid(), world.getTime())) {
                 player.addStatusEffect(new StatusEffectInstance(StatusEffects.NAUSEA, ILLNESS_DURATION_TICKS, 0));
                 player.addStatusEffect(new StatusEffectInstance(StatusEffects.WEAKNESS, ILLNESS_DURATION_TICKS, 0));
                 player.sendMessage(Text.translatable("message.realworldmod.smoking_sickness"), true);

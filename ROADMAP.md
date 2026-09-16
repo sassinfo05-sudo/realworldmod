@@ -1440,6 +1440,44 @@ updated with every slice so neither side ever has to guess.
     pharmacy); a citizen still doesn't queue or wait its turn if another
     citizen is already at the same counter.
 
+- **Slice 62 — a real nicotine-withdrawal effect** (Section 5), finishing
+  slice 38/60's "alcohol/cigarettes need more variety" priority item:
+  - `NicotineService` now tracks a cumulative, never-resetting smoke
+    count (separate from the illness streak that already resets after
+    triggering) and the tick of a player's last cigarette. A new
+    `checkWithdrawal(playerId, currentTick)` returns true exactly once —
+    once a player who's smoked at least
+    `NicotineWithdrawalRisk.DEPENDENCY_THRESHOLD_CIGARETTES` cigarettes
+    goes `NicotineWithdrawalRisk.WITHDRAWAL_TICKS` without another — the
+    same "cross a threshold, trigger once, reset on the next relevant
+    action" shape `vice.IntoxicationService.checkHangover` already
+    established for alcohol.
+  - A new `NicotineWithdrawalEffect.check`, called from the same
+    per-online-player tick loop as `HangoverEffect.check`, applies
+    Nausea and Slowness plus a chat message — a deliberately different
+    symptom pair from the alcohol hangover's Nausea+Mining Fatigue, so
+    quitting cigarettes doesn't feel like a reskin of sobering up.
+    `CigaretteUseHandler.smoke` now also passes the current world tick
+    so `NicotineService` can time the last cigarette.
+  - Exhaustively unit tested: `NicotineWithdrawalRiskTest` covers the
+    dependency threshold and withdrawal-timing thresholds directly, and
+    `NicotineServiceTest` gains cases for no withdrawal without ever
+    becoming dependent, no withdrawal before enough time passes,
+    withdrawal triggering exactly once at the exact tick a dependent
+    player goes overdue, and a second craving being able to trigger a
+    second withdrawal after the first fires — 359 total, all passing.
+    `NicotineWithdrawalEffect` itself is untested like every other
+    status-effect-applying class in the mod, needing a running
+    server/player to exercise.
+  - **Known gaps**: only one withdrawal severity regardless of how
+    dependent a player has become or how many times they've relapsed; no
+    nicotine patch/gum item to ease withdrawal short of smoking again;
+    drinking and smoking still don't interact with each other at all —
+    slice 38/60's "more variety" priority item is now honestly closed at
+    "one drink type, one cigarette type, one hangover, one withdrawal,"
+    not the fuller variety (a second tier of either, or cross-system
+    interaction) still missing above.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1729,7 +1767,14 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   player peaked at `IntoxicationCalculator.MAX_LEVEL` and, once they've
   fully sobered back up, `HangoverEffect` applies a real Nausea+Mining
   Fatigue hangover — sobering up from a bender is no longer completely
-  consequence-free.
+  consequence-free. As of slice 62, quitting cigarettes has a real cost
+  too: once `NicotineService` sees a player smoke
+  `NicotineWithdrawalRisk.DEPENDENCY_THRESHOLD_CIGARETTES` cigarettes
+  (cumulative, tracked separately from the streak that triggers illness),
+  `checkWithdrawal` fires once they go `WITHDRAWAL_TICKS` without
+  another, and `NicotineWithdrawalEffect` applies Nausea+Slowness — a
+  distinct symptom set from the alcohol hangover, so the two vice
+  systems don't feel identical.
 - Missing: this is a *health-bar replacement disguised as a status
   effect*, not a real localized zone model — there's no per-body-part
   (head/torso/arms/legs) data structure, no bone-fracture-requiring-cast
@@ -1751,12 +1796,15 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   marriage/dating-affinity system above exists to break up in the first
   place. (Alcohol/cigarettes themselves are no longer on this list — see
   slice 38 above — but variety is: one drink type and one cigarette type;
-  a real hangover effect exists as of slice 60, but it's the only one —
-  no separate nicotine-withdrawal effect, and no interaction between the
-  two vice systems (getting drunk while already sick from smoking, for
-  instance, is just two independent effect sets); NPCs can now catch a
-  cold in the rain as of slice 46, but still never drink, smoke, or get
-  injured — the vice systems and fall injury remain player-only, only the
+  a real hangover effect exists as of slice 60 and nicotine withdrawal as
+  of slice 62, but each fires at one fixed threshold with one fixed
+  severity — no escalation for repeat benders/quit-attempts, no way to
+  ease withdrawal short of smoking again (there's no nicotine patch/gum
+  item), and the two vice systems still don't interact with each other
+  at all (getting drunk while withdrawing from nicotine, for instance, is
+  just two independent effect sets); NPCs can now catch a cold in the
+  rain as of slice 46, but still never drink, smoke, or get injured — the
+  vice systems and fall injury remain player-only, only the
   weather-illness system is shared.)
 
 **Section 6 — Commercial Enterprises, Retail & Nightlife**
@@ -2037,10 +2085,11 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 1. Everything in the "missing" lists above — expanding the underworld
    system slices 37/58 started (a second drug/lab type, rival dealer
    NPCs, or a distinct narcotics crime-severity tier), giving
-   alcohol/cigarettes from slices 38/60 more variety (a second
-   drink/cigarette tier, or a nicotine-withdrawal effect to match the
-   new hangover), a second vehicle type now that slices 39/51/52 rounded
-   out the first car's fuel/ownership/speed, expanding the predator
+   alcohol/cigarettes from slices 38/60/62 more variety (a second
+   drink/cigarette tier, escalating hangover/withdrawal severity, a
+   nicotine patch/gum item, or letting the two vice systems interact), a
+   second vehicle type now that slices 39/51/52 rounded out the first
+   car's fuel/ownership/speed, expanding the predator
    system slices 42/59 started (a second predator/prey pair, or a
    meat/hide drop and population-count consequence for a kill),
    extending the NPC-inclusion slices 46-49/55/61 started to another
@@ -2100,7 +2149,8 @@ scaled narcotics catch chance by the dealer's wanted level — see
 Section 7 above. Slice 59 closed out pack-hunting coordination between
 coyotes — see Section 8 above. Slice 60 gave heavy drinking a real
 hangover effect — see Section 5 above. Slice 61 closed out NPC
-pathfinding to a real pharmacy — see Section 2 above.)
+pathfinding to a real pharmacy — see Section 2 above. Slice 62 gave
+quitting cigarettes a real withdrawal effect — see Section 5 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

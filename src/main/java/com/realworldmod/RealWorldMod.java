@@ -1,5 +1,7 @@
 package com.realworldmod;
 
+import com.realworldmod.civil.CivilCourtHandler;
+import com.realworldmod.civil.CivilCourtService;
 import com.realworldmod.commerce.BlackjackService;
 import com.realworldmod.commerce.RouletteUseHandler;
 import com.realworldmod.commerce.SlotMachineUseHandler;
@@ -92,6 +94,7 @@ public final class RealWorldMod implements ModInitializer {
     private final PropertyTaxService propertyTaxService =
             new PropertyTaxService(propertyService.registry(), bankService);
     private final BlackjackService blackjackService = new BlackjackService(bankService);
+    private final CivilCourtService civilCourtService = new CivilCourtService(bankService);
 
     @Override
     public void onInitialize() {
@@ -127,6 +130,7 @@ public final class RealWorldMod implements ModInitializer {
         new RouletteUseHandler(bankService).register();
         BlackjackNetworking.registerPayloadTypes();
         BlackjackNetworking.registerServerReceivers(blackjackService);
+        new CivilCourtHandler(civilCourtService).register();
         PoachingAccess.set(gameWardenService);
         new PoachingHandler(lawEnforcementService, huntingLicenseService, gameWardenService).register();
         CarSpawnHandler.register();
@@ -166,6 +170,7 @@ public final class RealWorldMod implements ModInitializer {
             }
             crimeService.tick(server.getOverworld().getTime());
             propertyTaxService.tick(server.getOverworld().getTime());
+            civilCourtService.tick(server.getOverworld().getTime());
 
             List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
             List<UUID> disconnected = utilityService.tick(

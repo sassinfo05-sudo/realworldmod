@@ -32,6 +32,7 @@ public final class ModItemGroups {
                         entries.add(ModBlocks.SLOT_MACHINE);
                         entries.add(ModBlocks.ROULETTE_TABLE);
                         entries.add(ModBlocks.BLACKJACK_TABLE);
+                        entries.add(ModBlocks.COURTHOUSE);
                     })
                     .build());
 

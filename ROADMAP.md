@@ -645,6 +645,36 @@ updated with every slice so neither side ever has to guess.
     button enable/disable logic and hand rendering are unverified without
     a running client, the same caveat as every other UI in the mod.
 
+- **Slice 36 — a real civil small-claims court** (Section 7), the next
+  item on the priority list and deliberately separate from the criminal
+  system slice 23 built:
+  - `CivilCourtService`: `fileClaim`/`contest`/`tick`, following the same
+    tick-bucket-deadline shape `TrialService` uses, but with none of that
+    system's machinery — no wanted level, no police, no punishment, just
+    one player claiming money from another. A defendant who doesn't
+    contest within the response window gets a real default judgment
+    (the actual legal term for a ruling entered because the defendant
+    failed to respond in time) — `BankService.transfer` moves the money
+    automatically, or simply fails if the defendant can't afford it (a
+    judgment can be uncollectible in reality too), either way closing
+    the case.
+  - `CivilCourtHandler` + `ModBlocks.COURTHOUSE`: right-click files a
+    claim against the nearest other player; if the interacting player
+    is themselves a pending defendant, that check runs first and
+    contesting takes priority over filing a new claim — no text-entry UI
+    needed, reusing the same nearest-player targeting
+    `ChaseWantedPlayerGoal`/`ChasePoacherGoal` already established for
+    aim-based interaction.
+  - Exhaustively unit tested: filing succeeds/fails correctly (duplicate
+    defendant, self-claim), contesting dismisses and reopens eligibility,
+    ticking before/after the deadline, and the judgment-closes-the-case-
+    regardless-of-affordability behavior.
+  - **Known gaps**: see the updated Section 7 status above — no named
+    defendant (nearest-player only), one fixed claim amount, no real
+    adjudication (contesting just dismisses, it isn't a defense that gets
+    weighed against anything), no lease/partnership contracts, no judge
+    NPC or courtroom; unverified without a running client.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -918,7 +948,14 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   also collects `IncomeTax` (a flat 5% withheld from every `JobService`
   wage before it reaches the player) and `PropertyTaxService` (a periodic,
   once-per-in-game-day charge on every land claim proportional to its
-  area) — all three tax types now feed the same account.
+  area) — all three tax types now feed the same account, and as of
+  slice 32 a Government phone app shows the treasury's live balance. As
+  of slice 36, a real (if minimal) civil court exists too, deliberately
+  separate from the criminal system above: `CivilCourtService` lets one
+  player file a small-claims case against another via a `COURTHOUSE`
+  block, and if the defendant doesn't contest it within a fixed response
+  window, a genuine default judgment (the real legal term for exactly
+  this situation) automatically transfers the claimed amount.
 - Missing: `PoliceEntity` only patrols/chases — no tactical cover, spike
   strips, pit maneuvers, backup calls, or squad coordination; deer/police
   spawn only via items (`POLICE_SPAWNER`), not real police-station
@@ -929,12 +966,14 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   charged everywhere, since there are no city boundaries anywhere in the
   world yet for a rate to vary by; an owner who can't afford property tax
   is simply skipped that cycle, with no forfeiture/seizure/lien
-  consequence; the treasury balance isn't exposed anywhere yet (no phone
-  app, no admin/government UI) — three tax types now feed it and nothing
-  reads any of it back; no real prison — no cell block, no yard, no
-  prison jobs, no faction/contraband/breakout mechanics; no civil courts
-  (no lease/partnership contracts, no suing NPCs, no judge UI, no search
-  warrants); no underworld/narcotics system (no dark web purchases, no
+  consequence; civil court has no evidence/lease/partnership contracts,
+  no judge NPC or courtroom, no way to name a specific defendant (the
+  claim always targets the nearest other player), one fixed claim amount,
+  and contesting just dismisses the case with no counter-argument or
+  actual adjudication — "contest" currently just means "show up in time,"
+  not a real defense; no real prison — no cell block, no yard, no
+  prison jobs, no faction/contraband/breakout mechanics; no underworld/
+  narcotics system (no dark web purchases, no
   chemical labs, no drug smuggling, no money laundering through front
   businesses) — the "dark web" referenced in Section 3 and the
   "underworld" here are both entirely unbuilt. **Requested and tracked,
@@ -1011,12 +1050,11 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 
 ## Priority order for what's next
 
-1. Everything in the "missing" lists above — a civil/court system
-   distinct from the criminal trial slice 23 built, or a fourth casino
-   game (poker or craps) alongside slots/roulette/blackjack, are both
-   reasonable next picks. Aviation/ATC and the space program stay
-   deliberately last, as the largest and least incrementally verifiable
-   pieces.
+1. Everything in the "missing" lists above — a fourth casino game (poker
+   or craps) alongside slots/roulette/blackjack, or starting on the
+   underworld/narcotics gap (still entirely unbuilt), are both reasonable
+   next picks. Aviation/ATC and the space program stay deliberately
+   last, as the largest and least incrementally verifiable pieces.
 
 (Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
 Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
@@ -1029,7 +1067,8 @@ property tax — see Section 7 above. Slice 30 closed out real
 home/workplace structures for `CitizenEntity` — see Section 2 above.
 Slice 32 closed out treasury visibility with a Government phone app —
 see Sections 3/7 above. Slices 33/34/35 got the casino its first three
-real tables (slots, roulette, blackjack) — see Section 6 above.)
+real tables (slots, roulette, blackjack) — see Section 6 above. Slice 36
+closed out a real civil small-claims court — see Section 7 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

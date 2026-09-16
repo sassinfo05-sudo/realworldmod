@@ -1344,6 +1344,37 @@ updated with every slice so neither side ever has to guess.
     smuggling or money-laundering mechanic — the rest of slice 37's
     "expanding the underworld system" priority item, unstarted.
 
+- **Slice 59 — pack-hunting coordination between coyotes** (Section 8),
+  closing slice 42's own "no pack-hunting coordination between multiple
+  coyotes" known gap:
+  - `WildlifeBehavior` gains `isPackMate` (true for another live coyote
+    within a new `PACK_RADIUS_SQUARED`, matching the existing
+    proximity-threshold pattern `shouldHunt`/`canAttack` already use) and
+    `packAttackMultiplier`, a pure function turning a nearby-ally count
+    into a damage multiplier — 1.0 for a lone coyote, +0.5 per pack mate,
+    capped at `MAX_PACK_ATTACK_MULTIPLIER` (2.5) so an arbitrarily large
+    pack still can't one-shot a deer.
+  - `HuntDeerGoal.tryAttack` now counts other live coyotes within pack
+    range of the attacker via `World.getEntitiesByClass` (the same query
+    shape `findNearestDeer` already uses) and scales `ATTACK_DAMAGE` by
+    `WildlifeBehavior.packAttackMultiplier` before applying it — several
+    coyotes hunting the same deer together now actually hit harder as a
+    pack, instead of each independently landing the same fixed 3 damage.
+  - Exhaustively unit tested at the pure-logic layer: `WildlifeBehaviorTest`
+    gains cases for a pack mate within/beyond `PACK_RADIUS_SQUARED`, the
+    base (lone-coyote) multiplier, the per-ally bonus at 1 and 2 allies,
+    and clamping at the maximum for a large pack — 347 total, all
+    passing. `HuntDeerGoal`'s own world query is untested like every
+    other `Goal` in the package, needing a running world with multiple
+    live coyotes to exercise.
+  - **Known gaps**: still a single coyote-vs-deer predator/prey
+    relationship — no second predator/prey pair; pack mates don't
+    actually coordinate their approach or surround the target, they just
+    each independently run `HuntDeerGoal` and happen to get a damage
+    bonus when close together; no pack-formation/leadership concept, and
+    a killed deer still simply dies with no meat/hide drop or
+    population-count consequence.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1857,14 +1888,22 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   rig for rendering (with its own texture, and the antler cuboids painted
   fully transparent so a coyote doesn't visibly have antlers) rather than
   hand-building a second near-identical model — the same model-reuse
-  `GameWardenEntityRenderer` already established.
+  `GameWardenEntityRenderer` already established. As of slice 59, a hunt
+  is no longer several coyotes independently chasing the same deer at the
+  same base damage: `HuntDeerGoal` counts other live coyotes within
+  `WildlifeBehavior.PACK_RADIUS_SQUARED` of the attacker and scales the
+  hit by `WildlifeBehavior.packAttackMultiplier` — a lone coyote still
+  deals the base 3 damage, but two or more hunting together deal
+  noticeably more, real pack-hunting coordination rather than a cosmetic
+  crowd.
 - Missing: no biome-specific mechanics at all (no multi-layer canopy/leaf
   decay/wildfires in forests, no machete-gated jungle thickets/equipment
   rust/malaria, no desert sand-dune physics/heatstroke/mirage/flash
   floods); the predator AI slice 42 added is a single coyote-vs-deer
-  relationship — no other predator/prey pairs, no pack-hunting
-  coordination between multiple coyotes, and a killed deer simply dies
-  with no meat/hide drop or population-count consequence; no migration
+  relationship — no other predator/prey pairs (pack-hunting coordination
+  between multiple coyotes closed as of slice 59), and a killed deer
+  simply dies with no meat/hide drop or population-count consequence; no
+  migration
   (herding is proximity-only, not a seasonal or territorial routine);
   deer/wardens/coyotes only spawn via items (`DEER_SPAWNER`/
   `GAME_WARDEN_SPAWNER`/`COYOTE_SPAWNER`), not natural biome-based
@@ -1912,14 +1951,15 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 1. Everything in the "missing" lists above — expanding the underworld
    system slices 37/58 started (a second drug/lab type, rival dealer
    NPCs, or a distinct narcotics crime-severity tier), giving
-   alcohol/cigarettes from
-   slice 38 more variety (a second drink/cigarette tier, a hangover
-   effect), a second vehicle type now that slices 39/51/52 rounded out
-   the first car's fuel/ownership/speed, expanding the predator system
-   slice 42 started (a second predator/prey pair, pack hunting),
-   extending the NPC-inclusion slices 46-49/55 started to another system
-   (NPC pathfinding to a real shop, or an NPC-specific arrest/detainment
-   flow now that citizens can be assault/murder victims), a filing
+   alcohol/cigarettes from slice 38 more variety (a second
+   drink/cigarette tier, a hangover effect), a second vehicle type now
+   that slices 39/51/52 rounded out the first car's
+   fuel/ownership/speed, expanding the predator system slices 42/59
+   started (a second predator/prey pair, or a meat/hide drop and
+   population-count consequence for a kill), extending the
+   NPC-inclusion slices 46-49/55 started to another system (NPC
+   pathfinding to a real shop, or an NPC-specific arrest/detainment flow
+   now that citizens can be assault/murder victims), a filing
    history/past-case archive for slice 53/56/57's Court Registry, or
    bringing Slots/Roulette up to the other three tables' slice-54
    wager-selection bar (they'd need a real screen first, since both are
@@ -1970,7 +2010,8 @@ see Section 7 above. Slice 56 added a Contest button to the Court
 Registry app — see Section 3 above. Slice 57 closed out plaintiff name
 resolution in the Court Registry app — see Section 3 above. Slice 58
 scaled narcotics catch chance by the dealer's wanted level — see
-Section 7 above.)
+Section 7 above. Slice 59 closed out pack-hunting coordination between
+coyotes — see Section 8 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

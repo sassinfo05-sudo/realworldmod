@@ -15,7 +15,11 @@ import java.util.List;
  * live in the pure, unit-tested {@link WildlifeBehavior#shouldHunt}/
  * {@link WildlifeBehavior#canAttack}; this class only wires that decision
  * to a live world/entity, the same split every other {@code Goal} in this
- * package uses.
+ * package uses. As of slice 59, an attack also counts other live coyotes
+ * within {@link WildlifeBehavior#PACK_RADIUS_SQUARED} and scales the
+ * damage by {@link WildlifeBehavior#packAttackMultiplier} — real
+ * pack-hunting coordination, not just several coyotes independently
+ * chasing the same deer at the same base damage.
  */
 public final class HuntDeerGoal extends Goal {
     private static final double CHASE_SPEED = 0.35;
@@ -74,8 +78,24 @@ public final class HuntDeerGoal extends Goal {
         if (attackCooldown > 0 || !WildlifeBehavior.canAttack(coyote.squaredDistanceTo(target))) {
             return;
         }
-        target.damage(coyote.getWorld().getDamageSources().mobAttack(coyote), ATTACK_DAMAGE);
+        double multiplier = WildlifeBehavior.packAttackMultiplier(countNearbyPackMates());
+        target.damage(coyote.getWorld().getDamageSources().mobAttack(coyote), (float) (ATTACK_DAMAGE * multiplier));
         attackCooldown = ATTACK_COOLDOWN_TICKS;
+    }
+
+    /** Counts other live coyotes close enough to this one to count as hunting alongside it (Section 8's "pack-hunting coordination" gap). */
+    private int countNearbyPackMates() {
+        List<CoyoteEntity> nearby = coyote.getWorld().getEntitiesByClass(
+                CoyoteEntity.class, coyote.getBoundingBox().expand(Math.sqrt(WildlifeBehavior.PACK_RADIUS_SQUARED)),
+                other -> other != coyote && other.isAlive());
+
+        int count = 0;
+        for (CoyoteEntity other : nearby) {
+            if (WildlifeBehavior.isPackMate(coyote.squaredDistanceTo(other))) {
+                count++;
+            }
+        }
+        return count;
     }
 
     private DeerEntity findNearestDeer() {

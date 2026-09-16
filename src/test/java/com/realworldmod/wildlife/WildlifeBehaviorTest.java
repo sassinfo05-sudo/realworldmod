@@ -76,4 +76,31 @@ class WildlifeBehaviorTest {
     void averagePositionRejectsAnEmptyList() {
         assertThrows(IllegalArgumentException.class, () -> WildlifeBehavior.averagePosition(List.of()));
     }
+
+    @Test
+    void isPackMateWithinRadius() {
+        assertTrue(WildlifeBehavior.isPackMate(4.0 * 4.0));
+        assertTrue(WildlifeBehavior.isPackMate(WildlifeBehavior.PACK_RADIUS_SQUARED));
+    }
+
+    @Test
+    void isNotPackMateBeyondRadius() {
+        assertFalse(WildlifeBehavior.isPackMate(20.0 * 20.0));
+    }
+
+    @Test
+    void aLoneCoyoteAttacksAtTheBaseMultiplier() {
+        assertEquals(1.0, WildlifeBehavior.packAttackMultiplier(0), 1e-9);
+    }
+
+    @Test
+    void eachPackMateAddsARealDamageBonus() {
+        assertEquals(1.5, WildlifeBehavior.packAttackMultiplier(1), 1e-9);
+        assertEquals(2.0, WildlifeBehavior.packAttackMultiplier(2), 1e-9);
+    }
+
+    @Test
+    void packAttackMultiplierClampsAtTheMaximum() {
+        assertEquals(WildlifeBehavior.MAX_PACK_ATTACK_MULTIPLIER, WildlifeBehavior.packAttackMultiplier(10), 1e-9);
+    }
 }

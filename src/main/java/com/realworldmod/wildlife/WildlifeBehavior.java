@@ -17,6 +17,9 @@ public final class WildlifeBehavior {
     public static final double HERD_TOO_CLOSE_SQUARED = 3.0 * 3.0;
     public static final double HUNT_TRIGGER_DISTANCE_SQUARED = 14.0 * 14.0;
     public static final double ATTACK_RANGE_SQUARED = 2.0 * 2.0;
+    public static final double PACK_RADIUS_SQUARED = 8.0 * 8.0;
+    public static final double PACK_BONUS_PER_ALLY = 0.5;
+    public static final double MAX_PACK_ATTACK_MULTIPLIER = 2.5;
 
     private WildlifeBehavior() {
     }
@@ -39,6 +42,16 @@ public final class WildlifeBehavior {
     /** True once a herd-mate is close enough that closing further would just cause crowding. */
     public static boolean isCloseEnoughToHerd(double distanceToHerdMateSquared) {
         return distanceToHerdMateSquared <= HERD_TOO_CLOSE_SQUARED;
+    }
+
+    /** True for another coyote close enough to the attacker to count as hunting the same target alongside it. */
+    public static boolean isPackMate(double distanceToOtherPredatorSquared) {
+        return distanceToOtherPredatorSquared <= PACK_RADIUS_SQUARED;
+    }
+
+    /** A lone coyote hits at the normal rate; each nearby pack mate adds a real damage bonus, capped so a huge pack can't one-shot prey. */
+    public static double packAttackMultiplier(int nearbyAllyCount) {
+        return Math.min(MAX_PACK_ATTACK_MULTIPLIER, 1.0 + PACK_BONUS_PER_ALLY * nearbyAllyCount);
     }
 
     public static Vec3d averagePosition(List<Vec3d> positions) {

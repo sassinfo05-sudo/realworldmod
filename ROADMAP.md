@@ -794,6 +794,32 @@ updated with every slice so neither side ever has to guess.
     them, no consequence for attacking an NPC (NPCs have no health/death
     of their own), and no weapon-specific detection.
 
+- **Slice 41 — murder as a separate, harsher crime tier than assault**
+  (Section 7), the direct follow-up slice 40's own known gaps called out:
+  - `MurderHandler`: hooks `ServerLivingEntityEvents.AFTER_DEATH` — fired
+    once, at the exact moment a victim dies, rather than on every hit
+    like `AssaultHandler`'s `AFTER_DAMAGE` — and when the fatal blow was
+    `DamageTypes.PLAYER_ATTACK` from another player, records the offense
+    through the same `LawEnforcementService.recordOffense` pipeline at
+    `WantedLevelMath.MAX` severity: a killing jumps a player straight to
+    "Most Wanted" in one offense, rather than climbing gradually the way
+    a lesser repeated crime does.
+  - Deliberately layered on top of slice 40 rather than replacing it: a
+    killing blow still fires `AssaultHandler` too (it's still a hit), so
+    a murder now records as both an assault and a murder in sequence —
+    two offenses that genuinely both happened, not a bug to suppress; the
+    wanted level clamps at its maximum either way.
+  - Not separately unit tested, for the same reason slice 40 wasn't:
+    `LawEnforcementServiceTest`/`CrimeServiceTest` already cover
+    `recordOffense` at any severity, including the maximum; only the new
+    event hook is untested, needing a running Minecraft entity/world like
+    every other Fabric event handler in the mod.
+  - **Known gaps**: see the updated Section 7 status above — no
+    consequence for killing an NPC, no attempted-murder distinction from
+    a survived assault, and no investigation/detective mechanic — a
+    murder is recorded the instant it happens with no possibility of
+    getting away with it unseen.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1114,7 +1140,13 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   pipeline — at a higher severity than poaching or dealing, since a real
   fistfight is worse than a stolen deer — alongside a real `KNIFE` melee
   weapon (a `SwordItem` on iron-tier stats) as the item category the gap
-  also called for.
+  also called for. As of slice 41, killing another player is a separate,
+  harsher offense than merely hitting them: `MurderHandler` hooks
+  `ServerLivingEntityEvents.AFTER_DEATH` (fired once, at the moment of
+  death, rather than on every hit like `AssaultHandler`) and records the
+  same kind of offense through the same `recordOffense` pipeline, but at
+  the maximum severity — a killing jumps a player straight to "Most
+  Wanted" in one offense rather than escalating gradually.
 - Missing: `PoliceEntity` only patrols/chases — no tactical cover, spike
   strips, pit maneuvers, backup calls, or squad coordination; deer/police
   spawn only via items (`POLICE_SPAWNER`), not real police-station
@@ -1148,14 +1180,16 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   player or of a random citizen); a defined path for the player to
   "become a criminal" as a real career/reputation track, not just an
   accumulating wanted level; illuminati-style secret societies and cults
-  as a distinct faction type from ordinary criminal organizations; murder
-  as a crime distinct from the assault slice 40 added — killing a player
-  currently records the exact same offense as merely hitting them, with
-  no separate, harsher severity tier, and no consequence at all for
-  killing an NPC, since NPCs have no health/death of their own to lose;
-  other melee weapons beyond the one `KNIFE` item, and no weapon-specific
-  detection (an assault is recorded for any player-on-player hit,
-  bare-handed or armed, rather than only when a real weapon connects); a
+  as a distinct faction type from ordinary criminal organizations; no
+  consequence at all for killing an NPC (slice 41's murder tier only
+  fires for a player victim, since NPCs have no health/death of their
+  own to lose); no separate charge for attempted murder versus a
+  survived assault, and no homicide investigation/detective mechanic —
+  a murder is recorded the instant it happens, with no possibility of
+  getting away with it if no one saw; other melee weapons beyond the one
+  `KNIFE` item, and no weapon-specific detection (an assault is recorded
+  for any player-on-player hit, bare-handed or armed, rather than only
+  when a real weapon connects); a
   full-scale
   military branch — enlistment, ranks, deployable operations — distinct
   from the individual military vehicles (tanks, military ships/planes)
@@ -1221,10 +1255,11 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    from slice 38 more variety (a second drink/cigarette tier, a
    hangover effect), continuing to round out automotive now that
    slice 39 added fuel visibility (a speed HUD, a second vehicle type),
-   or giving the assault crime slice 40 added a harsher, separate murder
-   tier are all reasonable next picks. Aviation/ATC and the space program
-   stay deliberately last, as the largest and least incrementally
-   verifiable pieces.
+   or diversifying into a section that hasn't had a slice in a while
+   (biomes/wildlife's missing predator AI, or a second casino table) are
+   all reasonable next picks. Aviation/ATC and the space program stay
+   deliberately last, as the largest and least incrementally verifiable
+   pieces.
 
 (Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
 Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
@@ -1244,7 +1279,8 @@ see Section 7 above. Slice 38 closed out alcohol/cigarettes as real
 consumable items — see Sections 5/6 above. Slice 39 closed out fuel
 visibility and refueling for `CarEntity` — see Section 4 above. Slice 40
 closed out assault as a tracked crime type and added a real knife
-weapon — see Section 7 above.)
+weapon — see Section 7 above. Slice 41 closed out a separate, harsher
+murder crime tier — see Section 7 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

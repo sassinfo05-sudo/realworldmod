@@ -2,6 +2,7 @@ package com.realworldmod.client.phone;
 
 import com.realworldmod.civil.net.CourtRegistryContestPayload;
 import com.realworldmod.civil.net.CourtRegistryHistoryRequestPayload;
+import com.realworldmod.civil.net.CourtRegistryHistoryResponsePayload;
 import com.realworldmod.civil.net.CourtRegistryStatusRequestPayload;
 import com.realworldmod.client.civil.ClientCourtRegistryHistoryState;
 import com.realworldmod.client.civil.ClientCourtRegistryState;
@@ -20,7 +21,9 @@ import net.minecraft.text.Text;
  * As of slice 56, a Contest button dismisses the case directly from here,
  * instead of requiring the in-world court flow. As of slice 64, it also
  * shows a filing-history summary — how many resolved cases the player has
- * been a party to, and the outcome/opponent/amount of the most recent one.
+ * been a party to. As of slice 70, that's a real bounded list of the most
+ * recent {@code CourtRegistryNetworking.MAX_HISTORY_ENTRIES} cases (not
+ * just the single most recent one), each on its own line.
  */
 public final class CourtRegistryAppScreen extends Screen {
     @SuppressWarnings("unused")
@@ -82,6 +85,8 @@ public final class CourtRegistryAppScreen extends Screen {
         renderHistory(context);
     }
 
+    private static final int HISTORY_LINE_HEIGHT = 11;
+
     private void renderHistory(DrawContext context) {
         ClientCourtRegistryHistoryState.State history = ClientCourtRegistryHistoryState.get();
         if (history == null) {
@@ -89,17 +94,18 @@ public final class CourtRegistryAppScreen extends Screen {
         }
 
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.translatable("gui.realworldmod.phone.court_registry.history_count", history.pastCaseCount()),
+                Text.translatable("gui.realworldmod.phone.court_registry.history_count", history.totalCount()),
                 this.width / 2, this.height / 2 + 55, 0xAAAAAA);
 
-        if (history.hasMostRecent()) {
-            String outcomeKey = history.mostRecentContested()
+        int y = this.height / 2 + 55 + HISTORY_LINE_HEIGHT;
+        for (CourtRegistryHistoryResponsePayload.HistoryEntry entry : history.entries()) {
+            String outcomeKey = entry.contested()
                     ? "gui.realworldmod.phone.court_registry.history_recent_contested"
                     : "gui.realworldmod.phone.court_registry.history_recent_default";
             context.drawCenteredTextWithShadow(this.textRenderer,
-                    Text.translatable(outcomeKey, history.mostRecentOpponentName(),
-                            CurrencyFormatter.format(history.mostRecentAmountCents())),
-                    this.width / 2, this.height / 2 + 67, 0xAAAAAA);
+                    Text.translatable(outcomeKey, entry.opponentName(), CurrencyFormatter.format(entry.amountCents())),
+                    this.width / 2, y, 0xAAAAAA);
+            y += HISTORY_LINE_HEIGHT;
         }
     }
 

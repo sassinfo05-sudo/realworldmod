@@ -1697,6 +1697,35 @@ updated with every slice so neither side ever has to guess.
     being caught; the severity cap (4) is a fixed constant, not tied to
     wanted level or amount dealt in the session.
 
+- **Slice 70 — a real bounded history list for the Court Registry**
+  (Section 3), closing part of slice 64's own "a count-plus-most-recent
+  summary, not a full scrollable list" gap:
+  - `CourtRegistryHistoryResponsePayload` gains a nested `HistoryEntry`
+    record (opponent name, amount, contested flag) and its own
+    `PacketCodec`, wrapped in `PacketCodecs.collection` for the list —
+    the first payload in the mod carrying a list of a composite record
+    rather than a list of primitives (`BlackjackStateResponsePayload`'s
+    `List<Integer>` hand ordinals being the closest existing precedent).
+    `totalCount` still reports every resolved case, even beyond the
+    list's cap.
+  - `CourtRegistryNetworking` gains `MAX_HISTORY_ENTRIES` (5) and builds
+    up to that many entries from `CivilCourtService.getHistoryFor`'s
+    already-sorted, most-recent-first list — no change to
+    `CivilCourtService` itself was needed, since it already returned the
+    full history.
+  - `ClientCourtRegistryHistoryState` and `CourtRegistryAppScreen` both
+    updated to carry/render the list: each entry gets its own line below
+    the "Past cases: N" count instead of a single "most recent" line.
+  - No new unit tests: this is pure networking/UI plumbing over
+    `CivilCourtService.getHistoryFor`, which `CivilCourtServiceTest`
+    already exhaustively covers from slice 64 — 392 total, unchanged,
+    all still passing.
+  - **Known gaps**: still a fixed top-5 view, not a real scrollable
+    widget — a player with more than 5 past cases can't see anything
+    beyond them, even though `totalCount` tells them how many exist; no
+    click-to-expand or per-case detail view, just the same
+    opponent/amount/outcome summary line repeated per entry.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1882,8 +1911,10 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   the case right from the app, plus — as of slice 57 — the plaintiff's
   resolved display name alongside the claim, plus — as of slice 64 — a
   filing-history summary: how many resolved cases the player has been a
-  party to, and the outcome/opponent/amount of the most recent one) over
-  a real client↔server networking pattern.
+  party to, plus — as of slice 70 — a real bounded list of up to
+  `CourtRegistryNetworking.MAX_HISTORY_ENTRIES` (5) of the most recent
+  ones, not just a single "most recent" line) over a real client↔server
+  networking pattern.
 - Missing: PearOS vs. OpenDroid distinction (rooting, sideloading,
   terminal access), cracked screens/repair shops, charging cables as a
   physical item, PC building (motherboard/CPU/GPU/RAM/PSU parts, physical
@@ -1892,11 +1923,11 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   web-page-like content (today's apps are native screens, not pages), real
   estate portal, credit score dashboard, stock/forex exchange, a criminal
   court registry as a web UI (the Criminal Record app is that start; the
-  Court Registry app from slices 53/56/57/64 covers the civil side,
+  Court Registry app from slices 53/56/57/64/70 covers the civil side,
   including an in-app Contest button as of slice 56, the plaintiff's
-  resolved name as of slice 57, and a filing-history summary as of
-  slice 64 — the history is a count-plus-most-recent summary, not a full
-  scrollable list of every past case), tax audit portal,
+  resolved name as of slice 57, and a filing history as of slices 64/70
+  — a bounded top-5 list, not a real scrollable widget or an unlimited
+  view of every past case), tax audit portal,
   BlockTube (record/edit/upload video, subscribers, ad revenue), dark web
   marketplace, game consoles/discs/arcades/claw machines/racing sims.
   **Requested and tracked, not started**: every phone/PC app being a
@@ -2350,9 +2381,9 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    NPC-specific arrest/detainment flow now that citizens can be
    assault/murder victims, or reusing slice 61's pathfinding pattern for
    a job site's actual task or a non-medicine shop trip), turning slice
-   64's Court Registry history summary into a real scrollable list of
-   every past case, or bringing Slots/Roulette up to the other three
-   tables' slice-54
+   64/70's Court Registry history into a real scrollable widget with no
+   fixed cap, or bringing Slots/Roulette up to the other three tables'
+   slice-54
    wager-selection bar (they'd need a real screen first, since both are
    still a single block right-click) are all reasonable next picks.
    Aviation/ATC and the space program stay deliberately last, as the
@@ -2415,7 +2446,8 @@ see Sections 3/8 above. Slice 67 gave hangovers and nicotine withdrawal
 escalating severity — see Section 5 above. Slice 68 added a real
 nicotine patch item to ease withdrawal — see Sections 5/6 above. Slice
 69 gave narcotics dealing its own escalating crime-severity tier — see
-Section 7 above.)
+Section 7 above. Slice 70 gave the Court Registry a real bounded
+history list — see Section 3 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

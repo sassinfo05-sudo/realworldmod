@@ -6,6 +6,7 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.network.ServerPlayerEntity;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -15,6 +16,9 @@ import java.util.UUID;
  * server-side handlers.
  */
 public final class CourtRegistryNetworking {
+    /** How many of a player's most-recently-resolved cases {@code buildHistoryResponse} sends, capping the response size. */
+    public static final int MAX_HISTORY_ENTRIES = 5;
+
     private CourtRegistryNetworking() {
     }
 
@@ -51,14 +55,16 @@ public final class CourtRegistryNetworking {
             CivilCourtService civilCourtService, ServerPlayerEntity player) {
         UUID playerId = player.getUuid();
         List<CivilCourtService.ArchivedCase> history = civilCourtService.getHistoryFor(playerId);
-        if (history.isEmpty()) {
-            return new CourtRegistryHistoryResponsePayload(0, false, "", 0L, false);
-        }
 
-        CivilCourtService.ArchivedCase mostRecent = history.get(0);
-        UUID opponentId = mostRecent.plaintiffId().equals(playerId) ? mostRecent.defendantId() : mostRecent.plaintiffId();
-        return new CourtRegistryHistoryResponsePayload(history.size(), true,
-                resolveName(player, opponentId), mostRecent.amountCents(), mostRecent.contested());
+        List<CourtRegistryHistoryResponsePayload.HistoryEntry> entries = new ArrayList<>();
+        for (int i = 0; i < Math.min(history.size(), MAX_HISTORY_ENTRIES); i++) {
+            CivilCourtService.ArchivedCase archivedCase = history.get(i);
+            UUID opponentId = archivedCase.plaintiffId().equals(playerId)
+                    ? archivedCase.defendantId() : archivedCase.plaintiffId();
+            entries.add(new CourtRegistryHistoryResponsePayload.HistoryEntry(
+                    resolveName(player, opponentId), archivedCase.amountCents(), archivedCase.contested()));
+        }
+        return new CourtRegistryHistoryResponsePayload(history.size(), entries);
     }
 
     private static String resolveName(ServerPlayerEntity player, UUID playerId) {

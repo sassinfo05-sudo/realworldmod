@@ -1,9 +1,17 @@
 package com.realworldmod.client.civil;
 
-/** Client-side cache of the last civil-case filing-history summary the server sent, mirroring {@link ClientCourtRegistryState}. */
+import com.realworldmod.civil.net.CourtRegistryHistoryResponsePayload;
+
+import java.util.List;
+
+/**
+ * Client-side cache of the last civil-case filing-history the server sent,
+ * mirroring {@link ClientCourtRegistryState}. As of slice 70, this holds a
+ * bounded list of entries (see {@code CourtRegistryNetworking.MAX_HISTORY_ENTRIES})
+ * instead of just the single most recent case.
+ */
 public final class ClientCourtRegistryHistoryState {
-    public record State(int pastCaseCount, boolean hasMostRecent, String mostRecentOpponentName,
-                         long mostRecentAmountCents, boolean mostRecentContested) {
+    public record State(int totalCount, List<CourtRegistryHistoryResponsePayload.HistoryEntry> entries) {
     }
 
     private static volatile State state;

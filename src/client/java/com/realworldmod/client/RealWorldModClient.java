@@ -87,8 +87,7 @@ public final class RealWorldModClient implements ClientModInitializer {
                         payload.hasPendingCase(), payload.amountCents(), payload.ticksRemaining(), payload.plaintiffName())));
         ClientPlayNetworking.registerGlobalReceiver(CourtRegistryHistoryResponsePayload.ID,
                 (payload, context) -> ClientCourtRegistryHistoryState.set(new ClientCourtRegistryHistoryState.State(
-                        payload.pastCaseCount(), payload.hasMostRecent(), payload.mostRecentOpponentName(),
-                        payload.mostRecentAmountCents(), payload.mostRecentContested())));
+                        payload.totalCount(), payload.entries())));
 
         EntityRendererRegistry.register(ModEntities.CAR, CarEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.CITIZEN, CitizenEntityRenderer::new);

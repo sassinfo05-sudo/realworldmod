@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "lit=false": { "model": "realworldmod:block/utility_lamp" },
+    "lit=true": { "model": "realworldmod:block/utility_lamp_on" }
+  }
+}

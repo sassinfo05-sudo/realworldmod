@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "flowing=false": { "model": "realworldmod:block/water_outlet_off" },
+    "flowing=true": { "model": "realworldmod:block/water_outlet" }
+  }
+}

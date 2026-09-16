@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "realworldmod:block/poker_table" }
+  }
+}

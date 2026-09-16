@@ -1,0 +1,136 @@
+package com.realworldmod.client;
+
+import com.realworldmod.client.commerce.BlackjackScreen;
+import com.realworldmod.client.commerce.ClientBlackjackState;
+import com.realworldmod.client.commerce.ClientCrapsState;
+import com.realworldmod.client.commerce.ClientThreeCardPokerState;
+import com.realworldmod.client.commerce.CrapsScreen;
+import com.realworldmod.client.commerce.ThreeCardPokerScreen;
+import com.realworldmod.client.civil.ClientCourtRegistryHistoryState;
+import com.realworldmod.client.civil.ClientCourtRegistryState;
+import com.realworldmod.client.crime.ClientCrimeState;
+import com.realworldmod.client.economy.ClientBankState;
+import com.realworldmod.client.economy.ClientTreasuryState;
+import com.realworldmod.client.wildlife.ClientWildlifePopulationState;
+import com.realworldmod.client.phone.PhoneLockScreen;
+import com.realworldmod.client.utilities.ClientUtilityState;
+import com.realworldmod.client.utilities.ClientWaterState;
+import com.realworldmod.client.crime.PoliceEntityRenderer;
+import com.realworldmod.client.npc.CitizenEntityRenderer;
+import com.realworldmod.client.vehicle.CarEntityRenderer;
+import com.realworldmod.client.vehicle.CarSpeedHud;
+import com.realworldmod.client.wildlife.CoyoteEntityRenderer;
+import com.realworldmod.client.wildlife.DeerEntityRenderer;
+import com.realworldmod.client.wildlife.GameWardenEntityRenderer;
+import com.realworldmod.commerce.net.BlackjackStateResponsePayload;
+import com.realworldmod.commerce.net.CrapsStateResponsePayload;
+import com.realworldmod.commerce.net.ThreeCardPokerStateResponsePayload;
+import com.realworldmod.civil.net.CourtRegistryHistoryResponsePayload;
+import com.realworldmod.civil.net.CourtRegistryStatusResponsePayload;
+import com.realworldmod.crime.net.WantedLevelResponsePayload;
+import com.realworldmod.economy.net.BankBalanceResponsePayload;
+import com.realworldmod.economy.net.TreasuryBalanceResponsePayload;
+import com.realworldmod.wildlife.net.WildlifePopulationResponsePayload;
+import com.realworldmod.init.ModBlocks;
+import com.realworldmod.init.ModDataComponents;
+import com.realworldmod.init.ModEntities;
+import com.realworldmod.init.ModItems;
+import com.realworldmod.phone.PhoneBattery;
+import com.realworldmod.utilities.net.UtilityStatusResponsePayload;
+import com.realworldmod.utilities.net.WaterStatusResponsePayload;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.fabricmc.fabric.api.event.player.UseBlockCallback;
+import net.fabricmc.fabric.api.event.player.UseItemCallback;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
+import net.minecraft.util.TypedActionResult;
+
+/**
+ * Client-only entry point. Registers the purely visual half of smartphone
+ * interaction (opening the lock screen); the shared battery-drain logic
+ * lives in {@code PhoneUseHandler} so it also runs on a dedicated server.
+ */
+public final class RealWorldModClient implements ClientModInitializer {
+    @Override
+    public void onInitializeClient() {
+        CarSpeedHud.register();
+
+        ClientPlayNetworking.registerGlobalReceiver(BankBalanceResponsePayload.ID,
+                (payload, context) -> ClientBankState.set(payload.balanceCents()));
+        ClientPlayNetworking.registerGlobalReceiver(TreasuryBalanceResponsePayload.ID,
+                (payload, context) -> ClientTreasuryState.set(payload.balanceCents()));
+        ClientPlayNetworking.registerGlobalReceiver(WildlifePopulationResponsePayload.ID,
+                (payload, context) -> ClientWildlifePopulationState.set(payload.deerPopulation()));
+        ClientPlayNetworking.registerGlobalReceiver(WantedLevelResponsePayload.ID,
+                (payload, context) -> ClientCrimeState.set(payload.wantedLevel()));
+        ClientPlayNetworking.registerGlobalReceiver(UtilityStatusResponsePayload.ID,
+                (payload, context) -> ClientUtilityState.set(payload.powerConnected(), payload.unpaidCents()));
+        ClientPlayNetworking.registerGlobalReceiver(WaterStatusResponsePayload.ID,
+                (payload, context) -> ClientWaterState.set(payload.connected(), payload.unpaidCents()));
+        ClientPlayNetworking.registerGlobalReceiver(BlackjackStateResponsePayload.ID,
+                (payload, context) -> ClientBlackjackState.set(new ClientBlackjackState.State(
+                        payload.hasActiveGame(), payload.playerHandOrdinals(), payload.dealerHandOrdinals(),
+                        payload.resolved(), payload.outcomeOrdinal(), payload.payoutCents())));
+        ClientPlayNetworking.registerGlobalReceiver(ThreeCardPokerStateResponsePayload.ID,
+                (payload, context) -> ClientThreeCardPokerState.set(new ClientThreeCardPokerState.State(
+                        payload.hasActiveGame(), payload.playerHandOrdinals(), payload.dealerHandOrdinals(),
+                        payload.resolved(), payload.outcomeOrdinal(), payload.payoutCents())));
+        ClientPlayNetworking.registerGlobalReceiver(CrapsStateResponsePayload.ID,
+                (payload, context) -> ClientCrapsState.set(new ClientCrapsState.State(
+                        payload.hasActiveGame(), payload.point(), payload.lastRollTotal(),
+                        payload.resolved(), payload.outcomeOrdinal(), payload.payoutCents())));
+        ClientPlayNetworking.registerGlobalReceiver(CourtRegistryStatusResponsePayload.ID,
+                (payload, context) -> ClientCourtRegistryState.set(new ClientCourtRegistryState.State(
+                        payload.hasPendingCase(), payload.amountCents(), payload.ticksRemaining(), payload.plaintiffName())));
+        ClientPlayNetworking.registerGlobalReceiver(CourtRegistryHistoryResponsePayload.ID,
+                (payload, context) -> ClientCourtRegistryHistoryState.set(new ClientCourtRegistryHistoryState.State(
+                        payload.totalCount(), payload.entries())));
+
+        EntityRendererRegistry.register(ModEntities.CAR, CarEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.CITIZEN, CitizenEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.DEER, DeerEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.POLICE, PoliceEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.GAME_WARDEN, GameWardenEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.COYOTE, CoyoteEntityRenderer::new);
+
+        UseItemCallback.EVENT.register((player, world, hand) -> {
+            if (!world.isClient || hand != Hand.MAIN_HAND) {
+                return TypedActionResult.pass(player.getStackInHand(hand));
+            }
+            var stack = player.getStackInHand(hand);
+            if (!stack.isOf(ModItems.SMARTPHONE)) {
+                return TypedActionResult.pass(stack);
+            }
+
+            int battery = stack.getOrDefault(ModDataComponents.PHONE_BATTERY, PhoneBattery.MAX_LEVEL);
+            if (PhoneBattery.isDead(battery)) {
+                return TypedActionResult.pass(stack);
+            }
+
+            MinecraftClient.getInstance().setScreen(new PhoneLockScreen(stack));
+            return TypedActionResult.pass(stack);
+        });
+
+        UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
+            if (!world.isClient || hand != Hand.MAIN_HAND) {
+                return ActionResult.PASS;
+            }
+            if (world.getBlockState(hitResult.getBlockPos()).isOf(ModBlocks.BLACKJACK_TABLE)) {
+                MinecraftClient.getInstance().setScreen(new BlackjackScreen());
+                return ActionResult.SUCCESS;
+            }
+            if (world.getBlockState(hitResult.getBlockPos()).isOf(ModBlocks.POKER_TABLE)) {
+                MinecraftClient.getInstance().setScreen(new ThreeCardPokerScreen());
+                return ActionResult.SUCCESS;
+            }
+            if (world.getBlockState(hitResult.getBlockPos()).isOf(ModBlocks.CRAPS_TABLE)) {
+                MinecraftClient.getInstance().setScreen(new CrapsScreen());
+                return ActionResult.SUCCESS;
+            }
+            return ActionResult.PASS;
+        });
+    }
+}

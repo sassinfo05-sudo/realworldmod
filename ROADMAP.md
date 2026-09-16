@@ -396,6 +396,30 @@ updated with every slice so neither side ever has to guess.
     no new ones, so it doesn't move the "10/10, hundreds of assets"
     backlog at all — only the "PBR" half of the last two requests.
 
+- **Slice 26 — real quadruped model for `DeerEntity`** (Section 1),
+  continuing straight on from slice 24's humanoid model into the other
+  entity slice 24 explicitly deferred:
+  - `DeerEntityModel<T>`: a body/head/two-antler/four-leg `ModelPart`
+    hierarchy (verified via the same `javap`-checked
+    `ModelPartBuilder`/`ModelData`/`TexturedModelData` API as slice 24),
+    with a diagonal-trot walk cycle — front-right paired with back-left,
+    front-left paired with back-right, the standard approximation every
+    vanilla quadruped mob model uses — replacing slice 22's scaled
+    brown-terracotta block.
+  - `DeerEntityRenderer` rewritten to extend `LivingEntityRenderer` with
+    this model, same pattern as `CitizenEntityRenderer`/
+    `PoliceEntityRenderer`.
+  - A hand-painted, correctly-UV-mapped `deer.png` (reddish-brown fur,
+    a lighter underside patch, dark hooves, antlers) plus its LabPBR
+    `_n`/`_s` maps generated the same way as slice 25's.
+  - **Known gaps**: still Minecraft's own blocky cuboid style, not
+    sculpted 3D art; `CarEntity` is the one entity left on the
+    block-placeholder technique (a wheeled vehicle body is a distinct
+    shape from a biped/quadruped and needs its own model, not a reuse
+    of either); nothing here is verified visually without a running
+    client, including whether the trot cycle actually reads as a deer
+    walking rather than four legs swinging independently.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -447,34 +471,38 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   holds today — see the cross-cutting notes above.)
 
 **Section 1 — Rendering, Physics & Graphics Engine**
-- Done: as of slice 24, `CitizenEntity` and `PoliceEntity` render with a
-  real hand-built `HumanoidEntityModel` (proper head/body/arm/leg geometry
-  via Minecraft's own `ModelPart` system) and a genuine walk-cycle plus
-  head-tracking animation, with distinct 64x64 skin-style textures —
+- Done: as of slice 24/26, `CitizenEntity`, `PoliceEntity`, and
+  `DeerEntity` all render with a real hand-built `ModelPart` hierarchy
+  (proper head/body/limb geometry via Minecraft's own model system) and
+  genuine walk-cycle animation, with distinct hand-painted textures —
   replacing the "scaled vanilla concrete block with no animation"
-  placeholder those two entities used through slice 23.
+  placeholder those three entities used through slice 23. As of slice 25,
+  every existing texture (all three entities plus every block/item) also
+  ships a LabPBR normal + specular map, so a player running Iris with a
+  PBR-aware shader pack gets real bump/specular/emissive shading instead
+  of flat lighting.
 - Missing — and this is the honest running tally against "10/10 assets,
-  nothing looks like Minecraft anymore": `DeerEntity` and `CarEntity`
-  still use the block-placeholder technique (a quadruped model and a
-  vehicle model are their own follow-up slices); every block/item texture
-  is still slice 18's simple 16x16 placeholder pixel art, not
-  high-fidelity art; the two humanoid textures that exist are
-  script-painted pixel art at Minecraft-skin resolution, not the
-  "hundreds of hand-crafted, high-quality" assets requested — no amount
-  of code can substitute for actual artist-made assets or a licensed
-  asset pack, and this mod has neither; the model geometry itself is
-  still Minecraft's own blocky cuboid style (no smooth/organic shapes);
-  and the whole rendering pipeline is still 100% vanilla Minecraft
-  underneath — no PBR/ray-traced lighting, volumetric fog, water
-  refraction, or displacement mapping (needs a custom shader pipeline,
-  unverifiable without a running game client); no 1/16th sub-grid interior
-  decoration system (arbitrary-angle furniture placement); no
-  background-thread macro-economics/weather/commute simulation for
-  unrendered regions (today's simulation runs only for online
-  players/loaded chunks via the normal server tick, not a separate async
-  layer); nothing in this section has been visually confirmed in a
-  running client. **Requested and tracked, not started**: working window
-  curtains, street lights, and other small
+  nothing looks like Minecraft anymore": `CarEntity` is the one entity
+  left on the block-placeholder technique (a wheeled vehicle body is a
+  distinct shape needing its own model, not a reuse of the biped/
+  quadruped ones); every block/item texture is still slice 18's simple
+  16x16 placeholder pixel art, not high-fidelity art; the three entity
+  textures that exist are script-painted pixel art at Minecraft-skin
+  resolution, not the "hundreds of hand-crafted, high-quality" assets
+  requested — no amount of code can substitute for actual artist-made
+  assets or a licensed asset pack, and this mod has neither; the model
+  geometry itself is still Minecraft's own blocky cuboid style (no
+  smooth/organic shapes); the LabPBR maps exist but nothing renders them
+  without the *player* separately installing Iris and a shader pack — the
+  mod ships no rendering pipeline of its own, no PBR/ray-traced lighting,
+  volumetric fog, water refraction, or displacement mapping happens by
+  default; no 1/16th sub-grid interior decoration system (arbitrary-angle
+  furniture placement); no background-thread macro-economics/weather/
+  commute simulation for unrendered regions (today's simulation runs only
+  for online players/loaded chunks via the normal server tick, not a
+  separate async layer); nothing in this section has been visually
+  confirmed in a running client. **Requested and tracked, not started**:
+  working window curtains, street lights, and other small
   world-detail props that toggle/animate on their own; emotes as their own
   player-triggered animation/expression system, distinct from an NPC's own
   idle/walk animations above.

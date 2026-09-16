@@ -1231,6 +1231,35 @@ updated with every slice so neither side ever has to guess.
     behavior but was never explicitly tested for a mid-session
     disconnect since the mod has no session-loss simulation at all.
 
+- **Slice 55 — assault and murder now protect NPCs too** (Section 7),
+  closing "no consequence at all for killing an NPC" now that citizens
+  have real health to lose:
+  - `AssaultHandler` and `MurderHandler` both gain an `isProtectedVictim`
+    check widened from "the victim is a `PlayerEntity`" to "the victim is
+    a `PlayerEntity` or a `CitizenEntity`" — the exact same NPC-inclusion
+    move slices 46/48 already made for illness and fall injury, applied
+    to the crime system this time. `DeerEntity`, `CoyoteEntity`,
+    `PoliceEntity`, and `GameWardenEntity` are deliberately left out:
+    each already has its own distinct consequence (poaching, predation,
+    arrest) and folding them into ordinary assault/murder would double
+    up rather than fill a real gap.
+  - Both handlers still only fire for a `PLAYER_ATTACK` from another
+    `PlayerEntity` — a citizen killed by a coyote, fall damage, or
+    another citizen still isn't a crime, matching how `MurderHandler`
+    already ignored non-player-attack deaths for player victims.
+  - Not separately unit tested, for the same reason slices 40/41/46/48
+    weren't: `LawEnforcementServiceTest`/`CrimeServiceTest` already cover
+    `recordOffense` at any severity; only the widened event-hook guard is
+    new, and like every other Fabric event handler in the mod it needs a
+    running Minecraft entity/world to exercise (338 tests total,
+    unchanged, all still passing).
+  - **Known gaps**: no distinct severity for an NPC victim versus a
+    player victim (both record at the same `ASSAULT_SEVERITY`/
+    `MURDER_SEVERITY`); no reaction from nearby citizens or police
+    witnessing the attack; still no attempted-murder distinction from a
+    survived assault, and no investigation/detective mechanic, for
+    either victim type.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1647,7 +1676,16 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   death, rather than on every hit like `AssaultHandler`) and records the
   same kind of offense through the same `recordOffense` pipeline, but at
   the maximum severity — a killing jumps a player straight to "Most
-  Wanted" in one offense rather than escalating gradually.
+  Wanted" in one offense rather than escalating gradually. As of slice
+  55, both `AssaultHandler` and `MurderHandler` protect `CitizenEntity`
+  the same way they protect a player: hitting or killing a citizen NPC
+  now records the same assault/murder offense a player victim would,
+  since citizens have real health and can actually die — the "NPCs have
+  no health/death of their own to lose" excuse from slices 40/41 no
+  longer applies now that slices 46-49 gave NPCs a real place in every
+  other system. Deer, coyotes, police, and game wardens stay excluded,
+  since they already have their own distinct consequence (poaching,
+  predation, arrest).
 - Missing: `PoliceEntity` only patrols/chases — no tactical cover, spike
   strips, pit maneuvers, backup calls, or squad coordination; deer/police
   spawn only via items (`POLICE_SPAWNER`), not real police-station
@@ -1682,9 +1720,7 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   "become a criminal" as a real career/reputation track, not just an
   accumulating wanted level; illuminati-style secret societies and cults
   as a distinct faction type from ordinary criminal organizations; no
-  consequence at all for killing an NPC (slice 41's murder tier only
-  fires for a player victim, since NPCs have no health/death of their
-  own to lose); no separate charge for attempted murder versus a
+  separate charge for attempted murder versus a
   survived assault, and no homicide investigation/detective mechanic —
   a murder is recorded the instant it happens, with no possibility of
   getting away with it if no one saw; other melee weapons beyond the one
@@ -1786,15 +1822,15 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    effect), a second vehicle type now that slices 39/51/52 rounded out
    the first car's fuel/ownership/speed, expanding the predator system
    slice 42 started (a second predator/prey pair, pack hunting),
-   extending the NPC-inclusion slices 46-49 started to another system
-   (NPC pathfinding to a real shop, or a distinct NPC-victim
-   assault/arrest consequence), adding an in-app contest button and
-   plaintiff name resolution to slice 53's Court Registry, or bringing
-   Slots/Roulette up to the other three tables' slice-54 wager-selection
-   bar (they'd need a real screen first, since both are still a single
-   block right-click) are all reasonable next picks. Aviation/ATC and
-   the space program stay deliberately last, as the largest and least
-   incrementally verifiable pieces.
+   extending the NPC-inclusion slices 46-49/55 started to another system
+   (NPC pathfinding to a real shop, or an NPC-specific arrest/detainment
+   flow now that citizens can be assault/murder victims), adding an
+   in-app contest button and plaintiff name resolution to slice 53's
+   Court Registry, or bringing Slots/Roulette up to the other three
+   tables' slice-54 wager-selection bar (they'd need a real screen first,
+   since both are still a single block right-click) are all reasonable
+   next picks. Aviation/ATC and the space program stay deliberately
+   last, as the largest and least incrementally verifiable pieces.
 
 (Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
 Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
@@ -1833,7 +1869,9 @@ cars" with real car ownership and tracked auto theft — see Section 4
 above. Slice 52 gave `CarEntity` a real persistent speed HUD — see
 Section 4 above. Slice 53 gave the civil court a Court Registry phone
 app — see Section 3 above. Slice 54 gave three of the five casino
-tables a real player-chosen wager — see Section 6 above.)
+tables a real player-chosen wager — see Section 6 above. Slice 55
+extended assault and murder to protect `CitizenEntity` victims too —
+see Section 7 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

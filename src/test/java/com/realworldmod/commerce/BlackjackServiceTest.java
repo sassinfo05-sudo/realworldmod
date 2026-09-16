@@ -9,6 +9,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -38,30 +39,40 @@ class BlackjackServiceTest {
     @Test
     void startingAGameWithoutFundsFails() {
         UUID player = UUID.randomUUID();
-        assertFalse(blackjackService.startGame(player));
+        assertFalse(blackjackService.startGame(player, BetSizing.DEFAULT_BET_CENTS));
         assertTrue(blackjackService.activeGame(player).isEmpty());
     }
 
     @Test
-    void startingAGameWithdrawsTheBetAndCreatesAGame() {
+    void startingAGameWithdrawsTheChosenBetAndCreatesAGame() {
         UUID player = UUID.randomUUID();
         bankService.deposit(player, 100_000);
 
-        assertTrue(blackjackService.startGame(player));
+        assertTrue(blackjackService.startGame(player, 2000));
 
         assertTrue(blackjackService.activeGame(player).isPresent());
-        assertTrue(bankService.getBalance(player) < 100_000);
+        assertEquals(100_000 - 2000, bankService.getBalance(player));
+    }
+
+    @Test
+    void startingAGameClampsAnOutOfRangeBetToTheAllowedMaximum() {
+        UUID player = UUID.randomUUID();
+        bankService.deposit(player, 100_000);
+
+        assertTrue(blackjackService.startGame(player, 999_999));
+
+        assertEquals(100_000 - BetSizing.MAX_BET_CENTS, bankService.getBalance(player));
     }
 
     @Test
     void cannotStartASecondGameWhileTheFirstIsUnresolved() {
         UUID player = UUID.randomUUID();
         bankService.deposit(player, 100_000);
-        blackjackService.startGame(player);
+        blackjackService.startGame(player, BetSizing.DEFAULT_BET_CENTS);
 
         boolean stillUnresolved = blackjackService.activeGame(player).map(g -> !g.isResolved()).orElse(false);
         if (stillUnresolved) {
-            assertFalse(blackjackService.startGame(player));
+            assertFalse(blackjackService.startGame(player, BetSizing.DEFAULT_BET_CENTS));
         }
     }
 
@@ -69,7 +80,7 @@ class BlackjackServiceTest {
     void standingAlwaysResolvesAnInProgressGame() {
         UUID player = UUID.randomUUID();
         bankService.deposit(player, 100_000);
-        blackjackService.startGame(player);
+        blackjackService.startGame(player, BetSizing.DEFAULT_BET_CENTS);
 
         blackjackService.activeGame(player).ifPresent(game -> {
             if (!game.isResolved()) {
@@ -84,14 +95,14 @@ class BlackjackServiceTest {
     void canStartANewGameAfterTheFirstResolves() {
         UUID player = UUID.randomUUID();
         bankService.deposit(player, 1_000_000);
-        blackjackService.startGame(player);
+        blackjackService.startGame(player, BetSizing.DEFAULT_BET_CENTS);
         blackjackService.activeGame(player).ifPresent(game -> {
             if (!game.isResolved()) {
                 blackjackService.stand(player);
             }
         });
 
-        assertTrue(blackjackService.startGame(player));
+        assertTrue(blackjackService.startGame(player, BetSizing.DEFAULT_BET_CENTS));
     }
 
     @Test

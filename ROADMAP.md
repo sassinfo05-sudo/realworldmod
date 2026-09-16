@@ -1182,6 +1182,55 @@ updated with every slice so neither side ever has to guess.
     cases; no equivalent registry app yet for the criminal side beyond
     the existing Criminal Record wanted-level display.
 
+- **Slice 54 — a real, player-chosen wager on three casino tables**
+  (Section 6), closing the "each is a single fixed bet size with no way
+  to wager more or less" gap the priority list called out once all five
+  tables existed:
+  - `BetSizing`: the shared bound every wager gets clamped against
+    (`MIN_BET_CENTS`/`MAX_BET_CENTS`/`STEP_CENTS`/`DEFAULT_BET_CENTS`),
+    so a client can never send a bogus wager that withdraws more than the
+    maximum or less than the minimum — `clamp` is the one place that
+    guarantee lives, exercised directly by `BetSizingTest`.
+  - `BlackjackService.startGame`, `CrapsService.startGame`, and
+    `ThreeCardPokerService.deal` all now take a requested bet/ante amount
+    instead of withdrawing the same hardcoded constant every round; each
+    clamps it through `BetSizing.clamp` before withdrawing, and stores
+    the *actual* amount withdrawn (not a shared constant) so settlement
+    always pays out against what that specific round actually bet.
+    Three Card Poker's real rule that the play bet always matches the
+    ante (unchanged from slice 45) now means the *chosen* ante, tracked
+    per player between the deal and the play/fold decision.
+  - `BlackjackStartPayload`, `CrapsStartPayload`, and
+    `ThreeCardPokerDealPayload` all gained a `long betCents`/`anteCents`
+    field carrying the client's chosen wager, and each table's screen
+    (`BlackjackScreen`, `CrapsScreen`, `ThreeCardPokerScreen`) gained a
+    +/- button pair that adjusts a selected-bet field in
+    `BetSizing.STEP_CENTS` increments (disabled while a round is in
+    progress, matching how the existing action buttons already toggle)
+    and a "Bet: $X.XX" label showing the current selection before the
+    player deals.
+  - Slots (`SlotMachineUseHandler`) and Roulette (`RouletteUseHandler`)
+    deliberately weren't touched: both are a single block right-click
+    with no persistent screen to put a wager selector on, so they stay
+    fixed-bet — an honestly narrower slice than "all five games," called
+    out explicitly in Section 6's status below.
+  - Exhaustively unit tested at the service layer: each of
+    `BlackjackServiceTest`/`CrapsServiceTest`/`ThreeCardPokerServiceTest`
+    gained a test asserting a custom in-range bet is exactly what gets
+    withdrawn and a test asserting an out-of-range bet clamps to
+    `BetSizing.MAX_BET_CENTS`, on top of `BetSizingTest`'s four direct
+    clamp cases — 338 total, all passing. The three screens' new +/-
+    buttons are untested like every other client-only rendering class in
+    the mod, needing a running game client to verify.
+  - **Known gaps**: no way to type an exact amount, only step through
+    `BetSizing`'s fixed increments; Slots and Roulette still don't have a
+    chooseable wager (see above); no per-table minimum/maximum
+    (high-roller vs. low-stakes tables) — the same `BetSizing` range
+    applies everywhere; a disconnect mid-round still leaves the round's
+    actual withdrawn amount, not a shared constant, which is the correct
+    behavior but was never explicitly tested for a mid-session
+    disconnect since the mod has no session-loss simulation at all.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1507,6 +1556,10 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   shooter keeps rolling until the point repeats (a win) or a 7 shows first
   ("seven out," a loss). All five are unit-tested exhaustively against
   every outcome, not just the category existing with no game underneath.
+  As of slice 54, the table screens for Blackjack, Three Card Poker, and
+  Craps let the player pick their own wager (in `BetSizing.STEP_CENTS`
+  increments between `MIN_BET_CENTS` and `MAX_BET_CENTS`) instead of
+  every round always costing the same fixed amount.
 - Missing: grocery stores/shopping carts, furniture stores, clothing
   boutiques with a layered fashion/customization engine, bakeries, gun/
   ammo shops, phone/PC retail beyond the two items that exist, player-run
@@ -1522,9 +1575,12 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   infinite shoe/dice-pair rather than modeling physical wear or bias),
   strip clubs/VIP lounges/nightclubs/DJ booths with proximity audio; all
   five games' losing bets simply vanish rather than reaching a tracked
-  "house"
-  account, and each is a single fixed
-  bet size with no way to wager more or less. **Requested and tracked,
+  "house" account; as of slice 54, Blackjack/Three Card Poker/Craps each
+  let the player choose a wager between `BetSizing.MIN_BET_CENTS` and
+  `MAX_BET_CENTS` via +/- buttons on their table screen, but Slots and
+  Roulette are still a single fixed bet size — they're plain
+  block-right-click interactions with no persistent screen to put a
+  wager selector on. **Requested and tracked,
   not started**: real wealth-tier
   recognition (nothing currently distinguishes or reacts to
   a player being a "millionaire" or "billionaire" — `BankService` just
@@ -1732,12 +1788,13 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    slice 42 started (a second predator/prey pair, pack hunting),
    extending the NPC-inclusion slices 46-49 started to another system
    (NPC pathfinding to a real shop, or a distinct NPC-victim
-   assault/arrest consequence), giving the casino a wagerable bet size
-   now that all five tables exist, or adding an in-app contest button
-   and plaintiff name resolution to slice 53's Court Registry are all
-   reasonable next picks. Aviation/ATC and the space program stay
-   deliberately last, as the largest and least incrementally verifiable
-   pieces.
+   assault/arrest consequence), adding an in-app contest button and
+   plaintiff name resolution to slice 53's Court Registry, or bringing
+   Slots/Roulette up to the other three tables' slice-54 wager-selection
+   bar (they'd need a real screen first, since both are still a single
+   block right-click) are all reasonable next picks. Aviation/ATC and
+   the space program stay deliberately last, as the largest and least
+   incrementally verifiable pieces.
 
 (Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
 Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
@@ -1775,7 +1832,8 @@ Section 6 above. Slice 51 closed part of "no mechanic for stealing
 cars" with real car ownership and tracked auto theft — see Section 4
 above. Slice 52 gave `CarEntity` a real persistent speed HUD — see
 Section 4 above. Slice 53 gave the civil court a Court Registry phone
-app — see Section 3 above.)
+app — see Section 3 above. Slice 54 gave three of the five casino
+tables a real player-chosen wager — see Section 6 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

@@ -1,5 +1,6 @@
 package com.realworldmod.client.commerce;
 
+import com.realworldmod.commerce.BetSizing;
 import com.realworldmod.commerce.BlackjackGame;
 import com.realworldmod.commerce.net.BlackjackHitPayload;
 import com.realworldmod.commerce.net.BlackjackStandPayload;
@@ -25,6 +26,9 @@ public final class BlackjackScreen extends Screen {
     private ButtonWidget dealButton;
     private ButtonWidget hitButton;
     private ButtonWidget standButton;
+    private ButtonWidget betMinusButton;
+    private ButtonWidget betPlusButton;
+    private long selectedBetCents = BetSizing.DEFAULT_BET_CENTS;
 
     public BlackjackScreen() {
         super(Text.translatable("gui.realworldmod.blackjack.title"));
@@ -34,9 +38,19 @@ public final class BlackjackScreen extends Screen {
     protected void init() {
         ClientPlayNetworking.send(new BlackjackStatePayload());
 
+        this.betMinusButton = this.addDrawableChild(ButtonWidget.builder(
+                        Text.translatable("gui.realworldmod.casino.bet_minus"),
+                        button -> adjustBet(-BetSizing.STEP_CENTS))
+                .dimensions(this.width / 2 - 100, this.height / 2 + 25, 20, 20)
+                .build());
+        this.betPlusButton = this.addDrawableChild(ButtonWidget.builder(
+                        Text.translatable("gui.realworldmod.casino.bet_plus"),
+                        button -> adjustBet(BetSizing.STEP_CENTS))
+                .dimensions(this.width / 2 + 80, this.height / 2 + 25, 20, 20)
+                .build());
         this.dealButton = this.addDrawableChild(ButtonWidget.builder(
                         Text.translatable("gui.realworldmod.blackjack.deal"),
-                        button -> ClientPlayNetworking.send(new BlackjackStartPayload()))
+                        button -> ClientPlayNetworking.send(new BlackjackStartPayload(selectedBetCents)))
                 .dimensions(this.width / 2 - 100, this.height / 2 + 50, 60, 20)
                 .build());
         this.hitButton = this.addDrawableChild(ButtonWidget.builder(
@@ -64,6 +78,12 @@ public final class BlackjackScreen extends Screen {
         this.dealButton.active = state == null || !inProgress;
         this.hitButton.active = inProgress;
         this.standButton.active = inProgress;
+        this.betMinusButton.active = !inProgress;
+        this.betPlusButton.active = !inProgress;
+
+        context.drawCenteredTextWithShadow(this.textRenderer,
+                Text.translatable("gui.realworldmod.casino.bet_label", CurrencyFormatter.format(selectedBetCents)),
+                this.width / 2, this.height / 2 + 31, 0xFFFFFF);
 
         if (state == null || !state.hasActiveGame()) {
             context.drawCenteredTextWithShadow(this.textRenderer,
@@ -97,6 +117,10 @@ public final class BlackjackScreen extends Screen {
                     Text.translatable(outcomeKey, CurrencyFormatter.format(state.payoutCents())),
                     this.width / 2, this.height / 2 + 15, 0x55FF55);
         }
+    }
+
+    private void adjustBet(long deltaCents) {
+        selectedBetCents = BetSizing.clamp(selectedBetCents + deltaCents);
     }
 
     private static List<BlackjackGame.Rank> toRanks(List<Integer> ordinals) {

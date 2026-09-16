@@ -15,12 +15,10 @@ import java.util.UUID;
  * chooses to play after seeing their hand, the real game's structure).
  */
 public final class ThreeCardPokerService {
-    public static final long ANTE_CENTS = 1000;
-    public static final long PLAY_CENTS = 1000;
-
     private final BankService bankService;
     private final Random random = new Random();
     private final Map<UUID, ThreeCardPokerGame> games = new HashMap<>();
+    private final Map<UUID, Long> antes = new HashMap<>();
     private final Map<UUID, Long> lastPayouts = new HashMap<>();
 
     public ThreeCardPokerService(BankService bankService) {
@@ -36,15 +34,17 @@ public final class ThreeCardPokerService {
         return lastPayouts.getOrDefault(playerId, 0L);
     }
 
-    /** Withdraws the ante and deals a fresh round, if the player doesn't already have one in progress and can afford it. */
-    public boolean deal(UUID playerId) {
+    /** Withdraws the ante (clamped to {@link BetSizing}'s range) and deals a fresh round, if the player doesn't already have one in progress and can afford it. */
+    public boolean deal(UUID playerId, long anteCents) {
         ThreeCardPokerGame existing = games.get(playerId);
         if (existing != null && !existing.isResolved()) {
             return false;
         }
-        if (bankService.withdraw(playerId, ANTE_CENTS).isEmpty()) {
+        long ante = BetSizing.clamp(anteCents);
+        if (bankService.withdraw(playerId, ante).isEmpty()) {
             return false;
         }
+        antes.put(playerId, ante);
         games.put(playerId, ThreeCardPokerGame.deal(random));
         lastPayouts.remove(playerId);
         return true;
@@ -57,23 +57,26 @@ public final class ThreeCardPokerService {
             return Optional.empty();
         }
         game.fold();
+        antes.remove(playerId);
         lastPayouts.put(playerId, 0L);
         return Optional.of(game);
     }
 
-    /** Withdraws the matching play bet and resolves the round, if the player can afford it. Leaves the round untouched if they can't. */
+    /** Withdraws a play bet matching the ante and resolves the round, if the player can afford it. Leaves the round untouched if they can't. */
     public Optional<ThreeCardPokerGame> play(UUID playerId) {
         ThreeCardPokerGame game = games.get(playerId);
         if (game == null || game.isResolved()) {
             return Optional.empty();
         }
-        if (bankService.withdraw(playerId, PLAY_CENTS).isEmpty()) {
+        Long ante = antes.get(playerId);
+        if (ante == null || bankService.withdraw(playerId, ante).isEmpty()) {
             return Optional.empty();
         }
+        antes.remove(playerId);
 
         ThreeCardPokerGame.Outcome outcome = game.play();
-        long antePayout = Math.round(ANTE_CENTS * ThreeCardPokerGame.anteMultiplier(outcome));
-        long playPayout = Math.round(PLAY_CENTS * ThreeCardPokerGame.playMultiplier(outcome));
+        long antePayout = Math.round(ante * ThreeCardPokerGame.anteMultiplier(outcome));
+        long playPayout = Math.round(ante * ThreeCardPokerGame.playMultiplier(outcome));
         long totalPayout = antePayout + playPayout;
         if (totalPayout > 0) {
             bankService.deposit(playerId, totalPayout);

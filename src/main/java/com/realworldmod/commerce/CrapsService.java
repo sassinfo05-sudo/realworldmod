@@ -15,11 +15,10 @@ import java.util.UUID;
  * than a fixed two-step flow.
  */
 public final class CrapsService {
-    public static final long BET_CENTS = 1000;
-
     private final BankService bankService;
     private final Random random = new Random();
     private final Map<UUID, CrapsGame> games = new HashMap<>();
+    private final Map<UUID, Long> activeBets = new HashMap<>();
     private final Map<UUID, Long> lastPayouts = new HashMap<>();
 
     public CrapsService(BankService bankService) {
@@ -35,15 +34,17 @@ public final class CrapsService {
         return lastPayouts.getOrDefault(playerId, 0L);
     }
 
-    /** Withdraws the bet and starts a fresh come-out roll sequence, if the player doesn't already have one in progress and can afford it. */
-    public boolean startGame(UUID playerId) {
+    /** Withdraws the bet (clamped to {@link BetSizing}'s range) and starts a fresh come-out roll sequence, if the player doesn't already have one in progress and can afford it. */
+    public boolean startGame(UUID playerId, long betCents) {
         CrapsGame existing = games.get(playerId);
         if (existing != null && !existing.isResolved()) {
             return false;
         }
-        if (bankService.withdraw(playerId, BET_CENTS).isEmpty()) {
+        long bet = BetSizing.clamp(betCents);
+        if (bankService.withdraw(playerId, bet).isEmpty()) {
             return false;
         }
+        activeBets.put(playerId, bet);
         games.put(playerId, CrapsGame.start());
         lastPayouts.remove(playerId);
         return true;
@@ -63,7 +64,11 @@ public final class CrapsService {
     }
 
     private void settle(UUID playerId, CrapsGame game) {
-        long payout = Math.round(BET_CENTS * CrapsGame.payoutMultiplier(game.outcome()));
+        Long bet = activeBets.remove(playerId);
+        if (bet == null) {
+            return;
+        }
+        long payout = Math.round(bet * CrapsGame.payoutMultiplier(game.outcome()));
         if (payout > 0) {
             bankService.deposit(playerId, payout);
         }

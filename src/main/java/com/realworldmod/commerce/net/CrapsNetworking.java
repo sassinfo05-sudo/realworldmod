@@ -30,7 +30,7 @@ public final class CrapsNetworking {
         ServerPlayNetworking.registerGlobalReceiver(CrapsStatePayload.ID, (payload, context) ->
                 context.responseSender().sendPacket(buildResponse(crapsService, context.player().getUuid())));
         ServerPlayNetworking.registerGlobalReceiver(CrapsStartPayload.ID, (payload, context) -> {
-            crapsService.startGame(context.player().getUuid());
+            crapsService.startGame(context.player().getUuid(), payload.betCents());
             context.responseSender().sendPacket(buildResponse(crapsService, context.player().getUuid()));
         });
         ServerPlayNetworking.registerGlobalReceiver(CrapsRollPayload.ID, (payload, context) -> {

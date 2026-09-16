@@ -33,7 +33,7 @@ public final class ThreeCardPokerNetworking {
         ServerPlayNetworking.registerGlobalReceiver(ThreeCardPokerStatePayload.ID, (payload, context) ->
                 context.responseSender().sendPacket(buildResponse(pokerService, context.player().getUuid())));
         ServerPlayNetworking.registerGlobalReceiver(ThreeCardPokerDealPayload.ID, (payload, context) -> {
-            pokerService.deal(context.player().getUuid());
+            pokerService.deal(context.player().getUuid(), payload.anteCents());
             context.responseSender().sendPacket(buildResponse(pokerService, context.player().getUuid()));
         });
         ServerPlayNetworking.registerGlobalReceiver(ThreeCardPokerFoldPayload.ID, (payload, context) -> {

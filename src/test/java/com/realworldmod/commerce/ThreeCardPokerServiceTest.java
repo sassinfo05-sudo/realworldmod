@@ -31,19 +31,28 @@ class ThreeCardPokerServiceTest {
     }
 
     @Test
-    void dealWithdrawsTheAnte() {
+    void dealWithdrawsTheChosenAnte() {
         UUID player = UUID.randomUUID();
         bankService.deposit(player, 5000);
 
-        assertTrue(service.deal(player));
-        assertEquals(5000 - ThreeCardPokerService.ANTE_CENTS, bankService.getBalance(player));
+        assertTrue(service.deal(player, 2000));
+        assertEquals(5000 - 2000, bankService.getBalance(player));
         assertTrue(service.activeGame(player).isPresent());
+    }
+
+    @Test
+    void dealClampsAnOutOfRangeAnteToTheAllowedMaximum() {
+        UUID player = UUID.randomUUID();
+        bankService.deposit(player, 100_000);
+
+        assertTrue(service.deal(player, 999_999));
+        assertEquals(100_000 - BetSizing.MAX_BET_CENTS, bankService.getBalance(player));
     }
 
     @Test
     void dealFailsWithoutEnoughForTheAnte() {
         UUID player = UUID.randomUUID();
-        assertFalse(service.deal(player));
+        assertFalse(service.deal(player, BetSizing.DEFAULT_BET_CENTS));
         assertTrue(service.activeGame(player).isEmpty());
     }
 
@@ -51,26 +60,26 @@ class ThreeCardPokerServiceTest {
     void cannotDealWhileARoundIsAlreadyInProgress() {
         UUID player = UUID.randomUUID();
         bankService.deposit(player, 5000);
-        service.deal(player);
+        service.deal(player, BetSizing.DEFAULT_BET_CENTS);
 
-        assertFalse(service.deal(player));
+        assertFalse(service.deal(player, BetSizing.DEFAULT_BET_CENTS));
     }
 
     @Test
     void canDealAgainAfterTheLastRoundResolved() {
         UUID player = UUID.randomUUID();
         bankService.deposit(player, 5000);
-        service.deal(player);
+        service.deal(player, BetSizing.DEFAULT_BET_CENTS);
         service.fold(player);
 
-        assertTrue(service.deal(player));
+        assertTrue(service.deal(player, BetSizing.DEFAULT_BET_CENTS));
     }
 
     @Test
     void foldingForfeitsTheAnteAndPaysNothing() {
         UUID player = UUID.randomUUID();
         bankService.deposit(player, 5000);
-        service.deal(player);
+        service.deal(player, BetSizing.DEFAULT_BET_CENTS);
         long balanceAfterAnte = bankService.getBalance(player);
 
         Optional<ThreeCardPokerGame> game = service.fold(player);
@@ -82,23 +91,23 @@ class ThreeCardPokerServiceTest {
     }
 
     @Test
-    void playingWithdrawsTheMatchingPlayBet() {
+    void playingWithdrawsAPlayBetMatchingTheChosenAnte() {
         UUID player = UUID.randomUUID();
         bankService.deposit(player, 5000);
-        service.deal(player);
+        service.deal(player, 2000);
         long balanceAfterAnte = bankService.getBalance(player);
 
         service.play(player);
 
         long balanceAfterPlay = bankService.getBalance(player) - service.lastPayoutCents(player);
-        assertEquals(balanceAfterAnte - ThreeCardPokerService.PLAY_CENTS, balanceAfterPlay);
+        assertEquals(balanceAfterAnte - 2000, balanceAfterPlay);
     }
 
     @Test
     void cannotPlayWithoutEnoughForThePlayBet() {
         UUID player = UUID.randomUUID();
-        bankService.deposit(player, ThreeCardPokerService.ANTE_CENTS);
-        service.deal(player);
+        bankService.deposit(player, BetSizing.DEFAULT_BET_CENTS);
+        service.deal(player, BetSizing.DEFAULT_BET_CENTS);
 
         Optional<ThreeCardPokerGame> result = service.play(player);
 
@@ -117,7 +126,7 @@ class ThreeCardPokerServiceTest {
     void cannotActTwiceOnAResolvedGame() {
         UUID player = UUID.randomUUID();
         bankService.deposit(player, 5000);
-        service.deal(player);
+        service.deal(player, BetSizing.DEFAULT_BET_CENTS);
         service.fold(player);
 
         assertTrue(service.fold(player).isEmpty());

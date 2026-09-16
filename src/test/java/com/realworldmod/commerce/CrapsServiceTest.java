@@ -31,19 +31,28 @@ class CrapsServiceTest {
     }
 
     @Test
-    void startGameWithdrawsTheBet() {
+    void startGameWithdrawsTheChosenBet() {
         UUID player = UUID.randomUUID();
         bankService.deposit(player, 5000);
 
-        assertTrue(service.startGame(player));
-        assertEquals(5000 - CrapsService.BET_CENTS, bankService.getBalance(player));
+        assertTrue(service.startGame(player, 2000));
+        assertEquals(5000 - 2000, bankService.getBalance(player));
         assertTrue(service.activeGame(player).isPresent());
+    }
+
+    @Test
+    void startGameClampsAnOutOfRangeBetToTheAllowedMaximum() {
+        UUID player = UUID.randomUUID();
+        bankService.deposit(player, 100_000);
+
+        assertTrue(service.startGame(player, 999_999));
+        assertEquals(100_000 - BetSizing.MAX_BET_CENTS, bankService.getBalance(player));
     }
 
     @Test
     void startGameFailsWithoutEnoughForTheBet() {
         UUID player = UUID.randomUUID();
-        assertFalse(service.startGame(player));
+        assertFalse(service.startGame(player, BetSizing.DEFAULT_BET_CENTS));
         assertTrue(service.activeGame(player).isEmpty());
     }
 
@@ -51,9 +60,9 @@ class CrapsServiceTest {
     void cannotStartWhileARoundIsAlreadyInProgress() {
         UUID player = UUID.randomUUID();
         bankService.deposit(player, 5000);
-        service.startGame(player);
+        service.startGame(player, BetSizing.DEFAULT_BET_CENTS);
 
-        assertFalse(service.startGame(player));
+        assertFalse(service.startGame(player, BetSizing.DEFAULT_BET_CENTS));
     }
 
     @Test
@@ -66,7 +75,7 @@ class CrapsServiceTest {
     void cannotRollAfterTheRoundResolves() {
         UUID player = UUID.randomUUID();
         bankService.deposit(player, 5000);
-        service.startGame(player);
+        service.startGame(player, BetSizing.DEFAULT_BET_CENTS);
 
         Optional<CrapsGame> firstResult;
         do {
@@ -80,7 +89,7 @@ class CrapsServiceTest {
     void aWinPaysEvenMoneyOnTopOfTheReturnedBet() {
         UUID player = UUID.randomUUID();
         bankService.deposit(player, 5000);
-        service.startGame(player);
+        service.startGame(player, BetSizing.DEFAULT_BET_CENTS);
         long balanceAfterBet = bankService.getBalance(player);
 
         CrapsGame game;
@@ -89,8 +98,8 @@ class CrapsServiceTest {
         } while (!game.isResolved());
 
         if (game.outcome() == CrapsGame.Outcome.PASS_WIN) {
-            assertEquals(balanceAfterBet + CrapsService.BET_CENTS * 2, bankService.getBalance(player));
-            assertEquals(CrapsService.BET_CENTS * 2, service.lastPayoutCents(player));
+            assertEquals(balanceAfterBet + BetSizing.DEFAULT_BET_CENTS * 2, bankService.getBalance(player));
+            assertEquals(BetSizing.DEFAULT_BET_CENTS * 2, service.lastPayoutCents(player));
         } else {
             assertEquals(balanceAfterBet, bankService.getBalance(player));
             assertEquals(0, service.lastPayoutCents(player));
@@ -101,13 +110,13 @@ class CrapsServiceTest {
     void canStartAgainAfterTheLastRoundResolved() {
         UUID player = UUID.randomUUID();
         bankService.deposit(player, 5000);
-        service.startGame(player);
+        service.startGame(player, BetSizing.DEFAULT_BET_CENTS);
 
         CrapsGame game;
         do {
             game = service.roll(player).orElseThrow();
         } while (!game.isResolved());
 
-        assertTrue(service.startGame(player));
+        assertTrue(service.startGame(player, BetSizing.DEFAULT_BET_CENTS));
     }
 }

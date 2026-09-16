@@ -16,8 +16,6 @@ import java.util.UUID;
  * starts a new one.
  */
 public final class BlackjackService {
-    public static final long BET_CENTS = 1000;
-
     private final BankService bankService;
     private final Random random = new Random();
     private final Map<UUID, BlackjackGame> games = new HashMap<>();
@@ -37,16 +35,17 @@ public final class BlackjackService {
         return lastPayouts.getOrDefault(playerId, 0L);
     }
 
-    /** Withdraws the bet and deals a fresh round, if the player doesn't already have one in progress and can afford it. */
-    public boolean startGame(UUID playerId) {
+    /** Withdraws the bet (clamped to {@link BetSizing}'s range) and deals a fresh round, if the player doesn't already have one in progress and can afford it. */
+    public boolean startGame(UUID playerId, long betCents) {
         BlackjackGame existing = games.get(playerId);
         if (existing != null && !existing.isResolved()) {
             return false;
         }
-        if (bankService.withdraw(playerId, BET_CENTS).isEmpty()) {
+        long bet = BetSizing.clamp(betCents);
+        if (bankService.withdraw(playerId, bet).isEmpty()) {
             return false;
         }
-        activeBets.put(playerId, BET_CENTS);
+        activeBets.put(playerId, bet);
         BlackjackGame game = BlackjackGame.deal(random);
         games.put(playerId, game);
         if (game.isResolved()) {

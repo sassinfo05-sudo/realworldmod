@@ -31,7 +31,7 @@ public final class BlackjackNetworking {
         ServerPlayNetworking.registerGlobalReceiver(BlackjackStatePayload.ID, (payload, context) ->
                 context.responseSender().sendPacket(buildResponse(blackjackService, context.player().getUuid())));
         ServerPlayNetworking.registerGlobalReceiver(BlackjackStartPayload.ID, (payload, context) -> {
-            blackjackService.startGame(context.player().getUuid());
+            blackjackService.startGame(context.player().getUuid(), payload.betCents());
             context.responseSender().sendPacket(buildResponse(blackjackService, context.player().getUuid()));
         });
         ServerPlayNetworking.registerGlobalReceiver(BlackjackHitPayload.ID, (payload, context) -> {

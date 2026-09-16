@@ -1,5 +1,6 @@
 package com.realworldmod.client.commerce;
 
+import com.realworldmod.commerce.BetSizing;
 import com.realworldmod.commerce.Card;
 import com.realworldmod.commerce.net.ThreeCardPokerDealPayload;
 import com.realworldmod.commerce.net.ThreeCardPokerFoldPayload;
@@ -24,6 +25,9 @@ public final class ThreeCardPokerScreen extends Screen {
     private ButtonWidget dealButton;
     private ButtonWidget foldButton;
     private ButtonWidget playButton;
+    private ButtonWidget betMinusButton;
+    private ButtonWidget betPlusButton;
+    private long selectedBetCents = BetSizing.DEFAULT_BET_CENTS;
 
     public ThreeCardPokerScreen() {
         super(Text.translatable("gui.realworldmod.poker.title"));
@@ -33,9 +37,19 @@ public final class ThreeCardPokerScreen extends Screen {
     protected void init() {
         ClientPlayNetworking.send(new ThreeCardPokerStatePayload());
 
+        this.betMinusButton = this.addDrawableChild(ButtonWidget.builder(
+                        Text.translatable("gui.realworldmod.casino.bet_minus"),
+                        button -> adjustBet(-BetSizing.STEP_CENTS))
+                .dimensions(this.width / 2 - 100, this.height / 2 + 25, 20, 20)
+                .build());
+        this.betPlusButton = this.addDrawableChild(ButtonWidget.builder(
+                        Text.translatable("gui.realworldmod.casino.bet_plus"),
+                        button -> adjustBet(BetSizing.STEP_CENTS))
+                .dimensions(this.width / 2 + 80, this.height / 2 + 25, 20, 20)
+                .build());
         this.dealButton = this.addDrawableChild(ButtonWidget.builder(
                         Text.translatable("gui.realworldmod.poker.deal"),
-                        button -> ClientPlayNetworking.send(new ThreeCardPokerDealPayload()))
+                        button -> ClientPlayNetworking.send(new ThreeCardPokerDealPayload(selectedBetCents)))
                 .dimensions(this.width / 2 - 100, this.height / 2 + 50, 60, 20)
                 .build());
         this.foldButton = this.addDrawableChild(ButtonWidget.builder(
@@ -63,6 +77,12 @@ public final class ThreeCardPokerScreen extends Screen {
         this.dealButton.active = state == null || !inProgress;
         this.foldButton.active = inProgress;
         this.playButton.active = inProgress;
+        this.betMinusButton.active = !inProgress;
+        this.betPlusButton.active = !inProgress;
+
+        context.drawCenteredTextWithShadow(this.textRenderer,
+                Text.translatable("gui.realworldmod.casino.bet_label", CurrencyFormatter.format(selectedBetCents)),
+                this.width / 2, this.height / 2 + 31, 0xFFFFFF);
 
         if (state == null || !state.hasActiveGame()) {
             context.drawCenteredTextWithShadow(this.textRenderer,
@@ -97,6 +117,10 @@ public final class ThreeCardPokerScreen extends Screen {
                     Text.translatable("gui.realworldmod.poker.dealer_hand_hidden"),
                     this.width / 2, this.height / 2 - 10, 0xAAAAAA);
         }
+    }
+
+    private void adjustBet(long deltaCents) {
+        selectedBetCents = BetSizing.clamp(selectedBetCents + deltaCents);
     }
 
     private static List<Card> toCards(List<Integer> ordinals) {

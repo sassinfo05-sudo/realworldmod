@@ -1,5 +1,6 @@
 package com.realworldmod.client.commerce;
 
+import com.realworldmod.commerce.BetSizing;
 import com.realworldmod.commerce.net.CrapsRollPayload;
 import com.realworldmod.commerce.net.CrapsStartPayload;
 import com.realworldmod.commerce.net.CrapsStatePayload;
@@ -20,6 +21,9 @@ import net.minecraft.text.Text;
 public final class CrapsScreen extends Screen {
     private ButtonWidget betButton;
     private ButtonWidget rollButton;
+    private ButtonWidget betMinusButton;
+    private ButtonWidget betPlusButton;
+    private long selectedBetCents = BetSizing.DEFAULT_BET_CENTS;
 
     public CrapsScreen() {
         super(Text.translatable("gui.realworldmod.craps.title"));
@@ -29,9 +33,19 @@ public final class CrapsScreen extends Screen {
     protected void init() {
         ClientPlayNetworking.send(new CrapsStatePayload());
 
+        this.betMinusButton = this.addDrawableChild(ButtonWidget.builder(
+                        Text.translatable("gui.realworldmod.casino.bet_minus"),
+                        button -> adjustBet(-BetSizing.STEP_CENTS))
+                .dimensions(this.width / 2 - 65, this.height / 2 + 25, 20, 20)
+                .build());
+        this.betPlusButton = this.addDrawableChild(ButtonWidget.builder(
+                        Text.translatable("gui.realworldmod.casino.bet_plus"),
+                        button -> adjustBet(BetSizing.STEP_CENTS))
+                .dimensions(this.width / 2 + 45, this.height / 2 + 25, 20, 20)
+                .build());
         this.betButton = this.addDrawableChild(ButtonWidget.builder(
                         Text.translatable("gui.realworldmod.craps.bet"),
-                        button -> ClientPlayNetworking.send(new CrapsStartPayload()))
+                        button -> ClientPlayNetworking.send(new CrapsStartPayload(selectedBetCents)))
                 .dimensions(this.width / 2 - 65, this.height / 2 + 50, 60, 20)
                 .build());
         this.rollButton = this.addDrawableChild(ButtonWidget.builder(
@@ -53,6 +67,12 @@ public final class CrapsScreen extends Screen {
         boolean inProgress = state != null && state.hasActiveGame() && !state.resolved();
         this.betButton.active = state == null || !inProgress;
         this.rollButton.active = inProgress;
+        this.betMinusButton.active = !inProgress;
+        this.betPlusButton.active = !inProgress;
+
+        context.drawCenteredTextWithShadow(this.textRenderer,
+                Text.translatable("gui.realworldmod.casino.bet_label", CurrencyFormatter.format(selectedBetCents)),
+                this.width / 2, this.height / 2 + 31, 0xFFFFFF);
 
         if (state == null || !state.hasActiveGame()) {
             context.drawCenteredTextWithShadow(this.textRenderer,
@@ -81,6 +101,10 @@ public final class CrapsScreen extends Screen {
                     Text.translatable(outcomeKey, CurrencyFormatter.format(state.payoutCents())),
                     this.width / 2, this.height / 2 + 15, 0x55FF55);
         }
+    }
+
+    private void adjustBet(long deltaCents) {
+        selectedBetCents = BetSizing.clamp(selectedBetCents + deltaCents);
     }
 
     @Override

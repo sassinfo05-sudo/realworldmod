@@ -37,6 +37,7 @@ import com.realworldmod.medical.MedicineUseHandler;
 import com.realworldmod.medical.PharmacyUseHandler;
 import com.realworldmod.medical.WeatherIllnessEffect;
 import com.realworldmod.npc.CitizenEntity;
+import com.realworldmod.npc.CitizenSelfMedicationHandler;
 import com.realworldmod.npc.CitizenSpawnHandler;
 import com.realworldmod.npc.NpcAccess;
 import com.realworldmod.npc.NpcDatabase;
@@ -233,6 +234,7 @@ public final class RealWorldMod implements ModInitializer {
             for (Entity entity : server.getOverworld().iterateEntities()) {
                 if (entity instanceof CitizenEntity citizen) {
                     WeatherIllnessEffect.checkEntity(illnessService, citizen);
+                    CitizenSelfMedicationHandler.tryTreat(bankService, citizen);
                 }
             }
         });

@@ -1036,6 +1036,35 @@ updated with every slice so neither side ever has to guess.
     effect's speed reduction, the same caveat every status-effect-driven
     injury in the mod shares.
 
+- **Slice 49 — a sick or injured citizen buys medicine and self-treats**
+  (Sections 2 and 5), closing "a sick citizen has no way to recover early
+  since it never spends its own income on medicine" — the very gap slices
+  46-48 kept naming without closing:
+  - `CitizenSelfMedicationHandler`: runs alongside the illness check in
+    the same per-tick entity loop, and for any `CitizenEntity` carrying
+    Nausea, Weakness, or Slowness, checks whether it can afford
+    `PharmacyUseHandler.MEDICINE_PRICE_CENTS` out of the real
+    `BankService` balance slice 47 started paying into. If it can, the
+    citizen pays for it — remitting the exact same municipal sales-tax
+    cut `PharmacyUseHandler` already withholds for a player's purchase —
+    and the effects clear immediately, the same cure `MedicineUseHandler`
+    gives a player. The first NPC purchase of any kind in the mod.
+  - Deliberately simplified relative to a player's own trip to the
+    pharmacy: a citizen doesn't need to path to a physical
+    `PHARMACY_COUNTER` first, since the mod has no NPC
+    pathfinding-to-a-shop behavior yet — this models a house call rather
+    than a shopping trip, an honest simplification rather than a silent
+    one.
+  - No new unit tests, for the same reason `MedicineUseHandler` itself
+    was never unit tested: it needs a running Minecraft entity to check
+    status effects against, and the `BankService`/`PharmacyUseHandler`
+    pieces it reuses are already exhaustively tested elsewhere (304 tests
+    total, unchanged, all still passing).
+  - **Known gaps**: see the updated Section 2/5 status above — medicine
+    is still the only thing a citizen can spend money on, no NPC
+    pathfinding to a real pharmacy, and a citizen still can't be
+    assaulted as a distinct offense or get arrested.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1156,7 +1185,13 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   restriction to `PlayerEntity` was an artificial one (the underlying
   Fabric event already hands back any `LivingEntity`), so removing it
   means a citizen that takes a bad fall limps with the same Slowness
-  effect a player would get.
+  effect a player would get. As of slice 49, a citizen can finally spend
+  that income too: `CitizenSelfMedicationHandler` checks every tick
+  whether a sick or injured citizen can afford
+  `PharmacyUseHandler.MEDICINE_PRICE_CENTS` out of its own `BankService`
+  balance and, if so, pays for it (remitting the same sales tax a real
+  pharmacy purchase would) and clears the effects immediately — the
+  first NPC purchase of any kind in the mod.
 - Missing: every citizen's building is identical (one fixed 5x5 room
   shape, walls-and-roof only, no interior furniture/rooms/windows), placed
   block-by-block with no check for terrain, water, or overlap with an
@@ -1165,14 +1200,16 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   mini-behaviors (cashiering, patrols, factory work), no evening leisure
   destinations, no branching dialogue tree (one fixed line per state), no
   NPC behavioral AI (mugging, reacting to red-light running, independent
-  crime, police chases); NPCs can now get sick, earn a wage, and get hurt
-  from a fall, but still can't spend that wage — there's no NPC purchase
-  of any kind (medicine, a meal, a hunting license) — and still can't be
-  assaulted as a distinct offense or get arrested; a sick or injured
-  citizen has no way to recover early since it never spends its own
-  income on medicine, and — like every other status effect the mod
-  applies — the leg injury has no visible limping *animation*, only the
-  Slowness effect's speed reduction. True GOAP (goal-oriented
+  crime, police chases); NPCs can now get sick, earn a wage, get hurt from
+  a fall, and buy medicine to treat themselves, but medicine is still the
+  only thing a citizen can spend money on — no other NPC purchase exists
+  (a meal, a hunting license, land) — and a citizen still can't be
+  assaulted as a distinct offense or get arrested; self-medication also
+  skips the trip to a physical `PHARMACY_COUNTER` a player has to make,
+  since there's no NPC pathfinding-to-a-shop behavior yet, and — like
+  every other status effect the mod applies — the leg injury has no
+  visible limping *animation*, only the Slowness effect's speed
+  reduction. True GOAP (goal-oriented
   action planning, i.e. dynamic plan search over actions) was never
   implemented — the FSM is a simpler deterministic rule tree, called out
   as such in the code's own Javadoc from slice 1 onward. **Requested and
@@ -1268,7 +1305,11 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   path: `LegInjuryEffect`'s player-only restriction was never load-bearing
   (the Fabric event it hooks already hands back any `LivingEntity`), so
   removing it means any living entity in the mod — a citizen, a deer, a
-  vanilla cow — limps from a bad fall exactly like a player does.
+  vanilla cow — limps from a bad fall exactly like a player does. As of
+  slice 49, a sick or injured citizen no longer just waits it out either:
+  `CitizenSelfMedicationHandler` pays for and applies the same Medicine
+  cure a player buys at a Pharmacy Counter, out of the citizen's own
+  wages from slice 47.
 - Missing: this is a *health-bar replacement disguised as a status
   effect*, not a real localized zone model — there's no per-body-part
   (head/torso/arms/legs) data structure, no bone-fracture-requiring-cast
@@ -1543,12 +1584,11 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    continuing to round out automotive now that slice 39 added fuel
    visibility (a speed HUD, a second vehicle type), expanding the
    predator system slice 42 started (a second predator/prey pair, pack
-   hunting), or extending the NPC-inclusion slices 46-48 started to
-   another system (an NPC actually spending its new income on medicine,
-   which would let a sick or injured citizen finally recover early) are
-   all reasonable next picks. Aviation/ATC and the space program stay
-   deliberately last, as the largest and least incrementally verifiable
-   pieces.
+   hunting), or extending the NPC-inclusion slices 46-49 started to
+   another system (NPC pathfinding to a real shop, or a distinct
+   NPC-victim assault/arrest consequence) are all reasonable next picks.
+   Aviation/ATC and the space program stay deliberately last, as the
+   largest and least incrementally verifiable pieces.
 
 (Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
 Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
@@ -1579,7 +1619,9 @@ from every other system," sharing the illness system with players — see
 Sections 2/5 above. Slice 47 gave NPCs real income through the same
 wage-and-tax pipeline players use — see Section 2 above. Slice 48
 extended fall injuries to every living entity, not just players — see
-Sections 2/5 above.)
+Sections 2/5 above. Slice 49 closed the loop by having a sick or injured
+citizen actually spend that income on medicine — see Sections 2/5
+above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

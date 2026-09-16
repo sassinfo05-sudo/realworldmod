@@ -8,7 +8,12 @@ import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 
-/** Right-clicking a {@code LICENSE_OFFICE} with an empty hand buys a hunting license, if affordable and not already held. */
+/**
+ * Right-clicking a {@code LICENSE_OFFICE} with an empty hand buys a
+ * hunting license, if affordable and not already held — remitting a
+ * municipal sales-tax cut to the treasury (see
+ * {@link com.realworldmod.economy.SalesTax}).
+ */
 public final class LicenseUseHandler {
     public static final long LICENSE_PRICE_CENTS = 3000;
 
@@ -43,6 +48,7 @@ public final class LicenseUseHandler {
                 return ActionResult.FAIL;
             }
 
+            bankService.remitSalesTax(LICENSE_PRICE_CENTS);
             licenseService.grantLicense(player.getUuid());
             player.sendMessage(Text.translatable("message.realworldmod.license_purchased",
                     CurrencyFormatter.format(LICENSE_PRICE_CENTS)), true);

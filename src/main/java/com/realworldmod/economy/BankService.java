@@ -13,6 +13,9 @@ import java.util.UUID;
  * apart.
  */
 public final class BankService {
+    /** Reserved account receiving the municipal sales-tax cut of purchases — see {@link SalesTax}. */
+    public static final UUID TREASURY_ACCOUNT_ID = new UUID(0L, 0L);
+
     private final Map<UUID, Long> balances = new HashMap<>();
     private BankDatabase database;
 
@@ -54,6 +57,11 @@ public final class BankService {
         }
         deposit(to, amountCents);
         return true;
+    }
+
+    /** Deposits the municipal sales-tax cut of a completed purchase into the government treasury account. */
+    public void remitSalesTax(long priceCents) {
+        deposit(TREASURY_ACCOUNT_ID, SalesTax.taxCents(priceCents));
     }
 
     private void setBalance(UUID ownerId, long balanceCents) {

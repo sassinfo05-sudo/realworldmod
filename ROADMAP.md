@@ -484,6 +484,30 @@ updated with every slice so neither side ever has to guess.
     without a running client whether the chase-and-catch actually reads
     right in play.
 
+- **Slice 29 — municipal sales tax on existing purchases** (Section 7):
+  - `economy.SalesTax`: a pure, unit-tested flat 8% rate calculator —
+    deliberately *not* the "city-specific" rate system the ROADMAP gap
+    describes, since no city boundaries exist anywhere in the world yet
+    for a rate to vary by.
+  - `BankService.TREASURY_ACCOUNT_ID` + `remitSalesTax(long)`: a reserved
+    account and a one-line helper so a purchase handler can remit its tax
+    cut in a single call; unit tested the same way every other
+    `BankService` behavior is.
+  - `DeedUseHandler`, `PharmacyUseHandler`, and `LicenseUseHandler` — the
+    mod's three existing paid purchases — now all remit their tax cut on
+    a successful sale. Previously the *entire* price of every purchase in
+    the mod simply vanished on withdrawal with no corresponding deposit
+    anywhere; this doesn't fix that for the remainder (there's still no
+    business-ownership model for who'd receive it), but the tax portion
+    specifically is now real, tracked money sitting in an account rather
+    than disappearing.
+  - **Known gaps**: one flat rate everywhere, not per-city; only covers
+    sales-style purchases, not property or income tax; the treasury
+    balance isn't exposed anywhere yet (no phone app, no admin/government
+    UI) — it accumulates but nothing reads it back; the remaining
+    non-tax portion of every purchase still vanishes into nothing rather
+    than reaching a real payee.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -723,15 +747,23 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   by then, not the level at capture — actually detains the player
   (teleport + Blindness) for a timed sentence; `NOT_GUILTY` acquits them
   outright. All of it, plus the trial/verdict flow, is exposed live
-  through the existing phone app and `ArrestHandler` messages.
+  through the existing phone app and `ArrestHandler` messages. As of
+  slice 29, every existing paid purchase (land deeds, medicine, hunting
+  licenses) also remits a real, flat 8% municipal sales-tax cut
+  (`economy.SalesTax`) into a reserved government treasury account
+  (`BankService.TREASURY_ACCOUNT_ID`) instead of the entire price simply
+  vanishing — a first, deliberately narrow step into "municipal tax," not
+  the full per-city system described below.
 - Missing: `PoliceEntity` only patrols/chases — no tactical cover, spike
   strips, pit maneuvers, backup calls, or squad coordination; deer/police
   spawn only via items (`POLICE_SPAWNER`), not real police-station
   structures or patrol routes; the trial's verdict logic is a single
   wanted-level check, not an actual evidence/witness/judge simulation
-  (there is no judge NPC, no courtroom, no defense); no municipal
-  border/tax-rate system (`BankService` has no concept of city-specific
-  sales/property/income tax); no real prison — no cell block, no yard, no
+  (there is no judge NPC, no courtroom, no defense); no *per-city*
+  tax-rate system — slice 29's sales tax is one flat rate charged
+  everywhere, since there are no city boundaries anywhere in the world
+  yet for a rate to vary by, and it only covers the existing sales-style
+  purchases, not property or income tax; no real prison — no cell block, no yard, no
   prison jobs, no faction/contraband/breakout mechanics; no civil courts
   (no lease/partnership contracts, no suing NPCs, no judge UI, no search
   warrants); no underworld/narcotics system (no dark web purchases, no
@@ -811,13 +843,11 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 
 ## Priority order for what's next
 
-1. Everything in the "missing" lists above — diversify out of the
-   `PathAwareEntity`/custom-`Goal` NPC pattern (slices 20-23 and 28 all
-   used it) into a different kind of system next: real home/workplace
+1. Everything in the "missing" lists above — real home/workplace
    *structures* for `CitizenEntity` to path into (closing slice 21's own
    known gap), a civil/court system distinct from the criminal trial
-   slice 23 built, or municipal taxation in `BankService` are all
-   reasonable next picks. Aviation/ATC and the space program stay
+   slice 23 built, and property/income tax alongside slice 29's sales tax
+   are all reasonable next picks. Aviation/ATC and the space program stay
    deliberately last, as the largest and least incrementally verifiable
    pieces.
 
@@ -827,7 +857,8 @@ above. Slice 23 closed out police NPCs and a real court/trial step — see
 Section 7 above. Slices 24/26/27 closed out the block-placeholder
 rendering backlog across every entity, and slice 25 added LabPBR maps for
 every texture — see Section 1 above. Slice 28 closed out the game-warden
-NPC — see Section 8 above.)
+NPC — see Section 8 above. Slice 29 started municipal sales tax — see
+Section 7 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

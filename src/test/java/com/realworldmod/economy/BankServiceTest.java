@@ -77,6 +77,12 @@ class BankServiceTest {
     }
 
     @Test
+    void remitSalesTaxDepositsIntoTheTreasuryAccount() {
+        service.remitSalesTax(1500);
+        assertEquals(SalesTax.taxCents(1500), service.getBalance(BankService.TREASURY_ACCOUNT_ID));
+    }
+
+    @Test
     void balancesArePersistedAndReloadable(@TempDir Path tempDir) {
         Path dbFile = tempDir.resolve("reload.sqlite");
         UUID player = UUID.randomUUID();

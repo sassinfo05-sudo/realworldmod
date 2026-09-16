@@ -10,7 +10,11 @@ import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 
-/** Right-clicking a {@code PHARMACY_COUNTER} with an empty hand buys one {@code MEDICINE}, if affordable. */
+/**
+ * Right-clicking a {@code PHARMACY_COUNTER} with an empty hand buys one
+ * {@code MEDICINE}, if affordable — remitting a municipal sales-tax cut
+ * to the treasury (see {@link com.realworldmod.economy.SalesTax}).
+ */
 public final class PharmacyUseHandler {
     public static final long MEDICINE_PRICE_CENTS = 1500;
 
@@ -38,6 +42,7 @@ public final class PharmacyUseHandler {
                 return ActionResult.FAIL;
             }
 
+            bankService.remitSalesTax(MEDICINE_PRICE_CENTS);
             player.giveItemStack(new ItemStack(ModItems.MEDICINE));
             player.sendMessage(Text.translatable("message.realworldmod.medicine_purchased",
                     CurrencyFormatter.format(MEDICINE_PRICE_CENTS)), true);

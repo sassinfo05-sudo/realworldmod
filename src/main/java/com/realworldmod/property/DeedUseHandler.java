@@ -14,7 +14,9 @@ import net.minecraft.util.math.BlockPos;
  * Lets a player turn a {@code LAND_DEED} item into an actual claim: right
  * click a block with a deed in hand to claim a square plot centered on it,
  * provided it doesn't overlap land someone else already owns and the
- * player can afford the purchase price.
+ * player can afford the purchase price. Remits a municipal sales-tax cut
+ * of that price to the treasury (see
+ * {@link com.realworldmod.economy.SalesTax}).
  */
 public final class DeedUseHandler {
     /** Half-width of a newly claimed plot, in blocks (a 33x33 square). */
@@ -56,6 +58,7 @@ public final class DeedUseHandler {
                 return ActionResult.FAIL;
             }
 
+            bankService.remitSalesTax(PRICE_CENTS);
             propertyService.claimPlot(player.getUuid(), pos.getX(), pos.getZ(), PLOT_RADIUS);
             stack.decrement(1);
             player.sendMessage(Text.translatable("message.realworldmod.plot_claimed",

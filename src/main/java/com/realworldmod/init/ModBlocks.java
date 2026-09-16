@@ -33,6 +33,10 @@ public final class ModBlocks {
     public static final Block SLOT_MACHINE = register("slot_machine",
             new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));
 
+    /** A second real casino game — see {@code RouletteUseHandler}. */
+    public static final Block ROULETTE_TABLE = register("roulette_table",
+            new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));
+
     private ModBlocks() {
     }
 

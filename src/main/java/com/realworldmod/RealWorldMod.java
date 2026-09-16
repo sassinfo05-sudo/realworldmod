@@ -1,5 +1,6 @@
 package com.realworldmod;
 
+import com.realworldmod.commerce.RouletteUseHandler;
 import com.realworldmod.commerce.SlotMachineUseHandler;
 import com.realworldmod.crime.ArrestAccess;
 import com.realworldmod.crime.ArrestHandler;
@@ -120,6 +121,7 @@ public final class RealWorldMod implements ModInitializer {
         new PharmacyUseHandler(bankService).register();
         new LicenseUseHandler(bankService, huntingLicenseService).register();
         new SlotMachineUseHandler(bankService).register();
+        new RouletteUseHandler(bankService).register();
         PoachingAccess.set(gameWardenService);
         new PoachingHandler(lawEnforcementService, huntingLicenseService, gameWardenService).register();
         CarSpawnHandler.register();

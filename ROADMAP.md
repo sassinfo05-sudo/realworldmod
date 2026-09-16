@@ -589,6 +589,22 @@ updated with every slice so neither side ever has to guess.
     visual/animation beyond a static block texture; unverified without a
     running client.
 
+- **Slice 34 — a real roulette game, the casino's second table**
+  (Section 6):
+  - `Roulette`: pure, unit-tested logic for a real 38-pocket American
+    wheel — `0` and `00` as green, `1`-`36` colored by the actual standard
+    red/black assignment (not an arbitrary split), and a `colorBetWins`
+    rule where green always loses a color bet — the house's genuine edge
+    on this bet type, not a fudged probability.
+  - `RouletteUseHandler` + `ModBlocks.ROULETTE_TABLE`: right-click bets
+    red, sneak-right-click bets black, same withdraw-then-resolve
+    `BankService` pattern as `SlotMachineUseHandler` — a win pays real
+    1:1, a loss (including green) keeps the bet.
+  - **Known gaps**: color bets only — no number, split, street, or other
+    real roulette bet types; same fixed-bet-size and vanishing-loss gaps
+    as slice 33's slot machine; still no blackjack/poker/craps; unverified
+    without a running client.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -800,22 +816,26 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 - Done: four "shop" blocks with a withdraw-or-refuse purchase pattern
   (Cash Register pays a wage rather than sells anything, Pharmacy Counter
   sells Medicine, License Office sells a hunting permit) — a narrow slice
-  of "retail," not general commerce — plus, as of slice 33, a real
-  `SlotMachine` casino game: three reels over a fixed symbol set and an
+  of "retail," not general commerce — plus two real casino games. As of
+  slice 33, `SlotMachine`: three reels over a fixed symbol set and an
   actual payout table (three sevens pays 10x the bet, bars 5x, bells 3x,
-  cherries 2x, any two matching is a push, no match loses the bet),
-  unit-tested exhaustively against every outcome, not just the category
-  existing with no game underneath.
+  cherries 2x, any two matching is a push, no match loses the bet). As of
+  slice 34, `Roulette`: a real 38-pocket American wheel (0, 00, and 1-36
+  with the standard red/black assignment) — right-click bets red,
+  sneak-right-click bets black, a win pays real 1:1, landing on green
+  always loses a color bet. Both are unit-tested exhaustively against
+  every outcome, not just the category existing with no game underneath.
 - Missing: grocery stores/shopping carts, furniture stores, clothing
   boutiques with a layered fashion/customization engine, bakeries, gun/
   ammo shops, phone/PC retail beyond the two items that exist, player-run
   businesses (buying commercial plots, setting prices on a POS UI, hiring
   NPC cashiers, automatic Friday payroll), the rest of a real casino
-  (roulette/blackjack/poker — one game exists now, not the whole floor),
-  strip clubs/VIP lounges/nightclubs/DJ booths with proximity audio; the
-  slot machine's losing bets simply vanish rather than reaching a "house"
-  account, and it's a single fixed bet size with no way to wager more or
-  less. **Requested and tracked, not started**: real wealth-tier
+  (blackjack/poker/craps — two games exist now, not the whole floor;
+  roulette itself is color-betting only, no number/split/street bets),
+  strip clubs/VIP lounges/nightclubs/DJ booths with proximity audio; both
+  games' losing bets simply vanish rather than reaching a tracked "house"
+  account, and each is a single fixed bet size with no way to wager more
+  or less. **Requested and tracked, not started**: real wealth-tier
   recognition (nothing currently distinguishes or reacts to
   a player being a "millionaire" or "billionaire" — `BankService` just
   stores an unbounded `long`); public parks as a distinct, purposeful
@@ -943,9 +963,9 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 ## Priority order for what's next
 
 1. Everything in the "missing" lists above — a civil/court system
-   distinct from the criminal trial slice 23 built, or a second casino
-   game (roulette or blackjack) alongside slice 33's slot machine, are
-   both reasonable next picks. Aviation/ATC and the space program stay
+   distinct from the criminal trial slice 23 built, or a third casino
+   game (blackjack or poker) alongside slots and roulette, are both
+   reasonable next picks. Aviation/ATC and the space program stay
    deliberately last, as the largest and least incrementally verifiable
    pieces.
 
@@ -959,8 +979,8 @@ NPC — see Section 8 above. Slices 29/31 closed out sales, income, and
 property tax — see Section 7 above. Slice 30 closed out real
 home/workplace structures for `CitizenEntity` — see Section 2 above.
 Slice 32 closed out treasury visibility with a Government phone app —
-see Sections 3/7 above. Slice 33 started the casino with a real
-slot machine — see Section 6 above.)
+see Sections 3/7 above. Slices 33/34 got the casino its first two real
+tables (slots, roulette) — see Section 6 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

@@ -43,12 +43,17 @@ import com.realworldmod.property.PropertyAccess;
 import com.realworldmod.property.PropertyProtection;
 import com.realworldmod.property.PropertyService;
 import com.realworldmod.property.PropertyTaxService;
+import com.realworldmod.underworld.NarcoticsHandler;
+import com.realworldmod.underworld.NarcoticsService;
 import com.realworldmod.utilities.UtilityAccess;
 import com.realworldmod.utilities.UtilityService;
 import com.realworldmod.utilities.net.UtilityNetworking;
-import com.realworldmod.underworld.NarcoticsHandler;
-import com.realworldmod.underworld.NarcoticsService;
 import com.realworldmod.vehicle.CarSpawnHandler;
+import com.realworldmod.vice.AlcoholUseHandler;
+import com.realworldmod.vice.CigaretteUseHandler;
+import com.realworldmod.vice.IntoxicationService;
+import com.realworldmod.vice.LiquorStoreUseHandler;
+import com.realworldmod.vice.NicotineService;
 import com.realworldmod.wildlife.DeerSpawnHandler;
 import com.realworldmod.wildlife.GameWardenService;
 import com.realworldmod.wildlife.GameWardenSpawnHandler;
@@ -98,6 +103,8 @@ public final class RealWorldMod implements ModInitializer {
     private final BlackjackService blackjackService = new BlackjackService(bankService);
     private final CivilCourtService civilCourtService = new CivilCourtService(bankService);
     private final NarcoticsService narcoticsService = new NarcoticsService(bankService);
+    private final IntoxicationService intoxicationService = new IntoxicationService();
+    private final NicotineService nicotineService = new NicotineService();
 
     @Override
     public void onInitialize() {
@@ -135,6 +142,9 @@ public final class RealWorldMod implements ModInitializer {
         BlackjackNetworking.registerServerReceivers(blackjackService);
         new CivilCourtHandler(civilCourtService).register();
         new NarcoticsHandler(narcoticsService, lawEnforcementService).register();
+        new LiquorStoreUseHandler(bankService).register();
+        new AlcoholUseHandler(intoxicationService).register();
+        new CigaretteUseHandler(nicotineService).register();
         PoachingAccess.set(gameWardenService);
         new PoachingHandler(lawEnforcementService, huntingLicenseService, gameWardenService).register();
         CarSpawnHandler.register();

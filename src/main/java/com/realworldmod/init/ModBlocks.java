@@ -49,6 +49,10 @@ public final class ModBlocks {
     public static final Block NARCOTICS_LAB = register("narcotics_lab",
             new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));
 
+    /** Sells {@code ALCOHOL} and {@code CIGARETTE} for real money — see {@code LiquorStoreUseHandler}. */
+    public static final Block LIQUOR_STORE = register("liquor_store",
+            new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));
+
     private ModBlocks() {
     }
 

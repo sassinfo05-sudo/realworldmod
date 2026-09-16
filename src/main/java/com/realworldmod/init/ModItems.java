@@ -26,6 +26,10 @@ public final class ModItems {
 
     public static final Item GAME_WARDEN_SPAWNER = register("game_warden_spawner", new Item(new Item.Settings().maxCount(16)));
 
+    public static final Item ALCOHOL = register("alcohol", new Item(new Item.Settings().maxCount(16)));
+
+    public static final Item CIGARETTE = register("cigarette", new Item(new Item.Settings().maxCount(16)));
+
     private ModItems() {
     }
 

@@ -705,6 +705,40 @@ updated with every slice so neither side ever has to guess.
     chance is a flat constant with no scaling by wanted level or law
     enforcement presence; unverified without a running client.
 
+- **Slice 38 — alcohol and cigarettes as real consumable vice items**
+  (Sections 5 and 6), closing the "cigarettes and alcohol as sellable
+  retail items with real effects" gap tracked in both sections:
+  - `IntoxicationCalculator`/`IntoxicationService`: drinking `ALCOHOL`
+    raises a per-player intoxication level (capped at 3), the same
+    pure-calculator-plus-service split `medical.FallInjuryCalculator`/
+    `IllnessService` already established. Unlike the earlier medical
+    effects, intoxication genuinely sobers back up on its own — one level
+    clears every 60 seconds since the last drink, computed lazily from
+    elapsed ticks rather than a periodic tick call — and the Slowness
+    (plus Nausea once "drunk" or worse) applied scales with the current
+    level instead of one flat effect for any amount had.
+  - `NicotineRisk`/`NicotineService`: smoking a `CIGARETTE` always gives a
+    brief Speed buzz, but every fifth one in a row (the same
+    count-until-threshold shape `medical.IllnessRisk` uses for rain
+    exposure) triggers the exact Nausea+Weakness illness
+    `WeatherIllnessEffect` already applies — reusing an existing
+    consequence instead of inventing a parallel one, so smoking has a
+    real, escalating health cost rather than being purely cosmetic.
+  - `LiquorStoreUseHandler` + `ModBlocks.LIQUOR_STORE`: the same
+    withdraw-or-refuse retail pattern `PharmacyUseHandler` established —
+    right-click buys `ALCOHOL`, sneak-right-click buys `CIGARETTE`, both
+    remitting the standard sales-tax cut.
+  - Exhaustively unit tested: intoxication level increments and caps
+    correctly, decays over elapsed ticks and never below zero, drinking
+    again before fully sober stacks on the remaining level; the nicotine
+    counter doesn't trigger before the threshold, triggers exactly at it,
+    resets afterward, and tracks players independently.
+  - **Known gaps**: one drink type and one cigarette type, no
+    hangover/withdrawal effects, no interaction between the two systems
+    or with the existing medical illness/injury systems beyond sharing
+    the same status effects, and NPCs never drink or smoke — see the
+    updated Section 5 status above; unverified without a running client.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -890,7 +924,16 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 - Done: two damage/exposure sources (fall damage, rain exposure) each
   driving a status-effect proxy (Slowness; Nausea+Weakness), plus a
   Medicine item that cures those specific effects, sold at a Pharmacy
-  Counter for real money.
+  Counter for real money. As of slice 38, alcohol and cigarettes are real
+  consumable items too: drinking `ALCOHOL` raises a per-player
+  intoxication level (`vice.IntoxicationService`) that sobers back up on
+  its own over time, with Slowness (and, once drunk enough, Nausea)
+  scaling to the current level rather than one flat effect; smoking a
+  `CIGARETTE` gives a brief Speed buzz every time, but every fifth one in
+  a row (`vice.NicotineService`) triggers the same lasting Nausea+
+  Weakness illness the rain-exposure system already applies — a real,
+  escalating health cost for repeated use rather than a purely cosmetic
+  item.
 - Missing: this is a *health-bar replacement disguised as a status
   effect*, not a real localized zone model — there's no per-body-part
   (head/torso/arms/legs) data structure, no bone-fracture-requiring-cast
@@ -907,15 +950,20 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   system implemented only affects players. **Requested and tracked, not
   started**: hunger/thirst as an actual survival requirement (the mod
   doesn't touch vanilla hunger at all right now); steroids/muscle-building
-  as a distinct mechanic from the general gym/fitness gap above; alcohol
-  and cigarettes as consumable items with real effects; relationships that
-  can actually break up or involve cheating, once the marriage/dating-
-  affinity system above exists to break up in the first place.
+  as a distinct mechanic from the general gym/fitness gap above;
+  relationships that can actually break up or involve cheating, once the
+  marriage/dating-affinity system above exists to break up in the first
+  place. (Alcohol/cigarettes themselves are no longer on this list — see
+  slice 38 above — but variety is: one drink type and one cigarette type,
+  no hangover/withdrawal effects beyond the single Nausea/Weakness
+  illness, and NPCs still never drink, smoke, get sick, or get injured —
+  every medical/vice system implemented only affects players.)
 
 **Section 6 — Commercial Enterprises, Retail & Nightlife**
-- Done: four "shop" blocks with a withdraw-or-refuse purchase pattern
+- Done: five "shop" blocks with a withdraw-or-refuse purchase pattern
   (Cash Register pays a wage rather than sells anything, Pharmacy Counter
-  sells Medicine, License Office sells a hunting permit) — a narrow slice
+  sells Medicine, License Office sells a hunting permit, and — as of
+  slice 38 — a Liquor Store sells Alcohol and Cigarettes) — a narrow slice
   of "retail," not general commerce — plus three real casino games. As of
   slice 33, `SlotMachine`: three reels over a fixed symbol set and an
   actual payout table (three sevens pays 10x the bet, bars 5x, bells 3x,
@@ -948,8 +996,7 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   recognition (nothing currently distinguishes or reacts to
   a player being a "millionaire" or "billionaire" — `BankService` just
   stores an unbounded `long`); public parks as a distinct, purposeful
-  location type; cigarettes and alcohol as sellable retail items (see
-  also Section 5); a working kitchen — hireable NPC chefs, real cooking
+  location type; a working kitchen — hireable NPC chefs, real cooking
   with its own animation (not an instant craft), and hundreds of distinct
   food items/recipes rather than reusing vanilla food, plus kitchen
   utensils (knives, pots, pans, etc.) as the item category tied to that
@@ -1098,11 +1145,13 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 1. Everything in the "missing" lists above — a fourth casino game (poker
    or craps) alongside slots/roulette/blackjack, expanding the underworld
    system slice 37 started (a second drug/lab type, rival dealer NPCs,
-   or scaling catch chance by wanted level), or diversifying into a
-   section that hasn't had a slice in a while (biology/medical, or
-   automotive/aviation short of full ATC) are all reasonable next picks.
-   Aviation/ATC and the space program stay deliberately last, as the
-   largest and least incrementally verifiable pieces.
+   or scaling catch chance by wanted level), giving alcohol/cigarettes
+   from slice 38 more variety (a second drink/cigarette tier, a
+   hangover effect), or diversifying into a section that hasn't had a
+   slice in a while (automotive/aviation short of full ATC) are all
+   reasonable next picks. Aviation/ATC and the space program stay
+   deliberately last, as the largest and least incrementally verifiable
+   pieces.
 
 (Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
 Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
@@ -1118,7 +1167,8 @@ see Sections 3/7 above. Slices 33/34/35 got the casino its first three
 real tables (slots, roulette, blackjack) — see Section 6 above. Slice 36
 closed out a real civil small-claims court — see Section 7 above. Slice
 37 started the previously entirely-unbuilt underworld/narcotics system —
-see Section 7 above.)
+see Section 7 above. Slice 38 closed out alcohol/cigarettes as real
+consumable items — see Sections 5/6 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

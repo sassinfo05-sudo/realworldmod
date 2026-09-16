@@ -24,6 +24,7 @@ public final class ModItemGroups {
                         entries.add(ModItems.CITIZEN_SPAWNER);
                         entries.add(ModItems.DEER_SPAWNER);
                         entries.add(ModItems.POLICE_SPAWNER);
+                        entries.add(ModItems.GAME_WARDEN_SPAWNER);
                         entries.add(ModBlocks.CASH_REGISTER);
                         entries.add(ModBlocks.UTILITY_LAMP);
                         entries.add(ModBlocks.PHARMACY_COUNTER);

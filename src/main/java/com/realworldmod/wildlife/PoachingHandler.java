@@ -8,22 +8,26 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 
 /**
- * Section 8's "hunting without a license alerts NPC game wardens," still
- * reduced to reusing the existing crime system rather than building warden
- * NPCs as agents (see ROADMAP.md), but as of slice 22 correctly scoped to
- * real wildlife: killing a {@link DeerEntity} without a license is a
- * recorded offense, same as trespassing. Vanilla livestock (cows, pigs,
- * chickens, sheep) is no longer treated as poachable game.
+ * Section 8's "hunting without a license alerts NPC game wardens": killing
+ * a {@link DeerEntity} without a license is a recorded offense, same as
+ * trespassing, *and* — as of slice 28 — flags the player in
+ * {@link GameWardenService} so a real {@link GameWardenEntity} has someone
+ * to chase, closing the "game wardens are simulated only as an automatic
+ * fine, not an agent" gap. Vanilla livestock (cows, pigs, chickens, sheep)
+ * is no longer treated as poachable game.
  */
 public final class PoachingHandler {
     public static final int POACHING_SEVERITY = 1;
 
     private final LawEnforcementService lawEnforcementService;
     private final HuntingLicenseService licenseService;
+    private final GameWardenService gameWardenService;
 
-    public PoachingHandler(LawEnforcementService lawEnforcementService, HuntingLicenseService licenseService) {
+    public PoachingHandler(LawEnforcementService lawEnforcementService, HuntingLicenseService licenseService,
+                            GameWardenService gameWardenService) {
         this.lawEnforcementService = lawEnforcementService;
         this.licenseService = licenseService;
+        this.gameWardenService = gameWardenService;
     }
 
     public void register() {
@@ -44,6 +48,7 @@ public final class PoachingHandler {
                 player.sendMessage(Text.translatable("message.realworldmod.fine_issued",
                         CurrencyFormatter.format(LawEnforcementService.FINE_CENTS)), true);
             }
+            gameWardenService.flagPoacher(player.getUuid(), player.getWorld().getTime());
         });
     }
 }

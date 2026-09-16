@@ -5,6 +5,7 @@ import com.realworldmod.crime.PoliceEntity;
 import com.realworldmod.npc.CitizenEntity;
 import com.realworldmod.vehicle.CarEntity;
 import com.realworldmod.wildlife.DeerEntity;
+import com.realworldmod.wildlife.GameWardenEntity;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnGroup;
@@ -41,6 +42,13 @@ public final class ModEntities {
                     .dimensions(0.6f, 1.8f)
                     .build("police"));
 
+    public static final EntityType<GameWardenEntity> GAME_WARDEN = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(RealWorldMod.MOD_ID, "game_warden"),
+            EntityType.Builder.<GameWardenEntity>create(GameWardenEntity::new, SpawnGroup.MISC)
+                    .dimensions(0.6f, 1.8f)
+                    .build("game_warden"));
+
     private ModEntities() {
     }
 
@@ -48,5 +56,6 @@ public final class ModEntities {
         FabricDefaultAttributeRegistry.register(CITIZEN, CitizenEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(DEER, DeerEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(POLICE, PoliceEntity.createAttributes());
+        FabricDefaultAttributeRegistry.register(GAME_WARDEN, GameWardenEntity.createAttributes());
     }
 }

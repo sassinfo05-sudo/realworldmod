@@ -456,6 +456,34 @@ updated with every slice so neither side ever has to guess.
     unlike the other three — gets no automatic positioning help from
     `LivingEntityRenderer`.
 
+- **Slice 28 — `GameWardenEntity`: a real agent for poaching enforcement**
+  (Section 8), closing the item at the top of the "Priority order"
+  section below:
+  - `GameWardenService`: a fixed 45-second poaching alert window per
+    player (`flagPoacher`/`isFlagged`/`apprehend`), deliberately separate
+    from `CrimeService`'s single overall wanted-level number, which has
+    no per-offense-type breakdown and so can't represent "wanted
+    specifically for poaching" — unit tested against a real `BankService`
+    the same way `LawEnforcementServiceTest` is.
+  - `PoachingHandler` now flags the poacher in `GameWardenService` in
+    addition to its existing crime-pipeline fine, so an unlicensed kill
+    has two independent consequences: the immediate fine, and a real
+    entity that comes looking for you.
+  - `GameWardenEntity` + `ChasePoacherGoal`: the same
+    `PathAwareEntity`/custom-`Goal` chase-and-apprehend shape
+    `PoliceEntity`/`ChaseWantedPlayerGoal` used in slice 23, reused for a
+    different trigger condition — evading a warden for the full alert
+    window means no further consequence; getting caught means a real fine
+    on contact (`GameWardenService.APPREHENSION_FINE_CENTS`).
+  - Reuses slice 24's `HumanoidEntityModel` with its own hand-painted
+    forest-green ranger-uniform texture (`game_warden.png`, wide-brim hat,
+    badge) plus LabPBR maps, rather than building a fourth body shape from
+    scratch — the model system built for Section 1 already generalizes.
+  - **Known gaps**: see the updated Section 8 status above — item-spawned
+    only, no radio/backup/vehicle patrol, no investigation step; unverified
+    without a running client whether the chase-and-catch actually reads
+    right in play.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -741,19 +769,28 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   fixing the old "any vanilla animal counts as game" stand-in — vanilla
   livestock (cows, pigs, chickens, sheep) is no longer poachable. Plus the
   pre-existing hunting-license permit system and poaching penalty that
-  reuses the crime pipeline.
+  reuses the crime pipeline. As of slice 28, a real `GameWardenEntity`
+  closes the "warden NPCs are simulated only as an automatic fine, not an
+  agent" gap: `PoachingHandler` now flags a poacher in a new
+  `GameWardenService` (a fixed 45-second alert window, deliberately
+  separate from `CrimeService`'s single overall wanted level, which has
+  no way to represent "wanted specifically for poaching"), and
+  `ChasePoacherGoal` makes any nearby warden pursue and apprehend a
+  flagged player — a real fine on contact, or, if evaded for the whole
+  window, no consequence beyond the original fine at the kill itself.
 - Missing: no biome-specific mechanics at all (no multi-layer canopy/leaf
   decay/wildfires in forests, no machete-gated jungle thickets/equipment
   rust/malaria, no desert sand-dune physics/heatstroke/mirage/flash
   floods); no predator AI (only prey flee/herd behavior exists, nothing
   stalks or hunts anything); no migration (herding is proximity-only, not
-  a seasonal or territorial routine); deer only spawn via a
-  `DEER_SPAWNER` item, not natural biome-based spawning; still no warden
-  NPCs as agents (poaching remains an automatic fine, not a chasing
-  game-warden entity — closely related to item 2 in "Priority order"
-  below); no zoo/safari system (no enclosures, HVAC, vet care, breeding,
-  monorails, ticketing, gift shops). **Requested and tracked, not
-  started**: abandoned towns as a distinct, generated location type.
+  a seasonal or territorial routine); deer/wardens only spawn via items
+  (`DEER_SPAWNER`/`GAME_WARDEN_SPAWNER`), not natural biome-based
+  spawning or real ranger-station structures; `GameWardenEntity` only
+  patrols/chases — no radio calls for backup, no vehicle patrols, no
+  poaching investigation beyond the instant the kill happens; no
+  zoo/safari system (no enclosures, HVAC, vet care, breeding, monorails,
+  ticketing, gift shops). **Requested and tracked, not started**:
+  abandoned towns as a distinct, generated location type.
 
 **Section 9 — Utilities, Space & Industrial Supply Chains**
 - Done: the most complete slice-for-slice implementation of any single
@@ -774,22 +811,23 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 
 ## Priority order for what's next
 
-1. **Game-warden NPC for poaching** (Section 8) — `PoliceEntity`/
-   `ChaseWantedPlayerGoal` from slice 23 is directly reusable for this: a
-   warden entity that chases a player caught poaching is the same shape
-   as a police entity chasing a wanted one, closing the "warden NPCs are
-   simulated only as an automatic fine, not an agent" gap explicitly
-   called out in Section 8 twice now.
-2. Everything else in the "missing" lists above — diversify out of the
-   `PathAwareEntity`/custom-`Goal` NPC pattern (slices 20-23 all used it)
-   into a different section next, then finally rendering/PBR, aviation/
-   ATC, and the space program — deliberately last, as the largest and
-   least incrementally verifiable pieces.
+1. Everything in the "missing" lists above — diversify out of the
+   `PathAwareEntity`/custom-`Goal` NPC pattern (slices 20-23 and 28 all
+   used it) into a different kind of system next: real home/workplace
+   *structures* for `CitizenEntity` to path into (closing slice 21's own
+   known gap), a civil/court system distinct from the criminal trial
+   slice 23 built, or municipal taxation in `BankService` are all
+   reasonable next picks. Aviation/ATC and the space program stay
+   deliberately last, as the largest and least incrementally verifiable
+   pieces.
 
-(Slice 21 closed out daily-schedule-driven `CitizenEntity` movement —
-see Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
+(Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
+Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
 above. Slice 23 closed out police NPCs and a real court/trial step — see
-Section 7 above.)
+Section 7 above. Slices 24/26/27 closed out the block-placeholder
+rendering backlog across every entity, and slice 25 added LabPBR maps for
+every texture — see Section 1 above. Slice 28 closed out the game-warden
+NPC — see Section 8 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

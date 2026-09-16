@@ -40,8 +40,11 @@ import com.realworldmod.utilities.UtilityService;
 import com.realworldmod.utilities.net.UtilityNetworking;
 import com.realworldmod.vehicle.CarSpawnHandler;
 import com.realworldmod.wildlife.DeerSpawnHandler;
+import com.realworldmod.wildlife.GameWardenService;
+import com.realworldmod.wildlife.GameWardenSpawnHandler;
 import com.realworldmod.wildlife.HuntingLicenseService;
 import com.realworldmod.wildlife.LicenseUseHandler;
+import com.realworldmod.wildlife.PoachingAccess;
 import com.realworldmod.wildlife.PoachingHandler;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -79,6 +82,7 @@ public final class RealWorldMod implements ModInitializer {
     private final UtilityService utilityService = new UtilityService(bankService);
     private final IllnessService illnessService = new IllnessService();
     private final HuntingLicenseService huntingLicenseService = new HuntingLicenseService();
+    private final GameWardenService gameWardenService = new GameWardenService(bankService);
 
     @Override
     public void onInitialize() {
@@ -108,11 +112,13 @@ public final class RealWorldMod implements ModInitializer {
         MedicineUseHandler.register();
         new PharmacyUseHandler(bankService).register();
         new LicenseUseHandler(bankService, huntingLicenseService).register();
-        new PoachingHandler(lawEnforcementService, huntingLicenseService).register();
+        PoachingAccess.set(gameWardenService);
+        new PoachingHandler(lawEnforcementService, huntingLicenseService, gameWardenService).register();
         CarSpawnHandler.register();
         CitizenSpawnHandler.register();
         DeerSpawnHandler.register();
         PoliceSpawnHandler.register();
+        GameWardenSpawnHandler.register();
 
         ServerLifecycleEvents.SERVER_STARTING.register(server -> {
             Path saveRoot = server.getSavePath(WorldSavePath.ROOT);

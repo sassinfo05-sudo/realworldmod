@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -59,13 +60,13 @@ class CivilCourtServiceTest {
         UUID defendant = UUID.randomUUID();
         civilCourtService.fileClaim(plaintiff, defendant, 0);
 
-        assertTrue(civilCourtService.contest(defendant));
+        assertTrue(civilCourtService.contest(defendant, 10));
         assertFalse(civilCourtService.hasPendingCase(defendant));
     }
 
     @Test
     void contestingWithNoPendingCaseReturnsFalse() {
-        assertFalse(civilCourtService.contest(UUID.randomUUID()));
+        assertFalse(civilCourtService.contest(UUID.randomUUID(), 10));
     }
 
     @Test
@@ -129,8 +130,76 @@ class CivilCourtServiceTest {
     void canFileANewClaimAgainstTheSameDefendantAfterTheirCaseCloses() {
         UUID defendant = UUID.randomUUID();
         civilCourtService.fileClaim(UUID.randomUUID(), defendant, 0);
-        civilCourtService.contest(defendant);
+        civilCourtService.contest(defendant, 10);
 
         assertTrue(civilCourtService.fileClaim(UUID.randomUUID(), defendant, 0));
+    }
+
+    @Test
+    void historyIsEmptyBeforeAnyCaseResolves() {
+        assertTrue(civilCourtService.getHistoryFor(UUID.randomUUID()).isEmpty());
+    }
+
+    @Test
+    void contestingArchivesTheCaseAsContested() {
+        UUID plaintiff = UUID.randomUUID();
+        UUID defendant = UUID.randomUUID();
+        civilCourtService.fileClaim(plaintiff, defendant, 0);
+
+        civilCourtService.contest(defendant, 42);
+
+        List<CivilCourtService.ArchivedCase> history = civilCourtService.getHistoryFor(defendant);
+        assertEquals(1, history.size());
+        assertEquals(plaintiff, history.get(0).plaintiffId());
+        assertEquals(defendant, history.get(0).defendantId());
+        assertEquals(42, history.get(0).resolvedTick());
+        assertTrue(history.get(0).contested());
+    }
+
+    @Test
+    void defaultJudgmentArchivesTheCaseAsNotContested() {
+        UUID plaintiff = UUID.randomUUID();
+        UUID defendant = UUID.randomUUID();
+        bankService.deposit(defendant, 100_000);
+        civilCourtService.fileClaim(plaintiff, defendant, 0);
+
+        civilCourtService.tick(CivilCourtService.RESPONSE_WINDOW_TICKS);
+
+        List<CivilCourtService.ArchivedCase> history = civilCourtService.getHistoryFor(defendant);
+        assertEquals(1, history.size());
+        assertFalse(history.get(0).contested());
+    }
+
+    @Test
+    void historyIsVisibleToBothPlaintiffAndDefendant() {
+        UUID plaintiff = UUID.randomUUID();
+        UUID defendant = UUID.randomUUID();
+        civilCourtService.fileClaim(plaintiff, defendant, 0);
+        civilCourtService.contest(defendant, 10);
+
+        assertEquals(1, civilCourtService.getHistoryFor(plaintiff).size());
+        assertEquals(1, civilCourtService.getHistoryFor(defendant).size());
+    }
+
+    @Test
+    void historyIsMostRecentlyResolvedFirst() {
+        UUID player = UUID.randomUUID();
+        UUID firstOpponent = UUID.randomUUID();
+        UUID secondOpponent = UUID.randomUUID();
+        civilCourtService.fileClaim(player, firstOpponent, 0);
+        civilCourtService.contest(firstOpponent, 10);
+        civilCourtService.fileClaim(player, secondOpponent, 20);
+        civilCourtService.contest(secondOpponent, 30);
+
+        List<CivilCourtService.ArchivedCase> history = civilCourtService.getHistoryFor(player);
+        assertEquals(2, history.size());
+        assertEquals(secondOpponent, history.get(0).defendantId());
+        assertEquals(firstOpponent, history.get(1).defendantId());
+    }
+
+    @Test
+    void historyDoesNotIncludeCasesTheGivenPlayerWasNotPartyTo() {
+        civilCourtService.fileClaim(UUID.randomUUID(), UUID.randomUUID(), 0);
+        assertTrue(civilCourtService.getHistoryFor(UUID.randomUUID()).isEmpty());
     }
 }

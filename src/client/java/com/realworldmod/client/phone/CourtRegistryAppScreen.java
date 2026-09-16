@@ -1,7 +1,9 @@
 package com.realworldmod.client.phone;
 
 import com.realworldmod.civil.net.CourtRegistryContestPayload;
+import com.realworldmod.civil.net.CourtRegistryHistoryRequestPayload;
 import com.realworldmod.civil.net.CourtRegistryStatusRequestPayload;
+import com.realworldmod.client.civil.ClientCourtRegistryHistoryState;
 import com.realworldmod.client.civil.ClientCourtRegistryState;
 import com.realworldmod.economy.CurrencyFormatter;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -16,7 +18,9 @@ import net.minecraft.text.Text;
  * against them, the claimed amount, and how long they have left to
  * contest it before a default judgment (see {@link com.realworldmod.civil.CivilCourtService}).
  * As of slice 56, a Contest button dismisses the case directly from here,
- * instead of requiring the in-world court flow.
+ * instead of requiring the in-world court flow. As of slice 64, it also
+ * shows a filing-history summary — how many resolved cases the player has
+ * been a party to, and the outcome/opponent/amount of the most recent one.
  */
 public final class CourtRegistryAppScreen extends Screen {
     @SuppressWarnings("unused")
@@ -31,6 +35,7 @@ public final class CourtRegistryAppScreen extends Screen {
     @Override
     protected void init() {
         ClientPlayNetworking.send(new CourtRegistryStatusRequestPayload());
+        ClientPlayNetworking.send(new CourtRegistryHistoryRequestPayload());
 
         this.contestButton = this.addDrawableChild(ButtonWidget.builder(
                         Text.translatable("gui.realworldmod.phone.court_registry.contest"),
@@ -59,21 +64,43 @@ public final class CourtRegistryAppScreen extends Screen {
 
         this.contestButton.active = state.hasPendingCase();
 
-        if (!state.hasPendingCase()) {
+        if (state.hasPendingCase()) {
+            long secondsRemaining = state.ticksRemaining() / 20L;
+            context.drawCenteredTextWithShadow(this.textRenderer,
+                    Text.translatable("gui.realworldmod.phone.court_registry.pending",
+                            state.plaintiffName(), CurrencyFormatter.format(state.amountCents())),
+                    this.width / 2, this.height / 2, 0xFF5555);
+            context.drawCenteredTextWithShadow(this.textRenderer,
+                    Text.translatable("gui.realworldmod.phone.court_registry.deadline", secondsRemaining),
+                    this.width / 2, this.height / 2 + 12, 0xFFFFFF);
+        } else {
             context.drawCenteredTextWithShadow(this.textRenderer,
                     Text.translatable("gui.realworldmod.phone.court_registry.none"),
                     this.width / 2, this.height / 2, 0x55FF55);
+        }
+
+        renderHistory(context);
+    }
+
+    private void renderHistory(DrawContext context) {
+        ClientCourtRegistryHistoryState.State history = ClientCourtRegistryHistoryState.get();
+        if (history == null) {
             return;
         }
 
-        long secondsRemaining = state.ticksRemaining() / 20L;
         context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.translatable("gui.realworldmod.phone.court_registry.pending",
-                        state.plaintiffName(), CurrencyFormatter.format(state.amountCents())),
-                this.width / 2, this.height / 2, 0xFF5555);
-        context.drawCenteredTextWithShadow(this.textRenderer,
-                Text.translatable("gui.realworldmod.phone.court_registry.deadline", secondsRemaining),
-                this.width / 2, this.height / 2 + 12, 0xFFFFFF);
+                Text.translatable("gui.realworldmod.phone.court_registry.history_count", history.pastCaseCount()),
+                this.width / 2, this.height / 2 + 55, 0xAAAAAA);
+
+        if (history.hasMostRecent()) {
+            String outcomeKey = history.mostRecentContested()
+                    ? "gui.realworldmod.phone.court_registry.history_recent_contested"
+                    : "gui.realworldmod.phone.court_registry.history_recent_default";
+            context.drawCenteredTextWithShadow(this.textRenderer,
+                    Text.translatable(outcomeKey, history.mostRecentOpponentName(),
+                            CurrencyFormatter.format(history.mostRecentAmountCents())),
+                    this.width / 2, this.height / 2 + 67, 0xAAAAAA);
+        }
     }
 
     @Override

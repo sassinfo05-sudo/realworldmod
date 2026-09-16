@@ -6,6 +6,7 @@ import com.realworldmod.client.commerce.ClientCrapsState;
 import com.realworldmod.client.commerce.ClientThreeCardPokerState;
 import com.realworldmod.client.commerce.CrapsScreen;
 import com.realworldmod.client.commerce.ThreeCardPokerScreen;
+import com.realworldmod.client.civil.ClientCourtRegistryHistoryState;
 import com.realworldmod.client.civil.ClientCourtRegistryState;
 import com.realworldmod.client.crime.ClientCrimeState;
 import com.realworldmod.client.economy.ClientBankState;
@@ -23,6 +24,7 @@ import com.realworldmod.client.wildlife.GameWardenEntityRenderer;
 import com.realworldmod.commerce.net.BlackjackStateResponsePayload;
 import com.realworldmod.commerce.net.CrapsStateResponsePayload;
 import com.realworldmod.commerce.net.ThreeCardPokerStateResponsePayload;
+import com.realworldmod.civil.net.CourtRegistryHistoryResponsePayload;
 import com.realworldmod.civil.net.CourtRegistryStatusResponsePayload;
 import com.realworldmod.crime.net.WantedLevelResponsePayload;
 import com.realworldmod.economy.net.BankBalanceResponsePayload;
@@ -79,6 +81,10 @@ public final class RealWorldModClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(CourtRegistryStatusResponsePayload.ID,
                 (payload, context) -> ClientCourtRegistryState.set(new ClientCourtRegistryState.State(
                         payload.hasPendingCase(), payload.amountCents(), payload.ticksRemaining(), payload.plaintiffName())));
+        ClientPlayNetworking.registerGlobalReceiver(CourtRegistryHistoryResponsePayload.ID,
+                (payload, context) -> ClientCourtRegistryHistoryState.set(new ClientCourtRegistryHistoryState.State(
+                        payload.pastCaseCount(), payload.hasMostRecent(), payload.mostRecentOpponentName(),
+                        payload.mostRecentAmountCents(), payload.mostRecentContested())));
 
         EntityRendererRegistry.register(ModEntities.CAR, CarEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.CITIZEN, CitizenEntityRenderer::new);

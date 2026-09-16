@@ -1510,6 +1510,43 @@ updated with every slice so neither side ever has to guess.
     existing as items — meat is edible but not used in any recipe, and
     hide isn't craftable into anything.
 
+- **Slice 64 — a filing-history archive for the Court Registry** (Section 3),
+  closing "no filing history or past-case archive," the gap every Court
+  Registry slice since 53 repeated:
+  - `CivilCourtService` gains an `ArchivedCase` record and an in-memory
+    `history` list: `contest` now archives the dismissed case (now taking
+    a `currentTick` parameter to record exactly when), and `tick`'s
+    default-judgment path archives it too, each tagged `contested` true
+    or false accordingly. A new `getHistoryFor(playerId)` returns every
+    archived case that player was a party to (as plaintiff *or*
+    defendant), most-recently-resolved first.
+  - Two new payloads, `CourtRegistryHistoryRequestPayload` (C2S, sent on
+    app open alongside the existing status request) and
+    `CourtRegistryHistoryResponsePayload` (S2C, carrying a past-case
+    count plus the most recent case's resolved opponent name, amount,
+    and contested flag), handled by a new branch in
+    `CourtRegistryNetworking` that resolves the *opponent's* name the
+    same `UserCache` way slice 57 resolves a plaintiff's.
+  - `ClientCourtRegistryHistoryState` caches the response, and
+    `CourtRegistryAppScreen` renders "Past cases: N" plus, when there's a
+    most-recent case, "Most recent: contested/default judgment vs
+    (name) ((amount))" below the existing pending-case display.
+  - Exhaustively unit tested at the service layer: `CivilCourtServiceTest`
+    gains cases for an empty history before any case resolves, a
+    contested case archiving as contested, a default judgment archiving
+    as not contested, history being visible to both plaintiff and
+    defendant, most-recently-resolved-first ordering across two cases,
+    and a player not party to any case seeing an empty history — 369
+    total, all passing. The networking/screen classes are untested,
+    matching every other phone-app slice (32, 44, 53, 56, 57).
+  - **Known gaps**: the history is a count-plus-most-recent summary, not
+    a full scrollable list of every past case — a player with many past
+    cases can't page through them or see anything but the latest one;
+    like slice 57's plaintiff-name resolution, an opponent who's never
+    joined this server still shows as a raw UUID string; contesting
+    still just dismisses the claim outright with no counter-argument or
+    real adjudication, the same limitation slices 56/57 already noted.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1693,8 +1730,10 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   civil case against them, the claimed amount, and the seconds left to
   contest it, plus — as of slice 56 — a Contest button that dismisses
   the case right from the app, plus — as of slice 57 — the plaintiff's
-  resolved display name alongside the claim) over a real client↔server
-  networking pattern.
+  resolved display name alongside the claim, plus — as of slice 64 — a
+  filing-history summary: how many resolved cases the player has been a
+  party to, and the outcome/opponent/amount of the most recent one) over
+  a real client↔server networking pattern.
 - Missing: PearOS vs. OpenDroid distinction (rooting, sideloading,
   terminal access), cracked screens/repair shops, charging cables as a
   physical item, PC building (motherboard/CPU/GPU/RAM/PSU parts, physical
@@ -1703,10 +1742,11 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   web-page-like content (today's apps are native screens, not pages), real
   estate portal, credit score dashboard, stock/forex exchange, a criminal
   court registry as a web UI (the Criminal Record app is that start; the
-  Court Registry app from slices 53/56/57 covers the civil side,
-  including an in-app Contest button as of slice 56 and the plaintiff's
-  resolved name as of slice 57 — still no filing history or past-case
-  archive), tax audit portal,
+  Court Registry app from slices 53/56/57/64 covers the civil side,
+  including an in-app Contest button as of slice 56, the plaintiff's
+  resolved name as of slice 57, and a filing-history summary as of
+  slice 64 — the history is a count-plus-most-recent summary, not a full
+  scrollable list of every past case), tax audit portal,
   BlockTube (record/edit/upload video, subscribers, ad revenue), dark web
   marketplace, game consoles/discs/arcades/claw machines/racing sims.
   **Requested and tracked, not started**: every phone/PC app being a
@@ -2132,12 +2172,12 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    system slices 42/59/63 started (a second predator/prey pair, showing
    the new deer population count somewhere, or giving meat/hide an
    actual use), extending the NPC-inclusion slices 46-49/55/61 started to
-   another
-   system (an NPC-specific arrest/detainment flow now that citizens can
-   be assault/murder victims, or reusing slice 61's pathfinding pattern
-   for a job site's actual task or a non-medicine shop trip), a filing
-   history/past-case archive for slice 53/56/57's Court Registry, or
-   bringing Slots/Roulette up to the other three tables' slice-54
+   another system (an NPC-specific arrest/detainment flow now that
+   citizens can be assault/murder victims, or reusing slice 61's
+   pathfinding pattern for a job site's actual task or a non-medicine
+   shop trip), turning slice 64's Court Registry history summary into a
+   real scrollable list of every past case, or bringing Slots/Roulette
+   up to the other three tables' slice-54
    wager-selection bar (they'd need a real screen first, since both are
    still a single block right-click) are all reasonable next picks.
    Aviation/ATC and the space program stay deliberately last, as the
@@ -2192,7 +2232,8 @@ hangover effect — see Section 5 above. Slice 61 closed out NPC
 pathfinding to a real pharmacy — see Section 2 above. Slice 62 gave
 quitting cigarettes a real withdrawal effect — see Section 5 above.
 Slice 63 gave a killed deer a real meat/hide drop and population-count
-consequence — see Section 8 above.)
+consequence — see Section 8 above. Slice 64 gave the Court Registry a
+real filing-history archive — see Section 3 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

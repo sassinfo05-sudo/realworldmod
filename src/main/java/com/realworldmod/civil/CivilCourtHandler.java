@@ -38,7 +38,7 @@ public final class CivilCourtHandler {
             }
             ServerPlayerEntity plaintiff = (ServerPlayerEntity) player;
 
-            if (civilCourtService.contest(plaintiff.getUuid())) {
+            if (civilCourtService.contest(plaintiff.getUuid(), world.getTime())) {
                 plaintiff.sendMessage(Text.translatable("message.realworldmod.civil_case_contested"), true);
                 return ActionResult.SUCCESS;
             }

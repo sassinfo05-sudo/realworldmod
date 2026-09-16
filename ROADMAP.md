@@ -420,6 +420,42 @@ updated with every slice so neither side ever has to guess.
     client, including whether the trot cycle actually reads as a deer
     walking rather than four legs swinging independently.
 
+- **Slice 27 — real vehicle model for `CarEntity`, closing out the
+  block-placeholder backlog across every entity** (Section 1):
+  - `CarEntity` gained its first synced state ever: a `TrackedData<Float>`
+    wheel-rotation angle, accumulated server-side each tick from the
+    vehicle's actual speed (`radians = speedBlocksPerTick / wheelRadius`,
+    wrapped mod `MathHelper.TAU`) and automatically synced to the client
+    via `DataTracker` — closing the "no synced fields yet" gap the
+    class's own Javadoc called out since slice 19, and giving the wheels
+    something real to spin from instead of a client-side guess.
+  - `CarEntityModel`: a chassis + raised cabin + four independently
+    rotating wheels, the same verified `ModelPart` technique as slices
+    24/26. `CarEntity` is a plain `Entity`, not a `LivingEntity`, so this
+    model is driven by a hand-written `CarEntityRenderer.render()`
+    override (yaw rotation, `model.setAngles`, `model.render`) rather
+    than `LivingEntityRenderer` — the two humanoid/quadruped renderers
+    get that machinery for free, this one doesn't.
+  - A hand-painted, correctly-UV-mapped `car.png` (red paint, tinted
+    glass cabin, headlights/taillights, dark tires with a rim highlight)
+    plus its LabPBR `_n`/`_s` maps.
+  - **Every entity in the mod now has a real shaped model with real
+    animation** — `CitizenEntity`, `PoliceEntity`, `DeerEntity`, and
+    `CarEntity` all replaced the "scaled vanilla block" placeholder that
+    every entity used through slice 23. See Section 1 below for what
+    "10/10, nothing looks like Minecraft" would still require beyond
+    this.
+  - **Known gaps**: still Minecraft's own blocky cuboid style, not
+    sculpted 3D art; the model's proportions (chassis width, wheel
+    placement) are reasoned from the entity's registered hitbox
+    dimensions, not measured against a real reference, since there's no
+    way to render and eyeball it; nothing here is verified visually
+    without a running client, including whether the ground-contact math
+    (wheel-bottom at the entity's actual world position, everything else
+    negative-Y/"up" from there) is actually right for a renderer that —
+    unlike the other three — gets no automatic positioning help from
+    `LivingEntityRenderer`.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -471,37 +507,37 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   holds today — see the cross-cutting notes above.)
 
 **Section 1 — Rendering, Physics & Graphics Engine**
-- Done: as of slice 24/26, `CitizenEntity`, `PoliceEntity`, and
-  `DeerEntity` all render with a real hand-built `ModelPart` hierarchy
-  (proper head/body/limb geometry via Minecraft's own model system) and
-  genuine walk-cycle animation, with distinct hand-painted textures —
-  replacing the "scaled vanilla concrete block with no animation"
-  placeholder those three entities used through slice 23. As of slice 25,
-  every existing texture (all three entities plus every block/item) also
-  ships a LabPBR normal + specular map, so a player running Iris with a
-  PBR-aware shader pack gets real bump/specular/emissive shading instead
-  of flat lighting.
+- Done: as of slice 27, all four of the mod's entities —
+  `CitizenEntity`, `PoliceEntity`, `DeerEntity`, `CarEntity` — render
+  with a real hand-built `ModelPart` hierarchy (proper body/limb/wheel
+  geometry via Minecraft's own model system) and genuine animation (walk
+  cycles, or independently-spinning wheels driven by a real synced speed
+  value for the car), with distinct hand-painted textures — replacing the
+  "scaled vanilla block with no animation" placeholder every entity used
+  through slice 23. As of slice 25, every existing texture (all four
+  entities plus every block/item) also ships a LabPBR normal + specular
+  map, so a player running Iris with a PBR-aware shader pack gets real
+  bump/specular/emissive shading instead of flat lighting.
 - Missing — and this is the honest running tally against "10/10 assets,
-  nothing looks like Minecraft anymore": `CarEntity` is the one entity
-  left on the block-placeholder technique (a wheeled vehicle body is a
-  distinct shape needing its own model, not a reuse of the biped/
-  quadruped ones); every block/item texture is still slice 18's simple
-  16x16 placeholder pixel art, not high-fidelity art; the three entity
-  textures that exist are script-painted pixel art at Minecraft-skin
-  resolution, not the "hundreds of hand-crafted, high-quality" assets
-  requested — no amount of code can substitute for actual artist-made
-  assets or a licensed asset pack, and this mod has neither; the model
-  geometry itself is still Minecraft's own blocky cuboid style (no
-  smooth/organic shapes); the LabPBR maps exist but nothing renders them
-  without the *player* separately installing Iris and a shader pack — the
-  mod ships no rendering pipeline of its own, no PBR/ray-traced lighting,
-  volumetric fog, water refraction, or displacement mapping happens by
-  default; no 1/16th sub-grid interior decoration system (arbitrary-angle
-  furniture placement); no background-thread macro-economics/weather/
-  commute simulation for unrendered regions (today's simulation runs only
-  for online players/loaded chunks via the normal server tick, not a
-  separate async layer); nothing in this section has been visually
-  confirmed in a running client. **Requested and tracked, not started**:
+  nothing looks like Minecraft anymore": every block/item texture is
+  still slice 18's simple 16x16 placeholder pixel art, not high-fidelity
+  art; the four entity textures that exist are script-painted pixel art
+  at Minecraft-skin resolution, not the "hundreds of hand-crafted,
+  high-quality" assets requested — no amount of code can substitute for
+  actual artist-made assets or a licensed asset pack, and this mod has
+  neither; the model geometry itself is still Minecraft's own blocky
+  cuboid style (no smooth/organic shapes); the LabPBR maps exist but
+  nothing renders them without the *player* separately installing Iris
+  and a shader pack — the mod ships no rendering pipeline of its own, no
+  PBR/ray-traced lighting, volumetric fog, water refraction, or
+  displacement mapping happens by default; no 1/16th sub-grid interior
+  decoration system (arbitrary-angle furniture placement); no
+  background-thread macro-economics/weather/commute simulation for
+  unrendered regions (today's simulation runs only for online
+  players/loaded chunks via the normal server tick, not a separate async
+  layer); nothing in this section has been visually confirmed in a
+  running client — every model/renderer in the mod is still unverified
+  against how it actually looks. **Requested and tracked, not started**:
   working window curtains, street lights, and other small
   world-detail props that toggle/animate on their own; emotes as their own
   player-triggered animation/expression system, distinct from an NPC's own

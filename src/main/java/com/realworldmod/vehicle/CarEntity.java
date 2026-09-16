@@ -5,10 +5,13 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
 import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 
 /**
@@ -26,6 +29,10 @@ public class CarEntity extends Entity {
     private static final double STARTING_FUEL_LITERS = 100.0;
     private static final float TURN_DEGREES_PER_TICK = 3.0f;
     private static final double GRAVITY_PER_TICK = 0.04;
+    private static final double WHEEL_RADIUS_BLOCKS = 0.3;
+
+    private static final TrackedData<Float> WHEEL_ROTATION =
+            DataTracker.registerData(CarEntity.class, TrackedDataHandlerRegistry.FLOAT);
 
     private VehicleState vehicleState = VehicleState.atRestWithFuel(STARTING_FUEL_LITERS);
 
@@ -37,9 +44,14 @@ public class CarEntity extends Entity {
         return vehicleState;
     }
 
+    /** Accumulated wheel-spin angle in radians, synced to the client for {@code CarEntityRenderer}. */
+    public float wheelRotation() {
+        return this.getDataTracker().get(WHEEL_ROTATION);
+    }
+
     @Override
     protected void initDataTracker(DataTracker.Builder builder) {
-        // No synced fields yet — speed/fuel aren't shown in any HUD in this slice.
+        builder.add(WHEEL_ROTATION, 0.0f);
     }
 
     @Override
@@ -81,6 +93,10 @@ public class CarEntity extends Entity {
         float steer = controller != null ? controller.sidewaysSpeed : 0.0f;
 
         vehicleState = VehiclePhysics.tick(vehicleState, throttle);
+
+        float rotationDelta = (float) (vehicleState.speedBlocksPerTick() / WHEEL_RADIUS_BLOCKS);
+        this.getDataTracker().set(WHEEL_ROTATION,
+                (this.getDataTracker().get(WHEEL_ROTATION) + rotationDelta) % MathHelper.TAU);
 
         if (controller != null && vehicleState.speedBlocksPerTick() != 0) {
             this.setYaw(this.getYaw() - steer * TURN_DEGREES_PER_TICK);

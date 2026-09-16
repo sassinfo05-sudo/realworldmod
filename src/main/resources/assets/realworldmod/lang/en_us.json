@@ -151,5 +151,6 @@
   "message.realworldmod.murder_recorded": "Murder reported. You are now Most Wanted.",
   "gui.realworldmod.phone.settings.battery": "Battery: %s%%",
   "gui.realworldmod.phone.settings.power_off": "Lock phone",
-  "gui.realworldmod.phone.messages.empty": "No messages yet."
+  "gui.realworldmod.phone.messages.empty": "No messages yet.",
+  "hud.realworldmod.car_speed": "%s mph"
 }

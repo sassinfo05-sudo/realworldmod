@@ -15,6 +15,7 @@ import com.realworldmod.client.utilities.ClientWaterState;
 import com.realworldmod.client.crime.PoliceEntityRenderer;
 import com.realworldmod.client.npc.CitizenEntityRenderer;
 import com.realworldmod.client.vehicle.CarEntityRenderer;
+import com.realworldmod.client.vehicle.CarSpeedHud;
 import com.realworldmod.client.wildlife.CoyoteEntityRenderer;
 import com.realworldmod.client.wildlife.DeerEntityRenderer;
 import com.realworldmod.client.wildlife.GameWardenEntityRenderer;
@@ -49,6 +50,8 @@ import net.minecraft.util.TypedActionResult;
 public final class RealWorldModClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
+        CarSpeedHud.register();
+
         ClientPlayNetworking.registerGlobalReceiver(BankBalanceResponsePayload.ID,
                 (payload, context) -> ClientBankState.set(payload.balanceCents()));
         ClientPlayNetworking.registerGlobalReceiver(TreasuryBalanceResponsePayload.ID,

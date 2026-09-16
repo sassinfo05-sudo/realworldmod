@@ -1124,6 +1124,33 @@ updated with every slice so neither side ever has to guess.
     detected at the moment of riding, not of taking a spare `CAR_KEY`
     item.
 
+- **Slice 52 — a persistent speed HUD while riding a car** (Section 4),
+  closing the other named half of "no speed HUD... the fuel gauge is a
+  chat message on request rather than a persistent HUD element":
+  - `VehicleSpeedDisplay`: a pure conversion from `VehicleState`'s
+    internal blocks-per-tick speed to a real mph reading — Minecraft's
+    20-tick second and one-block-per-meter convention makes this an
+    honest physical unit conversion, not an invented number, and reverse
+    travel displays as a positive speed the same way a real speedometer
+    would.
+  - `CarSpeedHud`: registers a `HudRenderCallback` (this mod's first use
+    of that Fabric API) that draws the reading in the corner of the
+    screen whenever `MinecraftClient.player.getVehicle()` is a
+    `CarEntity`, and draws nothing otherwise — a real persistent HUD
+    element, not a one-off message the player has to request.
+  - Exhaustively unit tested: `VehicleSpeedDisplayTest` covers zero
+    speed, a known blocks-per-tick-to-mph conversion, `VehiclePhysics`'s
+    own real `MAX_SPEED` converting to a realistic highway speed, reverse
+    travel displaying as positive, and linear scaling — 5 new tests, 329
+    total, all passing. `CarSpeedHud` itself is untested like every other
+    client-only rendering class in the mod, needing a running game
+    client to verify.
+  - **Known gaps**: the fuel gauge still hasn't joined the HUD as a
+    persistent element — it remains the sneak-right-click chat message
+    from slice 39; no other vehicle stat (RPM, gear, odometer) is shown;
+    unverified without a running client for the actual on-screen
+    rendering.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1333,7 +1360,15 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   mod follows — closing part of "no mechanic for stealing cars." An
   unowned car (spawned before this slice) is still drivable by anyone
   with no consequence, matching the property system's own "unclaimed is
-  unrestricted" convention.
+  unrestricted" convention. As of slice 52, the car finally has a real
+  speed HUD too: `VehicleSpeedDisplay` converts the vehicle's internal
+  blocks-per-tick speed to a real mph reading (Minecraft's 20-tick
+  second and one-block-per-meter convention gives an honest, physically
+  real conversion, not a made-up number), and `CarSpeedHud` renders it
+  persistently in the corner of the screen via `HudRenderCallback`
+  whenever the player is riding a `CarEntity` — no more needing to
+  sneak-right-click for a one-off chat message the way the fuel gauge
+  still works.
 - Missing: the other 299+ vehicle types (including, specifically
   requested: motorcycles, bicycles, e-bikes, skateboards, rollerblades,
   boats and kayaks, cargo ships, cargo/military planes, military ships,
@@ -1341,9 +1376,10 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   body-damage repair, garage capacity limits, any aviation at all
   (airports, ticketing, TSA, boarding, airliners), ATC job/radar
   minigame, subways/bullet trains/transit cards/timetables. The one
-  vehicle that exists still has no speed HUD, no suspension/tire-friction
-  modeling, no collision damage, and the fuel gauge is a chat message on
-  request rather than a persistent HUD element; car theft only exists for
+  vehicle that exists still has no suspension/tire-friction modeling or
+  collision damage, and the fuel gauge is still a chat message on request
+  rather than joining the new speed HUD as a persistent element; car
+  theft only exists for
   a player-owned car — an NPC-owned vehicle isn't possible yet since
   citizens don't own cars at all, and there's still no way to steal a
   spare `CAR_KEY` item itself (theft is only detected at the moment of
@@ -1657,16 +1693,15 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    system slice 37 started (a second drug/lab type, rival dealer NPCs, or
    scaling catch chance by wanted level), giving alcohol/cigarettes from
    slice 38 more variety (a second drink/cigarette tier, a hangover
-   effect), continuing to round out automotive now that slice 39 added
-   fuel visibility (a speed HUD, a second vehicle type), expanding the
-   predator system slice 42 started (a second predator/prey pair, pack
-   hunting), extending the NPC-inclusion slices 46-49 started to another
-   system (NPC pathfinding to a real shop, or a distinct NPC-victim
-   assault/arrest consequence), giving the casino a wagerable bet size
-   now that all five tables exist, or a speed HUD/second vehicle type to
-   build further on slice 51's car ownership are all reasonable next
-   picks. Aviation/ATC and the space program stay deliberately last, as
-   the largest and least incrementally verifiable pieces.
+   effect), a second vehicle type now that slices 39/51/52 rounded out
+   the first car's fuel/ownership/speed, expanding the predator system
+   slice 42 started (a second predator/prey pair, pack hunting),
+   extending the NPC-inclusion slices 46-49 started to another system
+   (NPC pathfinding to a real shop, or a distinct NPC-victim
+   assault/arrest consequence), or giving the casino a wagerable bet size
+   now that all five tables exist are all reasonable next picks.
+   Aviation/ATC and the space program stay deliberately last, as the
+   largest and least incrementally verifiable pieces.
 
 (Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
 Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
@@ -1702,7 +1737,8 @@ citizen actually spend that income on medicine — see Sections 2/5
 above. Slice 50 gave the casino its fifth real table, Craps — see
 Section 6 above. Slice 51 closed part of "no mechanic for stealing
 cars" with real car ownership and tracked auto theft — see Section 4
-above.)
+above. Slice 52 gave `CarEntity` a real persistent speed HUD — see
+Section 4 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

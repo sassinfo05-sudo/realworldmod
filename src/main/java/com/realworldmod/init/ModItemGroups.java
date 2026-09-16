@@ -29,6 +29,7 @@ public final class ModItemGroups {
                         entries.add(ModBlocks.UTILITY_LAMP);
                         entries.add(ModBlocks.PHARMACY_COUNTER);
                         entries.add(ModBlocks.LICENSE_OFFICE);
+                        entries.add(ModBlocks.SLOT_MACHINE);
                     })
                     .build());
 

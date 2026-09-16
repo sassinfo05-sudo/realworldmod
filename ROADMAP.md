@@ -570,6 +570,25 @@ updated with every slice so neither side ever has to guess.
     without a running client whether the screen actually renders
     correctly (same caveat as every other phone app in the mod).
 
+- **Slice 33 — a real slot-machine casino game** (Section 6), the first
+  actual game behind the "casino" category:
+  - `SlotMachine`: pure, exhaustively unit-tested game logic — three
+    reels drawn from a 4-symbol set, and a real payout table (three
+    sevens 10x, bars 5x, bells 3x, cherries 2x; any two matching is a
+    push; no match loses the bet), not a placeholder RNG with fake
+    numbers.
+  - `SlotMachineUseHandler` + `ModBlocks.SLOT_MACHINE`: the same
+    withdraw-then-resolve `BankService` pattern every other paid
+    interaction in the mod uses — a fixed bet is withdrawn up front, then
+    a win pays out a real multiple of it, a push returns it, and a loss
+    keeps it withdrawn.
+  - **Known gaps**: one game, one fixed bet size, no roulette/blackjack/
+    poker (the rest of "a casino" from the brief); a losing bet simply
+    vanishes rather than reaching a tracked "house"/casino-owner account
+    the way slice 29's sales tax reaches the treasury; no slot-machine
+    visual/animation beyond a static block texture; unverified without a
+    running client.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -778,20 +797,26 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   affinity system above exists to break up in the first place.
 
 **Section 6 — Commercial Enterprises, Retail & Nightlife**
-- Done: three "shop" blocks with a withdraw-or-refuse purchase pattern
+- Done: four "shop" blocks with a withdraw-or-refuse purchase pattern
   (Cash Register pays a wage rather than sells anything, Pharmacy Counter
   sells Medicine, License Office sells a hunting permit) — a narrow slice
-  of "retail," not general commerce.
+  of "retail," not general commerce — plus, as of slice 33, a real
+  `SlotMachine` casino game: three reels over a fixed symbol set and an
+  actual payout table (three sevens pays 10x the bet, bars 5x, bells 3x,
+  cherries 2x, any two matching is a push, no match loses the bet),
+  unit-tested exhaustively against every outcome, not just the category
+  existing with no game underneath.
 - Missing: grocery stores/shopping carts, furniture stores, clothing
   boutiques with a layered fashion/customization engine, bakeries, gun/
   ammo shops, phone/PC retail beyond the two items that exist, player-run
   businesses (buying commercial plots, setting prices on a POS UI, hiring
-  NPC cashiers, automatic Friday payroll), casinos (roulette/blackjack/
-  slots/poker), strip clubs/VIP lounges/nightclubs/DJ booths with
-  proximity audio. **Requested and tracked, not started**: a casino that
-  actually functions end-to-end (games with real rules and real payouts
-  against `BankService`, not just the category existing); real
-  wealth-tier recognition (nothing currently distinguishes or reacts to
+  NPC cashiers, automatic Friday payroll), the rest of a real casino
+  (roulette/blackjack/poker — one game exists now, not the whole floor),
+  strip clubs/VIP lounges/nightclubs/DJ booths with proximity audio; the
+  slot machine's losing bets simply vanish rather than reaching a "house"
+  account, and it's a single fixed bet size with no way to wager more or
+  less. **Requested and tracked, not started**: real wealth-tier
+  recognition (nothing currently distinguishes or reacts to
   a player being a "millionaire" or "billionaire" — `BankService` just
   stores an unbounded `long`); public parks as a distinct, purposeful
   location type; cigarettes and alcohol as sellable retail items (see
@@ -918,10 +943,11 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 ## Priority order for what's next
 
 1. Everything in the "missing" lists above — a civil/court system
-   distinct from the criminal trial slice 23 built is the next reasonable
-   pick now that sales/income/property tax all exist. Aviation/ATC and
-   the space program stay deliberately last, as the largest and least
-   incrementally verifiable pieces.
+   distinct from the criminal trial slice 23 built, or a second casino
+   game (roulette or blackjack) alongside slice 33's slot machine, are
+   both reasonable next picks. Aviation/ATC and the space program stay
+   deliberately last, as the largest and least incrementally verifiable
+   pieces.
 
 (Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
 Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
@@ -933,7 +959,8 @@ NPC — see Section 8 above. Slices 29/31 closed out sales, income, and
 property tax — see Section 7 above. Slice 30 closed out real
 home/workplace structures for `CitizenEntity` — see Section 2 above.
 Slice 32 closed out treasury visibility with a Government phone app —
-see Sections 3/7 above.)
+see Sections 3/7 above. Slice 33 started the casino with a real
+slot machine — see Section 6 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

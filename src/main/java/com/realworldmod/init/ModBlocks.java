@@ -29,6 +29,10 @@ public final class ModBlocks {
     public static final Block LICENSE_OFFICE = register("license_office",
             new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));
 
+    /** A real casino game with a real payout table — see {@code SlotMachineUseHandler}. */
+    public static final Block SLOT_MACHINE = register("slot_machine",
+            new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));
+
     private ModBlocks() {
     }
 

@@ -26,9 +26,11 @@ import java.util.Random;
  * again on every load would duplicate it.
  *
  * <p>The new citizen's home is set to its spawn position and its workplace
- * to a fixed offset from it — a stand-in until real house/workplace
- * structures exist for {@link CommuteGoal} to target instead (see
- * ROADMAP.md).
+ * to a fixed offset from it, and — as of slice 30 — {@link
+ * StructureBuilder} places a real small building at each coordinate so
+ * {@link CommuteGoal} has an actual structure to walk the citizen into,
+ * not a bare point in the world (see ROADMAP.md for what's still
+ * simplified about it).
  */
 public final class CitizenSpawnHandler {
     private static final List<String> NAME_POOL = List.of(
@@ -54,6 +56,7 @@ public final class CitizenSpawnHandler {
             }
 
             BlockPos spawnPos = hitResult.getBlockPos().up();
+            BlockPos workplacePos = spawnPos.add(WORKPLACE_OFFSET_BLOCKS, 0, 0);
             CitizenEntity citizen = new CitizenEntity(ModEntities.CITIZEN, world);
             citizen.refreshPositionAndAngles(
                     spawnPos.getX() + 0.5, spawnPos.getY(), spawnPos.getZ() + 0.5, player.getYaw(), 0.0f);
@@ -61,12 +64,15 @@ public final class CitizenSpawnHandler {
             String name = NAME_POOL.get(RANDOM.nextInt(NAME_POOL.size()));
             citizen.setCustomName(Text.literal(name));
             citizen.setCustomNameVisible(true);
-            ((ServerWorld) world).spawnEntity(citizen);
+            ServerWorld serverWorld = (ServerWorld) world;
+            serverWorld.spawnEntity(citizen);
+            StructureBuilder.buildHouse(serverWorld, spawnPos);
+            StructureBuilder.buildWorkplace(serverWorld, workplacePos);
 
             npcDatabase.upsert(new NpcProfile(citizen.getUuid(), name, "Unassigned", "Unassigned",
                     150_000L, 9, 17,
                     spawnPos.getX(), spawnPos.getY(), spawnPos.getZ(),
-                    spawnPos.getX() + WORKPLACE_OFFSET_BLOCKS, spawnPos.getY(), spawnPos.getZ(),
+                    workplacePos.getX(), workplacePos.getY(), workplacePos.getZ(),
                     DailyState.SLEEPING));
             return ActionResult.SUCCESS;
         });

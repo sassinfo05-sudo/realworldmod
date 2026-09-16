@@ -508,6 +508,26 @@ updated with every slice so neither side ever has to guess.
     non-tax portion of every purchase still vanishes into nothing rather
     than reaching a real payee.
 
+- **Slice 30 — real home/workplace structures for `CitizenEntity`**
+  (Section 2), closing the gap called out since slice 21:
+  - `StructureBuilder`: places a small rectangular room (walls, a
+    doorway gap, a flat roof) block-by-block at a given coordinate —
+    `buildHouse` for a citizen's home, `buildWorkplace` for a visually
+    distinct version with a `ModBlocks.CASH_REGISTER` fixture placed
+    inside it.
+  - `CitizenSpawnHandler` now calls both when spawning a citizen, so
+    `CommuteGoal` walks them into an actual building at each end of their
+    commute instead of a bare point in the world.
+  - **Known gaps**: every citizen's building is identical (one fixed
+    shape/size, no interior detail beyond the workplace's single fixture);
+    no terrain/water/overlap checking before placing blocks, so a
+    structure can spawn floating, submerged, or cutting through existing
+    claims or another citizen's building; not unit tested (like every
+    other world-block-placement handler in the mod, this needs a real
+    `ServerWorld` to run against, not something a plain JUnit test can
+    exercise); unverified without a running client whether the doorway
+    gap actually pathfinds correctly for `CommuteGoal`.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -606,12 +626,16 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   COMMUTING_TO_WORK/WORKING→workplace, LEISURE→no destination, falling
   back to the existing `WanderAroundGoal`), registered above wander but
   below swim so Minecraft's own goal-control arbitration hands off
-  navigation cleanly.
-- Missing: home/workplace coordinates are still just the spawn point and a
-  fixed 24-block offset (there are no real home/workplace *structures* to
-  path to yet, so a "WORKING" citizen walks to an empty point in the
-  world, not into an actual building); no fridge/breakfast/commute-by-vehicle
-  animation, no job-task
+  navigation cleanly. As of slice 30, `StructureBuilder` places a real
+  small building (walls, a doorway, a flat roof) at both the home and
+  workplace coordinate when a citizen spawns — the workplace's building
+  gets a `CASH_REGISTER` fixture inside it — so `CommuteGoal` actually
+  walks the citizen into a structure rather than to a bare point.
+- Missing: every citizen's building is identical (one fixed 5x5 room
+  shape, walls-and-roof only, no interior furniture/rooms/windows), placed
+  block-by-block with no check for terrain, water, or overlap with an
+  existing claim/structure/another citizen's building first; no
+  fridge/breakfast/commute-by-vehicle animation, no job-task
   mini-behaviors (cashiering, patrols, factory work), no evening leisure
   destinations, no branching dialogue tree (one fixed line per state), no
   NPC behavioral AI (mugging, reacting to red-light running, independent
@@ -843,13 +867,11 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 
 ## Priority order for what's next
 
-1. Everything in the "missing" lists above — real home/workplace
-   *structures* for `CitizenEntity` to path into (closing slice 21's own
-   known gap), a civil/court system distinct from the criminal trial
-   slice 23 built, and property/income tax alongside slice 29's sales tax
-   are all reasonable next picks. Aviation/ATC and the space program stay
-   deliberately last, as the largest and least incrementally verifiable
-   pieces.
+1. Everything in the "missing" lists above — a civil/court system
+   distinct from the criminal trial slice 23 built, and property/income
+   tax alongside slice 29's sales tax, are reasonable next picks.
+   Aviation/ATC and the space program stay deliberately last, as the
+   largest and least incrementally verifiable pieces.
 
 (Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
 Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
@@ -858,7 +880,8 @@ Section 7 above. Slices 24/26/27 closed out the block-placeholder
 rendering backlog across every entity, and slice 25 added LabPBR maps for
 every texture — see Section 1 above. Slice 28 closed out the game-warden
 NPC — see Section 8 above. Slice 29 started municipal sales tax — see
-Section 7 above.)
+Section 7 above. Slice 30 closed out real home/workplace structures for
+`CitizenEntity` — see Section 2 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

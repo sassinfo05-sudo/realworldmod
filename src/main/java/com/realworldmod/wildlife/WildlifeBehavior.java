@@ -15,6 +15,8 @@ public final class WildlifeBehavior {
     public static final double FLEE_TRIGGER_DISTANCE_SQUARED = 10.0 * 10.0;
     public static final double HERD_RANGE_SQUARED = 16.0 * 16.0;
     public static final double HERD_TOO_CLOSE_SQUARED = 3.0 * 3.0;
+    public static final double HUNT_TRIGGER_DISTANCE_SQUARED = 14.0 * 14.0;
+    public static final double ATTACK_RANGE_SQUARED = 2.0 * 2.0;
 
     private WildlifeBehavior() {
     }
@@ -22,6 +24,16 @@ public final class WildlifeBehavior {
     /** Real wildlife flees on proximity alone, unlike vanilla passive animals which only flee once hit. */
     public static boolean shouldFlee(double distanceToPlayerSquared) {
         return distanceToPlayerSquared <= FLEE_TRIGGER_DISTANCE_SQUARED;
+    }
+
+    /** A predator starts stalking prey once it's within this range — wider than an attack, so it has to close the gap. */
+    public static boolean shouldHunt(double distanceToPreySquared) {
+        return distanceToPreySquared <= HUNT_TRIGGER_DISTANCE_SQUARED;
+    }
+
+    /** True once a hunting predator has actually closed to striking range. */
+    public static boolean canAttack(double distanceToPreySquared) {
+        return distanceToPreySquared <= ATTACK_RANGE_SQUARED;
     }
 
     /** True once a herd-mate is close enough that closing further would just cause crowding. */

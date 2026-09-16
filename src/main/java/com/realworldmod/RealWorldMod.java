@@ -57,6 +57,7 @@ import com.realworldmod.vice.CigaretteUseHandler;
 import com.realworldmod.vice.IntoxicationService;
 import com.realworldmod.vice.LiquorStoreUseHandler;
 import com.realworldmod.vice.NicotineService;
+import com.realworldmod.wildlife.CoyoteSpawnHandler;
 import com.realworldmod.wildlife.DeerSpawnHandler;
 import com.realworldmod.wildlife.GameWardenService;
 import com.realworldmod.wildlife.GameWardenSpawnHandler;
@@ -156,6 +157,7 @@ public final class RealWorldMod implements ModInitializer {
         CarSpawnHandler.register();
         CitizenSpawnHandler.register();
         DeerSpawnHandler.register();
+        CoyoteSpawnHandler.register();
         PoliceSpawnHandler.register();
         GameWardenSpawnHandler.register();
 

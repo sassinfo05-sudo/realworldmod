@@ -820,6 +820,37 @@ updated with every slice so neither side ever has to guess.
     murder is recorded the instant it happens with no possibility of
     getting away with it unseen.
 
+- **Slice 42 — predator AI: `CoyoteEntity` hunts `DeerEntity`** (Section
+  8), closing "no predator AI at all — only prey flee/herd behavior
+  exists, nothing stalks or hunts anything":
+  - `WildlifeBehavior` gains `shouldHunt`/`canAttack`, the same
+    pure-distance-threshold shape `shouldFlee`/`isCloseEnoughToHerd`
+    already use, so the new AI's trigger ranges are unit tested without a
+    running world just like the existing ones.
+  - `HuntDeerGoal`: finds the nearest live `DeerEntity` within range via
+    `World.getEntitiesByClass`, chases it, and deals real damage on
+    contact (on its own attack cooldown, not once per tick) — a hunt that
+    can actually kill the deer, the same shape `ChasePoacherGoal` uses for
+    chase-then-act, but against another mob instead of a player.
+  - `FleeFromPredatorGoal`: the other half of a real predator/prey
+    relationship — `DeerEntity` now flees a nearby `CoyoteEntity` too, at
+    a higher goal priority than fleeing a player, reusing the same
+    `shouldFlee` threshold.
+  - `CoyoteEntityRenderer` reuses the existing `DeerEntityModel` quadruped
+    rig (a similarly-shaped four-legged animal) with its own texture,
+    rather than hand-building a second near-identical `ModelPart`
+    hierarchy — the same model-reuse pattern `GameWardenEntityRenderer`
+    already established for `HumanoidEntityModel`. The antler-cuboid UV
+    region is painted fully transparent in the coyote's texture so the
+    borrowed geometry doesn't visibly give a coyote antlers.
+  - Unit tested: 5 new `WildlifeBehaviorTest` cases for `shouldHunt`/
+    `canAttack` at, above, and below their thresholds. `HuntDeerGoal`/
+    `FleeFromPredatorGoal` themselves are untested like every other
+    `Goal` in this package, needing a running Minecraft world.
+  - **Known gaps**: see the updated Section 8 status above — one
+    predator/prey pair, no pack coordination, no drops or population
+    consequence from a kill, item-spawned only.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1214,14 +1245,29 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   no way to represent "wanted specifically for poaching"), and
   `ChasePoacherGoal` makes any nearby warden pursue and apprehend a
   flagged player — a real fine on contact, or, if evaded for the whole
-  window, no consequence beyond the original fine at the kill itself.
+  window, no consequence beyond the original fine at the kill itself. As
+  of slice 42, wildlife finally has a real predator too: `CoyoteEntity`'s
+  `HuntDeerGoal` finds the nearest live `DeerEntity` within range, chases
+  it, and deals real damage on contact that can actually kill it — the
+  first thing in the mod that stalks or hunts anything, rather than only
+  ever fleeing or herding. `DeerEntity` reacts in kind: `FleeFromPredatorGoal`
+  makes it flee a nearby coyote the same way it already flees a nearby
+  player, at a higher goal priority since a predator is more urgent than
+  a person. `CoyoteEntity` reuses the existing `DeerEntityModel` quadruped
+  rig for rendering (with its own texture, and the antler cuboids painted
+  fully transparent so a coyote doesn't visibly have antlers) rather than
+  hand-building a second near-identical model — the same model-reuse
+  `GameWardenEntityRenderer` already established.
 - Missing: no biome-specific mechanics at all (no multi-layer canopy/leaf
   decay/wildfires in forests, no machete-gated jungle thickets/equipment
   rust/malaria, no desert sand-dune physics/heatstroke/mirage/flash
-  floods); no predator AI (only prey flee/herd behavior exists, nothing
-  stalks or hunts anything); no migration (herding is proximity-only, not
-  a seasonal or territorial routine); deer/wardens only spawn via items
-  (`DEER_SPAWNER`/`GAME_WARDEN_SPAWNER`), not natural biome-based
+  floods); the predator AI slice 42 added is a single coyote-vs-deer
+  relationship — no other predator/prey pairs, no pack-hunting
+  coordination between multiple coyotes, and a killed deer simply dies
+  with no meat/hide drop or population-count consequence; no migration
+  (herding is proximity-only, not a seasonal or territorial routine);
+  deer/wardens/coyotes only spawn via items (`DEER_SPAWNER`/
+  `GAME_WARDEN_SPAWNER`/`COYOTE_SPAWNER`), not natural biome-based
   spawning or real ranger-station structures; `GameWardenEntity` only
   patrols/chases — no radio calls for backup, no vehicle patrols, no
   poaching investigation beyond the instant the kill happens; no
@@ -1255,11 +1301,10 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    from slice 38 more variety (a second drink/cigarette tier, a
    hangover effect), continuing to round out automotive now that
    slice 39 added fuel visibility (a speed HUD, a second vehicle type),
-   or diversifying into a section that hasn't had a slice in a while
-   (biomes/wildlife's missing predator AI, or a second casino table) are
-   all reasonable next picks. Aviation/ATC and the space program stay
-   deliberately last, as the largest and least incrementally verifiable
-   pieces.
+   or expanding the predator system slice 42 started (a second
+   predator/prey pair, pack hunting) are all reasonable next picks.
+   Aviation/ATC and the space program stay deliberately last, as the
+   largest and least incrementally verifiable pieces.
 
 (Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
 Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
@@ -1280,7 +1325,8 @@ consumable items — see Sections 5/6 above. Slice 39 closed out fuel
 visibility and refueling for `CarEntity` — see Section 4 above. Slice 40
 closed out assault as a tracked crime type and added a real knife
 weapon — see Section 7 above. Slice 41 closed out a separate, harsher
-murder crime tier — see Section 7 above.)
+murder crime tier — see Section 7 above. Slice 42 closed out predator AI
+with `CoyoteEntity` hunting `DeerEntity` — see Section 8 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

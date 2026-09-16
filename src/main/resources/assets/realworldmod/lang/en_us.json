@@ -29,6 +29,8 @@
   "message.realworldmod.acquitted": "The court found insufficient evidence. You've been acquitted.",
   "item.realworldmod.game_warden_spawner": "Game Warden Spawner",
   "entity.realworldmod.game_warden": "Game Warden",
+  "item.realworldmod.coyote_spawner": "Coyote Spawner",
+  "entity.realworldmod.coyote": "Coyote",
   "message.realworldmod.warden_fine_issued": "A game warden caught you poaching and fined you %s.",
   "message.realworldmod.warden_caught": "A game warden caught you poaching, but you couldn't pay the fine.",
   "message.realworldmod.wage_paid": "You earned %s for your shift.",

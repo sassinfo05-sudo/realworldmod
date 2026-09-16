@@ -27,6 +27,32 @@ class WildlifeBehaviorTest {
     }
 
     @Test
+    void doesNotHuntWhenPreyIsFarAway() {
+        assertFalse(WildlifeBehavior.shouldHunt(20.0 * 20.0));
+    }
+
+    @Test
+    void huntsWhenPreyIsWithinTriggerDistance() {
+        assertTrue(WildlifeBehavior.shouldHunt(8.0 * 8.0));
+    }
+
+    @Test
+    void huntsExactlyAtTheTriggerDistance() {
+        assertTrue(WildlifeBehavior.shouldHunt(WildlifeBehavior.HUNT_TRIGGER_DISTANCE_SQUARED));
+    }
+
+    @Test
+    void cannotAttackBeyondAttackRange() {
+        assertFalse(WildlifeBehavior.canAttack(5.0 * 5.0));
+    }
+
+    @Test
+    void canAttackWithinAttackRange() {
+        assertTrue(WildlifeBehavior.canAttack(1.0));
+        assertTrue(WildlifeBehavior.canAttack(WildlifeBehavior.ATTACK_RANGE_SQUARED));
+    }
+
+    @Test
     void isCloseEnoughToHerdWithinRange() {
         assertTrue(WildlifeBehavior.isCloseEnoughToHerd(1.0));
         assertFalse(WildlifeBehavior.isCloseEnoughToHerd(10.0 * 10.0));

@@ -4,6 +4,7 @@ import com.realworldmod.RealWorldMod;
 import com.realworldmod.crime.PoliceEntity;
 import com.realworldmod.npc.CitizenEntity;
 import com.realworldmod.vehicle.CarEntity;
+import com.realworldmod.wildlife.CoyoteEntity;
 import com.realworldmod.wildlife.DeerEntity;
 import com.realworldmod.wildlife.GameWardenEntity;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
@@ -49,6 +50,13 @@ public final class ModEntities {
                     .dimensions(0.6f, 1.8f)
                     .build("game_warden"));
 
+    public static final EntityType<CoyoteEntity> COYOTE = Registry.register(
+            Registries.ENTITY_TYPE,
+            Identifier.of(RealWorldMod.MOD_ID, "coyote"),
+            EntityType.Builder.<CoyoteEntity>create(CoyoteEntity::new, SpawnGroup.CREATURE)
+                    .dimensions(0.6f, 0.85f)
+                    .build("coyote"));
+
     private ModEntities() {
     }
 
@@ -57,5 +65,6 @@ public final class ModEntities {
         FabricDefaultAttributeRegistry.register(DEER, DeerEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(POLICE, PoliceEntity.createAttributes());
         FabricDefaultAttributeRegistry.register(GAME_WARDEN, GameWardenEntity.createAttributes());
+        FabricDefaultAttributeRegistry.register(COYOTE, CoyoteEntity.createAttributes());
     }
 }

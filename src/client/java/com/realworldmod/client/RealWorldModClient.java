@@ -10,6 +10,7 @@ import com.realworldmod.client.utilities.ClientUtilityState;
 import com.realworldmod.client.crime.PoliceEntityRenderer;
 import com.realworldmod.client.npc.CitizenEntityRenderer;
 import com.realworldmod.client.vehicle.CarEntityRenderer;
+import com.realworldmod.client.wildlife.CoyoteEntityRenderer;
 import com.realworldmod.client.wildlife.DeerEntityRenderer;
 import com.realworldmod.client.wildlife.GameWardenEntityRenderer;
 import com.realworldmod.commerce.net.BlackjackStateResponsePayload;
@@ -58,6 +59,7 @@ public final class RealWorldModClient implements ClientModInitializer {
         EntityRendererRegistry.register(ModEntities.DEER, DeerEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.POLICE, PoliceEntityRenderer::new);
         EntityRendererRegistry.register(ModEntities.GAME_WARDEN, GameWardenEntityRenderer::new);
+        EntityRendererRegistry.register(ModEntities.COYOTE, CoyoteEntityRenderer::new);
 
         UseItemCallback.EVENT.register((player, world, hand) -> {
             if (!world.isClient || hand != Hand.MAIN_HAND) {

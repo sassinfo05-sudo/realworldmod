@@ -53,6 +53,10 @@ public final class ModBlocks {
     public static final Block LIQUOR_STORE = register("liquor_store",
             new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));
 
+    /** Refuels the rider's parked car for real money — see {@code vehicle.GasPumpUseHandler}. */
+    public static final Block GAS_PUMP = register("gas_pump",
+            new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));
+
     private ModBlocks() {
     }
 

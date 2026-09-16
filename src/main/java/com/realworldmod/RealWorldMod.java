@@ -49,6 +49,7 @@ import com.realworldmod.utilities.UtilityAccess;
 import com.realworldmod.utilities.UtilityService;
 import com.realworldmod.utilities.net.UtilityNetworking;
 import com.realworldmod.vehicle.CarSpawnHandler;
+import com.realworldmod.vehicle.GasPumpUseHandler;
 import com.realworldmod.vice.AlcoholUseHandler;
 import com.realworldmod.vice.CigaretteUseHandler;
 import com.realworldmod.vice.IntoxicationService;
@@ -145,6 +146,7 @@ public final class RealWorldMod implements ModInitializer {
         new LiquorStoreUseHandler(bankService).register();
         new AlcoholUseHandler(intoxicationService).register();
         new CigaretteUseHandler(nicotineService).register();
+        new GasPumpUseHandler(bankService).register();
         PoachingAccess.set(gameWardenService);
         new PoachingHandler(lawEnforcementService, huntingLicenseService, gameWardenService).register();
         CarSpawnHandler.register();

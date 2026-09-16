@@ -739,6 +739,34 @@ updated with every slice so neither side ever has to guess.
     the same status effects, and NPCs never drink or smoke — see the
     updated Section 5 status above; unverified without a running client.
 
+- **Slice 39 — gas station refueling and a fuel gauge readout for
+  `CarEntity`** (Section 4): `VehiclePhysics` has simulated fuel
+  consumption since slice 19, but nothing let a player see or refill it —
+  once empty, a car was permanently stranded.
+  - `FuelPricing`: a pure liters-to-cost calculator, the same
+    calculator-plus-handler split every paid interaction in the mod
+    already uses.
+  - `CarEntity.refuel`: adds fuel capped at the tank's capacity
+    (`MAX_FUEL_LITERS`, now public so `GasPumpUseHandler` can reference
+    it); sneak-right-clicking your own car now reports its exact fuel
+    level as a chat message instead of it being invisible.
+  - `GasPumpUseHandler` + `ModBlocks.GAS_PUMP`: right-click while riding a
+    car refuels it, following the same withdraw-or-refuse pattern
+    `PharmacyUseHandler` established — except a player who can't afford a
+    full tank gets however much fuel their balance actually covers
+    instead of the interaction just failing, the same way a real gas
+    pump sells a partial tank.
+  - Unit tested: `FuelPricing`'s cost/budget conversions in both
+    directions, rounding, and the zero-liters edge case. `CarEntity`
+    itself remains untested like the rest of the class, per its own
+    documented caveat — it needs a running Minecraft entity/world to
+    exercise.
+  - **Known gaps**: the fuel gauge is a request-response chat message,
+    not a persistent HUD bar; one fixed fuel price with no per-station
+    variation; no "out of gas, stranded on the highway" narrative beyond
+    the vehicle simply refusing to accelerate; see the updated Section 4
+    status above for the rest of what a real automotive system needs.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -901,9 +929,15 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 
 **Section 4 — Automotive, Aviation & Global Transit**
 - Done: `VehiclePhysics` (pure drivetrain simulation) wired into a real,
-  spawnable, rideable `CarEntity` with a placeholder visual — see slice
-  19. One vehicle type exists; its feel/visuals are unverified without a
-  running client (see slice 19's own caveat above).
+  spawnable, rideable `CarEntity`, since slice 27 with a real hand-built
+  model (`CarEntityModel`) and synced wheel rotation rather than a
+  placeholder box. One vehicle type exists; its feel/visuals are
+  unverified without a running client (see slice 19's own caveat above).
+  As of slice 39, its fuel is no longer invisible or a dead end once
+  empty: sneak-right-clicking your car reads out its exact fuel level,
+  and a `GAS_PUMP` retail block refuels it for real money — a partial
+  refill, not a failed interaction, if the player can't afford a full
+  tank.
 - Missing: the other 299+ vehicle types (including, specifically
   requested: motorcycles, bicycles, e-bikes, skateboards, rollerblades,
   boats and kayaks, cargo ships, cargo/military planes, military ships,
@@ -911,8 +945,9 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   body-damage repair, garage capacity limits, any aviation at all
   (airports, ticketing, TSA, boarding, airliners), ATC job/radar
   minigame, subways/bullet trains/transit cards/timetables. The one
-  vehicle that exists also has no fuel gauge/speed HUD, no suspension/
-  tire-friction modeling, and no collision damage. **Requested and
+  vehicle that exists still has no speed HUD, no suspension/tire-friction
+  modeling, no collision damage, and the fuel gauge is a chat message on
+  request rather than a persistent HUD element. **Requested and
   tracked, not started**: any AI-controlled traffic at all — no other
   cars/planes/helicopters share the roads or sky with the player; no
   speed-check/radar-gun mechanic, no bumper/collision-damage system
@@ -1147,9 +1182,9 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    system slice 37 started (a second drug/lab type, rival dealer NPCs,
    or scaling catch chance by wanted level), giving alcohol/cigarettes
    from slice 38 more variety (a second drink/cigarette tier, a
-   hangover effect), or diversifying into a section that hasn't had a
-   slice in a while (automotive/aviation short of full ATC) are all
-   reasonable next picks. Aviation/ATC and the space program stay
+   hangover effect), or continuing to round out automotive now that
+   slice 39 added fuel visibility (a speed HUD, a second vehicle type)
+   are all reasonable next picks. Aviation/ATC and the space program stay
    deliberately last, as the largest and least incrementally verifiable
    pieces.
 
@@ -1168,7 +1203,8 @@ real tables (slots, roulette, blackjack) — see Section 6 above. Slice 36
 closed out a real civil small-claims court — see Section 7 above. Slice
 37 started the previously entirely-unbuilt underworld/narcotics system —
 see Section 7 above. Slice 38 closed out alcohol/cigarettes as real
-consumable items — see Sections 5/6 above.)
+consumable items — see Sections 5/6 above. Slice 39 closed out fuel
+visibility and refueling for `CarEntity` — see Section 4 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

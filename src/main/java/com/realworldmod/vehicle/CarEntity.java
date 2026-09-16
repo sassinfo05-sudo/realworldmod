@@ -9,6 +9,7 @@ import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
@@ -26,7 +27,9 @@ import net.minecraft.world.World;
  * client.
  */
 public class CarEntity extends Entity {
-    private static final double STARTING_FUEL_LITERS = 100.0;
+    /** Also the tank capacity — a car spawns with a full tank, see {@link #refuel}. */
+    public static final double MAX_FUEL_LITERS = 100.0;
+    private static final double STARTING_FUEL_LITERS = MAX_FUEL_LITERS;
     private static final float TURN_DEGREES_PER_TICK = 3.0f;
     private static final double GRAVITY_PER_TICK = 0.04;
     private static final double WHEEL_RADIUS_BLOCKS = 0.3;
@@ -42,6 +45,12 @@ public class CarEntity extends Entity {
 
     public VehicleState vehicleState() {
         return vehicleState;
+    }
+
+    /** Adds fuel, capped at {@link #MAX_FUEL_LITERS} — see {@code vehicle.GasPumpUseHandler}. */
+    public void refuel(double liters) {
+        double newFuel = Math.min(MAX_FUEL_LITERS, vehicleState.fuelLiters() + liters);
+        vehicleState = new VehicleState(vehicleState.speedBlocksPerTick(), newFuel);
     }
 
     /** Accumulated wheel-spin angle in radians, synced to the client for {@code CarEntityRenderer}. */
@@ -69,7 +78,15 @@ public class CarEntity extends Entity {
 
     @Override
     public ActionResult interact(PlayerEntity player, Hand hand) {
-        if (!this.getWorld().isClient && this.getPassengerList().isEmpty()) {
+        if (this.getWorld().isClient || hand != Hand.MAIN_HAND) {
+            return ActionResult.PASS;
+        }
+        if (player.isSneaking()) {
+            player.sendMessage(Text.translatable("message.realworldmod.car_fuel_gauge",
+                    String.format("%.1f", vehicleState.fuelLiters()), String.format("%.1f", MAX_FUEL_LITERS)), true);
+            return ActionResult.SUCCESS;
+        }
+        if (this.getPassengerList().isEmpty()) {
             return player.startRiding(this) ? ActionResult.SUCCESS : ActionResult.PASS;
         }
         return ActionResult.PASS;

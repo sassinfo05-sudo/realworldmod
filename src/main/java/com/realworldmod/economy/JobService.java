@@ -9,10 +9,13 @@ import java.util.UUID;
  * working a shift at a job site pays a flat wage, gated by a cooldown so it
  * can't be spammed. One cooldown per player regardless of which job site
  * they use — good enough for this slice; per-workplace shifts tied to
- * {@code NpcProfile}-style jobs are a later refinement.
+ * {@code NpcProfile}-style jobs are a later refinement. As of slice 31,
+ * each shift withholds {@link IncomeTax} into the government treasury,
+ * so the player actually takes home {@link #NET_WAGE_CENTS}.
  */
 public final class JobService {
     public static final long WAGE_CENTS = 500;
+    public static final long NET_WAGE_CENTS = WAGE_CENTS - IncomeTax.taxCents(WAGE_CENTS);
     public static final long COOLDOWN_TICKS = 200;
 
     private final BankService bankService;
@@ -22,13 +25,15 @@ public final class JobService {
         this.bankService = bankService;
     }
 
-    /** Pays the wage and starts a new cooldown if the player isn't still on one; returns whether it paid out. */
+    /** Pays the after-tax wage and starts a new cooldown if the player isn't still on one; returns whether it paid out. */
     public boolean tryWorkShift(UUID playerId, long currentTick) {
         if (ticksRemaining(playerId, currentTick) > 0) {
             return false;
         }
         lastShiftTick.put(playerId, currentTick);
-        bankService.deposit(playerId, WAGE_CENTS);
+        long tax = IncomeTax.taxCents(WAGE_CENTS);
+        bankService.deposit(playerId, WAGE_CENTS - tax);
+        bankService.depositToTreasury(tax);
         return true;
     }
 

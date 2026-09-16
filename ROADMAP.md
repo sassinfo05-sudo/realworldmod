@@ -528,6 +528,30 @@ updated with every slice so neither side ever has to guess.
     exercise); unverified without a running client whether the doorway
     gap actually pathfinds correctly for `CommuteGoal`.
 
+- **Slice 31 — property and income tax alongside sales tax** (Section 7),
+  finishing the three-tax-type set slice 29 started:
+  - `economy.IncomeTax`: a pure, unit-tested flat 5% rate calculator,
+    withheld from every `JobService.tryWorkShift` payout before it
+    reaches the player and remitted to the treasury —
+    `JobService.NET_WAGE_CENTS` is what a player actually takes home now,
+    and `JobServiceTest`/`JobUseHandler`'s wage message were both updated
+    to reflect it instead of the pre-tax gross.
+  - `property.PropertyTaxService`: a periodic (once-per-in-game-day) tax
+    on every land claim, proportional to its area
+    (`RATE_CENTS_PER_BLOCK`), following the same tick-bucket pattern
+    `CrimeService`/`NpcScheduleManager` already use; an owner who can't
+    afford it is skipped that cycle rather than the withdrawal failing
+    loudly.
+  - `BankService.depositToTreasury(long)`: a small refactor extracting
+    the "deposit an already-computed tax amount" step `remitSalesTax` did
+    inline, so `PropertyTaxService`/`JobService` (which compute their own
+    tax amounts rather than a percentage-of-price like sales tax) can
+    reuse it directly.
+  - **Known gaps**: see the updated Section 7 status above — still one
+    flat rate everywhere for all three tax types, no forfeiture/seizure
+    for unpaid property tax, and the treasury balance still isn't exposed
+    anywhere a player can see it.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -777,17 +801,24 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   (`economy.SalesTax`) into a reserved government treasury account
   (`BankService.TREASURY_ACCOUNT_ID`) instead of the entire price simply
   vanishing — a first, deliberately narrow step into "municipal tax," not
-  the full per-city system described below.
+  the full per-city system described below. As of slice 31, that treasury
+  also collects `IncomeTax` (a flat 5% withheld from every `JobService`
+  wage before it reaches the player) and `PropertyTaxService` (a periodic,
+  once-per-in-game-day charge on every land claim proportional to its
+  area) — all three tax types now feed the same account.
 - Missing: `PoliceEntity` only patrols/chases — no tactical cover, spike
   strips, pit maneuvers, backup calls, or squad coordination; deer/police
   spawn only via items (`POLICE_SPAWNER`), not real police-station
   structures or patrol routes; the trial's verdict logic is a single
   wanted-level check, not an actual evidence/witness/judge simulation
   (there is no judge NPC, no courtroom, no defense); no *per-city*
-  tax-rate system — slice 29's sales tax is one flat rate charged
-  everywhere, since there are no city boundaries anywhere in the world
-  yet for a rate to vary by, and it only covers the existing sales-style
-  purchases, not property or income tax; no real prison — no cell block, no yard, no
+  tax-rate system — sales/income/property tax are all one flat rate
+  charged everywhere, since there are no city boundaries anywhere in the
+  world yet for a rate to vary by; an owner who can't afford property tax
+  is simply skipped that cycle, with no forfeiture/seizure/lien
+  consequence; the treasury balance isn't exposed anywhere yet (no phone
+  app, no admin/government UI) — three tax types now feed it and nothing
+  reads any of it back; no real prison — no cell block, no yard, no
   prison jobs, no faction/contraband/breakout mechanics; no civil courts
   (no lease/partnership contracts, no suing NPCs, no judge UI, no search
   warrants); no underworld/narcotics system (no dark web purchases, no
@@ -868,10 +899,10 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 ## Priority order for what's next
 
 1. Everything in the "missing" lists above — a civil/court system
-   distinct from the criminal trial slice 23 built, and property/income
-   tax alongside slice 29's sales tax, are reasonable next picks.
-   Aviation/ATC and the space program stay deliberately last, as the
-   largest and least incrementally verifiable pieces.
+   distinct from the criminal trial slice 23 built is the next reasonable
+   pick now that sales/income/property tax all exist. Aviation/ATC and
+   the space program stay deliberately last, as the largest and least
+   incrementally verifiable pieces.
 
 (Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
 Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
@@ -879,9 +910,9 @@ above. Slice 23 closed out police NPCs and a real court/trial step — see
 Section 7 above. Slices 24/26/27 closed out the block-placeholder
 rendering backlog across every entity, and slice 25 added LabPBR maps for
 every texture — see Section 1 above. Slice 28 closed out the game-warden
-NPC — see Section 8 above. Slice 29 started municipal sales tax — see
-Section 7 above. Slice 30 closed out real home/workplace structures for
-`CitizenEntity` — see Section 2 above.)
+NPC — see Section 8 above. Slices 29/31 closed out sales, income, and
+property tax — see Section 7 above. Slice 30 closed out real
+home/workplace structures for `CitizenEntity` — see Section 2 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

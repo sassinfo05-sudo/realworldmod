@@ -61,7 +61,12 @@ public final class BankService {
 
     /** Deposits the municipal sales-tax cut of a completed purchase into the government treasury account. */
     public void remitSalesTax(long priceCents) {
-        deposit(TREASURY_ACCOUNT_ID, SalesTax.taxCents(priceCents));
+        depositToTreasury(SalesTax.taxCents(priceCents));
+    }
+
+    /** Deposits an already-computed tax amount (property, income, ...) into the government treasury account. */
+    public void depositToTreasury(long amountCents) {
+        deposit(TREASURY_ACCOUNT_ID, amountCents);
     }
 
     private void setBalance(UUID ownerId, long balanceCents) {

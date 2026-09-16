@@ -28,7 +28,7 @@ public final class JobUseHandler {
             long currentTick = world.getTime();
             if (jobService.tryWorkShift(player.getUuid(), currentTick)) {
                 player.sendMessage(Text.translatable("message.realworldmod.wage_paid",
-                        CurrencyFormatter.format(JobService.WAGE_CENTS)), true);
+                        CurrencyFormatter.format(JobService.NET_WAGE_CENTS)), true);
                 return ActionResult.SUCCESS;
             }
 

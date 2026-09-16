@@ -35,6 +35,7 @@ import com.realworldmod.property.DeedUseHandler;
 import com.realworldmod.property.PropertyAccess;
 import com.realworldmod.property.PropertyProtection;
 import com.realworldmod.property.PropertyService;
+import com.realworldmod.property.PropertyTaxService;
 import com.realworldmod.utilities.UtilityAccess;
 import com.realworldmod.utilities.UtilityService;
 import com.realworldmod.utilities.net.UtilityNetworking;
@@ -83,6 +84,8 @@ public final class RealWorldMod implements ModInitializer {
     private final IllnessService illnessService = new IllnessService();
     private final HuntingLicenseService huntingLicenseService = new HuntingLicenseService();
     private final GameWardenService gameWardenService = new GameWardenService(bankService);
+    private final PropertyTaxService propertyTaxService =
+            new PropertyTaxService(propertyService.registry(), bankService);
 
     @Override
     public void onInitialize() {
@@ -150,6 +153,7 @@ public final class RealWorldMod implements ModInitializer {
                 scheduleManager.tick(dayTime);
             }
             crimeService.tick(server.getOverworld().getTime());
+            propertyTaxService.tick(server.getOverworld().getTime());
 
             List<ServerPlayerEntity> onlinePlayers = server.getPlayerManager().getPlayerList();
             List<UUID> disconnected = utilityService.tick(

@@ -32,7 +32,7 @@ class JobServiceTest {
     void firstShiftAlwaysPaysOut() {
         UUID player = UUID.randomUUID();
         assertTrue(jobService.tryWorkShift(player, 0));
-        assertEquals(JobService.WAGE_CENTS, bankService.getBalance(player));
+        assertEquals(JobService.NET_WAGE_CENTS, bankService.getBalance(player));
     }
 
     @Test
@@ -41,7 +41,7 @@ class JobServiceTest {
         jobService.tryWorkShift(player, 0);
 
         assertFalse(jobService.tryWorkShift(player, 10));
-        assertEquals(JobService.WAGE_CENTS, bankService.getBalance(player));
+        assertEquals(JobService.NET_WAGE_CENTS, bankService.getBalance(player));
     }
 
     @Test
@@ -50,7 +50,16 @@ class JobServiceTest {
         jobService.tryWorkShift(player, 0);
 
         assertTrue(jobService.tryWorkShift(player, JobService.COOLDOWN_TICKS));
-        assertEquals(JobService.WAGE_CENTS * 2, bankService.getBalance(player));
+        assertEquals(JobService.NET_WAGE_CENTS * 2, bankService.getBalance(player));
+    }
+
+    @Test
+    void eachShiftWithholdsIncomeTaxIntoTheTreasury() {
+        UUID player = UUID.randomUUID();
+        jobService.tryWorkShift(player, 0);
+
+        assertEquals(IncomeTax.taxCents(JobService.WAGE_CENTS),
+                bankService.getBalance(BankService.TREASURY_ACCOUNT_ID));
     }
 
     @Test

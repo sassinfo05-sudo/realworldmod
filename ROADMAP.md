@@ -952,6 +952,32 @@ updated with every slice so neither side ever has to guess.
     dedicated message for it, just an unchanged screen) rather than being
     auto-folded; unverified without a running client.
 
+- **Slice 46 — NPCs are no longer exempt from the illness system**
+  (Sections 2 and 5), the first crack in a gap repeated in this file
+  since slice 22: "NPCs are entirely exempt from every other system this
+  session built."
+  - `WeatherIllnessEffect.checkEntity`: the existing player-only `check`
+    method is split into a shared `applyIfSick` helper plus two thin
+    wrappers — `check` (players, sends a chat message) and `checkEntity`
+    (any `LivingEntity`, no message since NPCs have no chat to read) —
+    rather than duplicating the rain-exposure-and-consequence logic for
+    NPCs in a parallel class.
+  - `RealWorldMod`'s server tick loop now walks every entity in the
+    overworld via `ServerWorld.iterateEntities()`, and for each
+    `CitizenEntity` found, runs `checkEntity` against the *same*
+    `IllnessService` instance players already use — one shared illness
+    system with two kinds of victims, not a second NPC-specific one.
+  - No new unit tests: `IllnessServiceTest`/`IllnessRiskTest` already
+    exhaustively cover the `IllnessService.tick` logic this reuses
+    unchanged; only the entity-iteration wiring is new, and like every
+    other tick-loop integration in the mod it needs a running Minecraft
+    world to exercise (299 tests total, unchanged, all still passing).
+  - **Known gaps**: see the updated Section 2/5 status above — NPCs can
+    now get sick but still can't earn, get hurt from a fall, get assaulted
+    as a distinct offense, or be arrested; a sick citizen has no way to
+    recover early since it can't buy medicine, so its illness only ever
+    resolves by the effect's duration expiring.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1054,7 +1080,14 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   small building (walls, a doorway, a flat roof) at both the home and
   workplace coordinate when a citizen spawns — the workplace's building
   gets a `CASH_REGISTER` fixture inside it — so `CommuteGoal` actually
-  walks the citizen into a structure rather than to a bare point.
+  walks the citizen into a structure rather than to a bare point. As of
+  slice 46, NPCs are no longer categorically exempt from every other
+  system: `WeatherIllnessEffect.checkEntity` runs the same rain-exposure
+  check and Nausea/Weakness consequence against every live `CitizenEntity`
+  each tick, through the exact same `IllnessService` instance players
+  already share — a citizen caught out in the rain gets sick exactly like
+  a player does, the first crack in "only players can earn, get sick, get
+  hurt, or get arrested."
 - Missing: every citizen's building is identical (one fixed 5x5 room
   shape, walls-and-roof only, no interior furniture/rooms/windows), placed
   block-by-block with no check for terrain, water, or overlap with an
@@ -1063,9 +1096,10 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   mini-behaviors (cashiering, patrols, factory work), no evening leisure
   destinations, no branching dialogue tree (one fixed line per state), no
   NPC behavioral AI (mugging, reacting to red-light running, independent
-  crime, police chases) — and NPCs are entirely exempt from every other
-  system this session built (economy, medical, crime): only players can
-  earn, get sick, get hurt, or get arrested. True GOAP (goal-oriented
+  crime, police chases); NPCs can now get sick but still can't earn, get
+  hurt, or get arrested — fall damage, assault, medicine, bank accounts,
+  and wanted levels are all still player-only, and a sick citizen has no
+  way to recover early since it can't buy medicine. True GOAP (goal-oriented
   action planning, i.e. dynamic plan search over actions) was never
   implemented — the FSM is a simpler deterministic rule tree, called out
   as such in the code's own Javadoc from slice 1 onward. **Requested and
@@ -1153,7 +1187,11 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   a row (`vice.NicotineService`) triggers the same lasting Nausea+
   Weakness illness the rain-exposure system already applies — a real,
   escalating health cost for repeated use rather than a purely cosmetic
-  item.
+  item. As of slice 46, the rain-exposure illness is no longer
+  player-exclusive: `WeatherIllnessEffect.checkEntity` applies the exact
+  same check and consequence to every `CitizenEntity` too, sharing the
+  same `IllnessService` state players use — not a parallel NPC-specific
+  system.
 - Missing: this is a *health-bar replacement disguised as a status
   effect*, not a real localized zone model — there's no per-body-part
   (head/torso/arms/legs) data structure, no bone-fracture-requiring-cast
@@ -1176,8 +1214,9 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   place. (Alcohol/cigarettes themselves are no longer on this list — see
   slice 38 above — but variety is: one drink type and one cigarette type,
   no hangover/withdrawal effects beyond the single Nausea/Weakness
-  illness, and NPCs still never drink, smoke, get sick, or get injured —
-  every medical/vice system implemented only affects players.)
+  illness; NPCs can now catch a cold in the rain as of slice 46, but
+  still never drink, smoke, or get injured — the vice systems and fall
+  injury remain player-only, only the weather-illness system is shared.)
 
 **Section 6 — Commercial Enterprises, Retail & Nightlife**
 - Done: five "shop" blocks with a withdraw-or-refuse purchase pattern
@@ -1425,11 +1464,12 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    catch chance by wanted level), giving alcohol/cigarettes from slice 38
    more variety (a second drink/cigarette tier, a hangover effect),
    continuing to round out automotive now that slice 39 added fuel
-   visibility (a speed HUD, a second vehicle type), or expanding the
+   visibility (a speed HUD, a second vehicle type), expanding the
    predator system slice 42 started (a second predator/prey pair, pack
-   hunting) are all reasonable next picks. Aviation/ATC and the space
-   program stay deliberately last, as the largest and least incrementally
-   verifiable pieces.
+   hunting), or extending the NPC-inclusion slice 46 started to another
+   system (NPC bank accounts, or fall-damage injuries) are all reasonable
+   next picks. Aviation/ATC and the space program stay deliberately last,
+   as the largest and least incrementally verifiable pieces.
 
 (Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
 Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
@@ -1455,7 +1495,9 @@ with `CoyoteEntity` hunting `DeerEntity` — see Section 8 above. Slice 43
 closed out water as a second, independent billed utility — see Section 9
 above. Slice 44 closed out water's phone-app visibility — see Section 9
 above. Slice 45 gave the casino its fourth real table, Three Card Poker —
-see Section 6 above.)
+see Section 6 above. Slice 46 closed the first crack in "NPCs are exempt
+from every other system," sharing the illness system with players — see
+Sections 2/5 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

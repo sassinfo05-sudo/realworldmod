@@ -36,6 +36,7 @@ import com.realworldmod.medical.LegInjuryEffect;
 import com.realworldmod.medical.MedicineUseHandler;
 import com.realworldmod.medical.PharmacyUseHandler;
 import com.realworldmod.medical.WeatherIllnessEffect;
+import com.realworldmod.npc.CitizenEntity;
 import com.realworldmod.npc.CitizenSpawnHandler;
 import com.realworldmod.npc.NpcAccess;
 import com.realworldmod.npc.NpcDatabase;
@@ -73,6 +74,7 @@ import com.realworldmod.wildlife.PoachingHandler;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.entity.Entity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.WorldSavePath;
@@ -226,6 +228,12 @@ public final class RealWorldMod implements ModInitializer {
 
                 ArrestOutcome arrestOutcome = arrestService.tick(player.getUuid(), server.getOverworld().getTime());
                 ArrestHandler.apply(arrestOutcome, server, player);
+            }
+
+            for (Entity entity : server.getOverworld().iterateEntities()) {
+                if (entity instanceof CitizenEntity citizen) {
+                    WeatherIllnessEffect.checkEntity(illnessService, citizen);
+                }
             }
         });
 

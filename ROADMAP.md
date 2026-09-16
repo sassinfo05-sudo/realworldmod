@@ -1406,6 +1406,40 @@ updated with every slice so neither side ever has to guess.
     and smoking still don't interact with each other at all — the rest of
     slice 38's "more variety" priority item, unstarted.
 
+- **Slice 61 — NPC pathfinding to a real pharmacy** (Section 2), closing
+  "no NPC pathfinding-to-a-shop behavior yet," the gap slice 49's own
+  javadoc called out from the moment it was written:
+  - `PharmacyLocator`, a new bounded block-search utility, scans a box
+    around a given position for the nearest real `PHARMACY_COUNTER` —
+    a wide box (`WALK_SEARCH_RADIUS`/`WALK_SEARCH_VERTICAL_RADIUS`) for
+    finding somewhere to walk towards, and a tight one
+    (`ARRIVAL_RADIUS`/`ARRIVAL_VERTICAL_RADIUS`) for confirming a citizen
+    has actually arrived — a brute-force scan rather than a spatial
+    index, the honest limitation a bounded search always has.
+  - `WalkToPharmacyGoal`, a new `Goal` registered above `CommuteGoal` in
+    `CitizenEntity.initGoals`, makes a sick or injured citizen walk to
+    that nearest pharmacy the moment it's found — pre-empting its normal
+    commute, the same "urgent goal outranks the routine one" priority
+    ordering `FleeFromPredatorGoal` already established over herding.
+  - `CitizenSelfMedicationHandler.tryTreat` now requires
+    `PharmacyLocator.findNearest` (at the tight arrival radius) to
+    actually find a counter before withdrawing payment and clearing the
+    effects — a citizen is no longer cured wherever it happens to be
+    standing, closing the gap the class's own javadoc has documented
+    since slice 49.
+  - No new unit tests, matching every other Minecraft-world-coupled class
+    in the `npc` package (`CommuteGoal`, `StructureBuilder`,
+    `CitizenSelfMedicationHandler` itself): `PharmacyLocator`'s block
+    scan and `WalkToPharmacyGoal`'s navigation both need a real
+    `ServerWorld` to exercise — 351 total, unchanged, all still passing.
+  - **Known gaps**: the search is a brute-force scan with no fallback, so
+    a citizen with no pharmacy within `WALK_SEARCH_RADIUS` simply never
+    gets treated rather than eventually recovering on its own; no other
+    NPC destination uses this same pathfinding pattern yet (no
+    pathfinding to a job site's actual task, or to any shop besides a
+    pharmacy); a citizen still doesn't queue or wait its turn if another
+    citizen is already at the same counter.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1532,7 +1566,14 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   `PharmacyUseHandler.MEDICINE_PRICE_CENTS` out of its own `BankService`
   balance and, if so, pays for it (remitting the same sales tax a real
   pharmacy purchase would) and clears the effects immediately — the
-  first NPC purchase of any kind in the mod.
+  first NPC purchase of any kind in the mod. As of slice 61, that
+  purchase is no longer a "house call": `WalkToPharmacyGoal` pre-empts a
+  sick citizen's normal commute and walks it to the nearest real
+  `PHARMACY_COUNTER` found by a new `PharmacyLocator` block search, and
+  `CitizenSelfMedicationHandler` only treats a citizen once it's actually
+  standing at one — the first real NPC pathfinding-to-a-shop behavior in
+  the mod, closing a gap slice 49's own javadoc had called out since it
+  was written.
 - Missing: every citizen's building is identical (one fixed 5x5 room
   shape, walls-and-roof only, no interior furniture/rooms/windows), placed
   block-by-block with no check for terrain, water, or overlap with an
@@ -1545,9 +1586,15 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   a fall, and buy medicine to treat themselves, but medicine is still the
   only thing a citizen can spend money on — no other NPC purchase exists
   (a meal, a hunting license, land) — and a citizen still can't be
-  assaulted as a distinct offense or get arrested; self-medication also
-  skips the trip to a physical `PHARMACY_COUNTER` a player has to make,
-  since there's no NPC pathfinding-to-a-shop behavior yet, and — like
+  assaulted as a distinct offense or get arrested; `PharmacyLocator`'s
+  block search (closed as of slice 61) is a bounded brute-force scan, not
+  a spatial index or a stored per-citizen "usual pharmacy," so a citizen
+  with no counter within `PharmacyLocator.WALK_SEARCH_RADIUS` simply never
+  gets treated — the same real limitation a player wandering blind would
+  face, but with no fallback for a world that just doesn't have a nearby
+  pharmacy yet; no other NPC destination uses this pathfinding pattern
+  (no pathfinding to a job site's actual task, a shop for a purchase
+  besides medicine, or anywhere else) — and — like
   every other status effect the mod applies — the leg injury has no
   visible limping *animation*, only the Slowness effect's speed
   reduction. True GOAP (goal-oriented
@@ -1994,12 +2041,12 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    drink/cigarette tier, or a nicotine-withdrawal effect to match the
    new hangover), a second vehicle type now that slices 39/51/52 rounded
    out the first car's fuel/ownership/speed, expanding the predator
-   system slices 42/59
-   started (a second predator/prey pair, or a meat/hide drop and
-   population-count consequence for a kill), extending the
-   NPC-inclusion slices 46-49/55 started to another system (NPC
-   pathfinding to a real shop, or an NPC-specific arrest/detainment flow
-   now that citizens can be assault/murder victims), a filing
+   system slices 42/59 started (a second predator/prey pair, or a
+   meat/hide drop and population-count consequence for a kill),
+   extending the NPC-inclusion slices 46-49/55/61 started to another
+   system (an NPC-specific arrest/detainment flow now that citizens can
+   be assault/murder victims, or reusing slice 61's pathfinding pattern
+   for a job site's actual task or a non-medicine shop trip), a filing
    history/past-case archive for slice 53/56/57's Court Registry, or
    bringing Slots/Roulette up to the other three tables' slice-54
    wager-selection bar (they'd need a real screen first, since both are
@@ -2052,7 +2099,8 @@ resolution in the Court Registry app — see Section 3 above. Slice 58
 scaled narcotics catch chance by the dealer's wanted level — see
 Section 7 above. Slice 59 closed out pack-hunting coordination between
 coyotes — see Section 8 above. Slice 60 gave heavy drinking a real
-hangover effect — see Section 5 above.)
+hangover effect — see Section 5 above. Slice 61 closed out NPC
+pathfinding to a real pharmacy — see Section 2 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

@@ -18,11 +18,13 @@ import java.util.List;
  * it) and, if so, pays for it — remitting the same municipal sales-tax
  * cut a real pharmacy purchase would — and clears the effects immediately.
  *
- * <p>Deliberately simplified relative to a player's own treatment: a
- * citizen doesn't need to actually walk to a {@code PHARMACY_COUNTER}
- * structure first, since the mod has no NPC pathfinding-to-a-shop
- * behavior yet — this models "calls in a house visit" rather than a
- * shopping trip. See ROADMAP.md.
+ * <p>As of slice 61, this is no longer a "house call": a citizen must
+ * actually be standing next to a real {@code PHARMACY_COUNTER} (the same
+ * one {@link WalkToPharmacyGoal} walks it towards) before it can be
+ * treated, closing the "no NPC pathfinding-to-a-shop behavior" gap this
+ * class's own javadoc used to call out. A citizen with no pharmacy within
+ * {@link PharmacyLocator#ARRIVAL_RADIUS} simply stays sick, the same real
+ * limitation a player without one nearby would face.
  */
 public final class CitizenSelfMedicationHandler {
     private static final List<RegistryEntry<StatusEffect>> CURABLE_EFFECTS =
@@ -31,10 +33,15 @@ public final class CitizenSelfMedicationHandler {
     private CitizenSelfMedicationHandler() {
     }
 
-    /** Checks whether {@code citizen} is sick/injured and can afford treatment, and cures it if so. */
+    /** Checks whether {@code citizen} is sick/injured, standing at a real pharmacy counter, and can afford treatment, and cures it if so. */
     public static void tryTreat(BankService bankService, CitizenEntity citizen) {
         boolean needsTreatment = CURABLE_EFFECTS.stream().anyMatch(citizen::hasStatusEffect);
         if (!needsTreatment) {
+            return;
+        }
+        boolean atPharmacy = PharmacyLocator.findNearest(citizen.getWorld(), citizen.getBlockPos(),
+                PharmacyLocator.ARRIVAL_RADIUS, PharmacyLocator.ARRIVAL_VERTICAL_RADIUS).isPresent();
+        if (!atPharmacy) {
             return;
         }
         if (bankService.withdraw(citizen.getUuid(), PharmacyUseHandler.MEDICINE_PRICE_CENTS).isEmpty()) {

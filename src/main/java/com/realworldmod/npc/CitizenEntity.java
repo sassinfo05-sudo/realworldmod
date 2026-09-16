@@ -22,7 +22,10 @@ import net.minecraft.world.World;
  * calls for it, falling back to vanilla's off-the-shelf wander/look goals
  * during {@code LEISURE}. The citizen's {@link NpcProfile} (its name, job,
  * current {@code DailyState}, home/workplace coordinates) lives entirely in
- * {@link NpcDatabase}, keyed by this entity's own UUID. See ROADMAP.md.
+ * {@link NpcDatabase}, keyed by this entity's own UUID. As of slice 61,
+ * {@link WalkToPharmacyGoal} pre-empts the normal commute whenever this
+ * citizen is sick or injured, walking it to a real pharmacy counter before
+ * {@link CitizenSelfMedicationHandler} will treat it. See ROADMAP.md.
  */
 public final class CitizenEntity extends PathAwareEntity {
     public CitizenEntity(EntityType<? extends CitizenEntity> entityType, World world) {
@@ -38,10 +41,11 @@ public final class CitizenEntity extends PathAwareEntity {
     @Override
     protected void initGoals() {
         this.goalSelector.add(0, new SwimGoal(this));
-        this.goalSelector.add(1, new CommuteGoal(this));
-        this.goalSelector.add(2, new WanderAroundGoal(this, 0.6));
-        this.goalSelector.add(3, new LookAtEntityGoal(this, PlayerEntity.class, 6.0f));
-        this.goalSelector.add(4, new LookAroundGoal(this));
+        this.goalSelector.add(1, new WalkToPharmacyGoal(this));
+        this.goalSelector.add(2, new CommuteGoal(this));
+        this.goalSelector.add(3, new WanderAroundGoal(this, 0.6));
+        this.goalSelector.add(4, new LookAtEntityGoal(this, PlayerEntity.class, 6.0f));
+        this.goalSelector.add(5, new LookAroundGoal(this));
     }
 
     @Override

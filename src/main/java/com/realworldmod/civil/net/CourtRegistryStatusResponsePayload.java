@@ -15,7 +15,8 @@ import net.minecraft.util.Identifier;
 public record CourtRegistryStatusResponsePayload(
         boolean hasPendingCase,
         long amountCents,
-        long ticksRemaining
+        long ticksRemaining,
+        String plaintiffName
 ) implements CustomPayload {
     public static final CustomPayload.Id<CourtRegistryStatusResponsePayload> ID =
             new CustomPayload.Id<>(Identifier.of(RealWorldMod.MOD_ID, "court_registry_status_response"));
@@ -23,6 +24,7 @@ public record CourtRegistryStatusResponsePayload(
             PacketCodecs.BOOL, CourtRegistryStatusResponsePayload::hasPendingCase,
             PacketCodecs.VAR_LONG, CourtRegistryStatusResponsePayload::amountCents,
             PacketCodecs.VAR_LONG, CourtRegistryStatusResponsePayload::ticksRemaining,
+            PacketCodecs.STRING, CourtRegistryStatusResponsePayload::plaintiffName,
             CourtRegistryStatusResponsePayload::new);
 
     @Override

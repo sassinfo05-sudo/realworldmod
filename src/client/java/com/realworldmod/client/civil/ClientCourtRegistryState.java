@@ -2,7 +2,7 @@ package com.realworldmod.client.civil;
 
 /** Client-side cache of the last court-registry status the server sent, mirroring {@code ClientCrimeState}. */
 public final class ClientCourtRegistryState {
-    public record State(boolean hasPendingCase, long amountCents, long ticksRemaining) {
+    public record State(boolean hasPendingCase, long amountCents, long ticksRemaining, String plaintiffName) {
     }
 
     private static volatile State state;

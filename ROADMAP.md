@@ -1285,6 +1285,36 @@ updated with every slice so neither side ever has to guess.
     limitations `CivilCourtService.contest` always had, just reachable
     from one more place now.
 
+- **Slice 57 — plaintiff name resolution in the Court Registry app**
+  (Section 3), closing slice 53's "no plaintiff name shown
+  (`CivilCourtService.Case` only stores a UUID...)" known gap, still open
+  as of slice 56:
+  - `CourtRegistryStatusResponsePayload` gains a `plaintiffName` field
+    (`PacketCodecs.STRING`, defaulting to `""` when there's no pending
+    case). `CourtRegistryNetworking.buildResponse` resolves the case's
+    `plaintiffId` server-side via
+    `player.getServer().getUserCache().getByUuid(id).map(GameProfile::getName)`,
+    falling back to the raw UUID string when the cache has no record for
+    that player (offline, or a player who has never joined this server)
+    — the same graceful-degradation shape the mod already uses whenever
+    it resolves a UUID it didn't mint itself.
+  - `ClientCourtRegistryState.State` and `CourtRegistryAppScreen` both
+    carry/render the new field: the pending-case message now reads
+    "Claim by (plaintiff name): (amount)" instead of just the amount,
+    via an updated `gui.realworldmod.phone.court_registry.pending` lang
+    entry taking two format arguments instead of one.
+  - No new unit tests, matching every other phone-app slice (32, 44, 53,
+    56): `CivilCourtService`'s own stored data didn't change, and the new
+    resolution logic depends on a live `MinecraftServer`'s `UserCache`,
+    which needs a running server to exercise — 338 tests total,
+    unchanged, all still passing.
+  - **Known gaps**: still no filing history or past-case archive; a
+    plaintiff who has never joined this server (no `UserCache` entry at
+    all) still shows as a raw UUID string rather than a name; contesting
+    still just dismisses the claim outright with no counter-argument or
+    real adjudication — the same limitations slice 56 already noted,
+    just with the plaintiff-visibility gap itself now closed.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1454,8 +1484,9 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   slice 53 — Court Registry, showing whether the player has a pending
   civil case against them, the claimed amount, and the seconds left to
   contest it, plus — as of slice 56 — a Contest button that dismisses
-  the case right from the app) over a real client↔server networking
-  pattern.
+  the case right from the app, plus — as of slice 57 — the plaintiff's
+  resolved display name alongside the claim) over a real client↔server
+  networking pattern.
 - Missing: PearOS vs. OpenDroid distinction (rooting, sideloading,
   terminal access), cracked screens/repair shops, charging cables as a
   physical item, PC building (motherboard/CPU/GPU/RAM/PSU parts, physical
@@ -1464,9 +1495,10 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   web-page-like content (today's apps are native screens, not pages), real
   estate portal, credit score dashboard, stock/forex exchange, a criminal
   court registry as a web UI (the Criminal Record app is that start; the
-  Court Registry app from slices 53/56 covers the civil side, including
-  an in-app Contest button as of slice 56 — still no plaintiff name
-  shown, no filing history or past-case archive), tax audit portal,
+  Court Registry app from slices 53/56/57 covers the civil side,
+  including an in-app Contest button as of slice 56 and the plaintiff's
+  resolved name as of slice 57 — still no filing history or past-case
+  archive), tax audit portal,
   BlockTube (record/edit/upload video, subscribers, ad revenue), dark web
   marketplace, game consoles/discs/arcades/claw machines/racing sims.
   **Requested and tracked, not started**: every phone/PC app being a
@@ -1851,13 +1883,13 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    slice 42 started (a second predator/prey pair, pack hunting),
    extending the NPC-inclusion slices 46-49/55 started to another system
    (NPC pathfinding to a real shop, or an NPC-specific arrest/detainment
-   flow now that citizens can be assault/murder victims), adding
-   plaintiff name resolution to slice 53/56's Court Registry, or bringing
-   Slots/Roulette up to the other three tables' slice-54 wager-selection
-   bar (they'd need a real screen first, since both are still a single
-   block right-click) are all reasonable next picks. Aviation/ATC and
-   the space program stay deliberately last, as the largest and least
-   incrementally verifiable pieces.
+   flow now that citizens can be assault/murder victims), a filing
+   history/past-case archive for slice 53/56/57's Court Registry, or
+   bringing Slots/Roulette up to the other three tables' slice-54
+   wager-selection bar (they'd need a real screen first, since both are
+   still a single block right-click) are all reasonable next picks.
+   Aviation/ATC and the space program stay deliberately last, as the
+   largest and least incrementally verifiable pieces.
 
 (Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
 Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
@@ -1899,7 +1931,8 @@ app — see Section 3 above. Slice 54 gave three of the five casino
 tables a real player-chosen wager — see Section 6 above. Slice 55
 extended assault and murder to protect `CitizenEntity` victims too —
 see Section 7 above. Slice 56 added a Contest button to the Court
-Registry app — see Section 3 above.)
+Registry app — see Section 3 above. Slice 57 closed out plaintiff name
+resolution in the Court Registry app — see Section 3 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

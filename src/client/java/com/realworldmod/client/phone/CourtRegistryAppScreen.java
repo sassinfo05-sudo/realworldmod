@@ -69,7 +69,7 @@ public final class CourtRegistryAppScreen extends Screen {
         long secondsRemaining = state.ticksRemaining() / 20L;
         context.drawCenteredTextWithShadow(this.textRenderer,
                 Text.translatable("gui.realworldmod.phone.court_registry.pending",
-                        CurrencyFormatter.format(state.amountCents())),
+                        state.plaintiffName(), CurrencyFormatter.format(state.amountCents())),
                 this.width / 2, this.height / 2, 0xFF5555);
         context.drawCenteredTextWithShadow(this.textRenderer,
                 Text.translatable("gui.realworldmod.phone.court_registry.deadline", secondsRemaining),

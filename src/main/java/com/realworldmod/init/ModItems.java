@@ -2,6 +2,7 @@ package com.realworldmod.init;
 
 import com.realworldmod.RealWorldMod;
 import com.realworldmod.phone.PhoneBattery;
+import net.minecraft.component.type.FoodComponent;
 import net.minecraft.item.Item;
 import net.minecraft.item.SwordItem;
 import net.minecraft.item.ToolMaterials;
@@ -36,6 +37,13 @@ public final class ModItems {
 
     /** A real melee weapon (Section 6 kitchen-utensil category doubling as Section 7's assault-enabling item). */
     public static final Item KNIFE = register("knife", new SwordItem(ToolMaterials.IRON, new Item.Settings()));
+
+    /** Dropped by a killed {@code DeerEntity} as of slice 63 — real, edible raw game meat instead of nothing at all. */
+    public static final Item DEER_MEAT = register("deer_meat", new Item(new Item.Settings()
+            .food(new FoodComponent.Builder().nutrition(3).saturationModifier(0.3f).build())));
+
+    /** Dropped alongside {@link #DEER_MEAT} — a real crafting-material byproduct of a kill, not consumed by anything yet. */
+    public static final Item DEER_HIDE = register("deer_hide", new Item(new Item.Settings()));
 
     private ModItems() {
     }

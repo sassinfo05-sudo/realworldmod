@@ -70,6 +70,7 @@ import com.realworldmod.vice.LiquorStoreUseHandler;
 import com.realworldmod.vice.NicotineService;
 import com.realworldmod.vice.NicotineWithdrawalEffect;
 import com.realworldmod.wildlife.CoyoteSpawnHandler;
+import com.realworldmod.wildlife.DeerDropHandler;
 import com.realworldmod.wildlife.DeerSpawnHandler;
 import com.realworldmod.wildlife.GameWardenService;
 import com.realworldmod.wildlife.GameWardenSpawnHandler;
@@ -77,6 +78,7 @@ import com.realworldmod.wildlife.HuntingLicenseService;
 import com.realworldmod.wildlife.LicenseUseHandler;
 import com.realworldmod.wildlife.PoachingAccess;
 import com.realworldmod.wildlife.PoachingHandler;
+import com.realworldmod.wildlife.WildlifePopulationService;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -116,6 +118,7 @@ public final class RealWorldMod implements ModInitializer {
     private final IllnessService illnessService = new IllnessService();
     private final HuntingLicenseService huntingLicenseService = new HuntingLicenseService();
     private final GameWardenService gameWardenService = new GameWardenService(bankService);
+    private final WildlifePopulationService wildlifePopulationService = new WildlifePopulationService();
     private final PropertyTaxService propertyTaxService =
             new PropertyTaxService(propertyService.registry(), bankService);
     private final BlackjackService blackjackService = new BlackjackService(bankService);
@@ -179,9 +182,10 @@ public final class RealWorldMod implements ModInitializer {
         new MurderHandler(lawEnforcementService).register();
         PoachingAccess.set(gameWardenService);
         new PoachingHandler(lawEnforcementService, huntingLicenseService, gameWardenService).register();
+        new DeerDropHandler(wildlifePopulationService).register();
         CarSpawnHandler.register();
         CitizenSpawnHandler.register();
-        DeerSpawnHandler.register();
+        DeerSpawnHandler.register(wildlifePopulationService);
         CoyoteSpawnHandler.register();
         PoliceSpawnHandler.register();
         GameWardenSpawnHandler.register();

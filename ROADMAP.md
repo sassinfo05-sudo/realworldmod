@@ -1478,6 +1478,38 @@ updated with every slice so neither side ever has to guess.
     not the fuller variety (a second tier of either, or cross-system
     interaction) still missing above.
 
+- **Slice 63 — a meat/hide drop and a real deer population count**
+  (Section 8), closing the rest of slice 42's "a killed deer simply dies
+  with no meat/hide drop or population-count consequence" gap:
+  - Two new items, `DEER_MEAT` (a genuine `FoodComponent`-backed food —
+    nutrition 3, saturation 0.3 — not just a decorative drop) and
+    `DEER_HIDE` (a plain crafting-material byproduct, not consumed by
+    anything yet), each with a real 16x16 placeholder texture plus
+    LabPBR normal/specular maps, matching every other item in the mod.
+  - A new `DeerDropHandler` hooks `ServerLivingEntityEvents.AFTER_DEATH`
+    for any `DeerEntity` — poacher, licensed hunter, or coyote kill alike,
+    deliberately broader than `PoachingHandler`'s player-only,
+    license-gated scope — and drops both items via `ItemScatterer.spawn`
+    at the death location.
+  - A new `WildlifePopulationService` tracks a real, queryable deer count:
+    `DeerSpawnHandler.register` now takes it and calls `recordDeerSpawn`
+    on every spawn, and `DeerDropHandler` calls `recordDeerDeath` on
+    every death (floored at zero) — an honest running total, not a full
+    ecosystem simulation.
+  - Exhaustively unit tested at the service layer: `WildlifePopulationServiceTest`
+    covers starting at zero, incrementing on spawn, decrementing on
+    death, and flooring at zero — 363 total, all passing. `DeerDropHandler`
+    itself is untested like every other Fabric event handler in the mod,
+    needing a running world to exercise.
+  - **Known gaps**: the population count isn't surfaced anywhere yet (no
+    phone app, no command, no in-world display) and nothing in the mod
+    reacts to it — a population of zero doesn't stop poaching, change
+    coyote behavior, or trigger any consequence; drop quantities are
+    fixed (always 2 meat, 1 hide) regardless of cause of death or any
+    other factor; the meat and hide themselves don't do anything beyond
+    existing as items — meat is edible but not used in any recipe, and
+    hide isn't craftable into anything.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -2029,15 +2061,22 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   hit by `WildlifeBehavior.packAttackMultiplier` — a lone coyote still
   deals the base 3 damage, but two or more hunting together deal
   noticeably more, real pack-hunting coordination rather than a cosmetic
-  crowd.
+  crowd. As of slice 63, a killed deer no longer just disappears: a new
+  `DeerDropHandler` drops real `DEER_MEAT` (edible, a genuine food item
+  via `FoodComponent`) and `DEER_HIDE` on any `DeerEntity` death —
+  poacher, licensed hunter, or coyote kill alike — and records the death
+  in a new `WildlifePopulationService`, which `DeerSpawnHandler` also
+  feeds on every spawn, so the mod tracks a real, queryable deer
+  population instead of nothing at all.
 - Missing: no biome-specific mechanics at all (no multi-layer canopy/leaf
   decay/wildfires in forests, no machete-gated jungle thickets/equipment
   rust/malaria, no desert sand-dune physics/heatstroke/mirage/flash
   floods); the predator AI slice 42 added is a single coyote-vs-deer
   relationship — no other predator/prey pairs (pack-hunting coordination
-  between multiple coyotes closed as of slice 59), and a killed deer
-  simply dies with no meat/hide drop or population-count consequence; no
-  migration
+  between multiple coyotes closed as of slice 59, and a meat/hide drop
+  plus population tracking as of slice 63, though the population count
+  isn't shown anywhere yet and nothing in the mod reacts to it — no
+  extinction consequence, no effect on spawn rate); no migration
   (herding is proximity-only, not a seasonal or territorial routine);
   deer/wardens/coyotes only spawn via items (`DEER_SPAWNER`/
   `GAME_WARDEN_SPAWNER`/`COYOTE_SPAWNER`), not natural biome-based
@@ -2090,9 +2129,10 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    nicotine patch/gum item, or letting the two vice systems interact), a
    second vehicle type now that slices 39/51/52 rounded out the first
    car's fuel/ownership/speed, expanding the predator
-   system slices 42/59 started (a second predator/prey pair, or a
-   meat/hide drop and population-count consequence for a kill),
-   extending the NPC-inclusion slices 46-49/55/61 started to another
+   system slices 42/59/63 started (a second predator/prey pair, showing
+   the new deer population count somewhere, or giving meat/hide an
+   actual use), extending the NPC-inclusion slices 46-49/55/61 started to
+   another
    system (an NPC-specific arrest/detainment flow now that citizens can
    be assault/murder victims, or reusing slice 61's pathfinding pattern
    for a job site's actual task or a non-medicine shop trip), a filing
@@ -2150,7 +2190,9 @@ Section 7 above. Slice 59 closed out pack-hunting coordination between
 coyotes — see Section 8 above. Slice 60 gave heavy drinking a real
 hangover effect — see Section 5 above. Slice 61 closed out NPC
 pathfinding to a real pharmacy — see Section 2 above. Slice 62 gave
-quitting cigarettes a real withdrawal effect — see Section 5 above.)
+quitting cigarettes a real withdrawal effect — see Section 5 above.
+Slice 63 gave a killed deer a real meat/hide drop and population-count
+consequence — see Section 8 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

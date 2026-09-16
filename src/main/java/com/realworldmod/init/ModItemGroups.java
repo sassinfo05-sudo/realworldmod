@@ -43,6 +43,8 @@ public final class ModItemGroups {
                         entries.add(ModBlocks.GAS_PUMP);
                         entries.add(ModItems.KNIFE);
                         entries.add(ModBlocks.WATER_OUTLET);
+                        entries.add(ModItems.DEER_MEAT);
+                        entries.add(ModItems.DEER_HIDE);
                     })
                     .build());
 

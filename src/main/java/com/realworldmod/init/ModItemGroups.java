@@ -40,6 +40,7 @@ public final class ModItemGroups {
                         entries.add(ModBlocks.LIQUOR_STORE);
                         entries.add(ModItems.ALCOHOL);
                         entries.add(ModItems.CIGARETTE);
+                        entries.add(ModItems.NICOTINE_PATCH);
                         entries.add(ModBlocks.GAS_PUMP);
                         entries.add(ModItems.KNIFE);
                         entries.add(ModBlocks.WATER_OUTLET);

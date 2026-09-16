@@ -115,6 +115,48 @@ class NicotineServiceTest {
     }
 
     @Test
+    void usingAPatchDelaysWithdrawalTheSameAsSmokingWould() {
+        NicotineService service = new NicotineService();
+        UUID player = UUID.randomUUID();
+        for (int i = 0; i < NicotineWithdrawalRisk.DEPENDENCY_THRESHOLD_CIGARETTES; i++) {
+            service.smoke(player, 0);
+        }
+
+        service.usePatch(player, NicotineWithdrawalRisk.WITHDRAWAL_TICKS - 1);
+
+        assertEquals(0, service.checkWithdrawal(player, NicotineWithdrawalRisk.WITHDRAWAL_TICKS));
+    }
+
+    @Test
+    void usingAPatchDoesNotResetTheIllnessStreak() {
+        NicotineService service = new NicotineService();
+        UUID player = UUID.randomUUID();
+        for (int i = 0; i < NicotineRisk.CIGARETTES_TO_ILLNESS - 1; i++) {
+            service.smoke(player, 0);
+        }
+
+        service.usePatch(player, 0);
+
+        assertTrue(service.smoke(player, 0));
+    }
+
+    @Test
+    void usingAPatchAfterAWithdrawalResetsTheEscalationStreak() {
+        NicotineService service = new NicotineService();
+        UUID player = UUID.randomUUID();
+        for (int i = 0; i < NicotineWithdrawalRisk.DEPENDENCY_THRESHOLD_CIGARETTES; i++) {
+            service.smoke(player, 0);
+        }
+        long firstWithdrawalTick = NicotineWithdrawalRisk.WITHDRAWAL_TICKS;
+        assertEquals(1, service.checkWithdrawal(player, firstWithdrawalTick));
+
+        service.usePatch(player, firstWithdrawalTick);
+        long secondWithdrawalTick = firstWithdrawalTick + NicotineWithdrawalRisk.WITHDRAWAL_TICKS;
+
+        assertEquals(1, service.checkWithdrawal(player, secondWithdrawalTick));
+    }
+
+    @Test
     void aWithdrawalStreakResetsAfterGoingLongEnoughWithoutAnother() {
         NicotineService service = new NicotineService();
         UUID player = UUID.randomUUID();

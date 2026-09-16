@@ -35,6 +35,9 @@ public final class ModItems {
 
     public static final Item CIGARETTE = register("cigarette", new Item(new Item.Settings().maxCount(16)));
 
+    /** Delays/eases nicotine withdrawal without the illness risk or buzz of an actual cigarette — see {@code vice.NicotinePatchUseHandler}. */
+    public static final Item NICOTINE_PATCH = register("nicotine_patch", new Item(new Item.Settings().maxCount(16)));
+
     /** A real melee weapon (Section 6 kitchen-utensil category doubling as Section 7's assault-enabling item). */
     public static final Item KNIFE = register("knife", new SwordItem(ToolMaterials.IRON, new Item.Settings()));
 

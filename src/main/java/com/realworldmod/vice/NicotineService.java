@@ -63,4 +63,16 @@ public final class NicotineService {
         lastWithdrawalTick.put(playerId, currentTick);
         return WithdrawalSeverity.forStreak(nextStreak);
     }
+
+    /**
+     * Applies a nicotine patch: delays the next possible withdrawal the same way an actual cigarette
+     * would (resetting the clock {@link NicotineWithdrawalRisk#causesWithdrawal} checks against), but
+     * without counting as smoking — {@code totalSmoked} and the illness streak are untouched. Also resets
+     * the escalation streak, since managing a craving without relapsing breaks the pattern that built it.
+     */
+    public void usePatch(UUID playerId, long currentTick) {
+        lastSmokeTick.put(playerId, currentTick);
+        withdrawalApplied.put(playerId, false);
+        withdrawalStreak.put(playerId, 0);
+    }
 }

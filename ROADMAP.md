@@ -1634,6 +1634,35 @@ updated with every slice so neither side ever has to guess.
     any way (no in-game indicator of "how close to a worse hangover" they
     are).
 
+- **Slice 68 — a nicotine patch item** (Section 5/6), closing the rest of
+  slice 67's own "no way to ease withdrawal short of smoking again" gap:
+  - `NicotineService.usePatch(playerId, currentTick)` resets the clock
+    `NicotineWithdrawalRisk.causesWithdrawal` checks against — the same
+    effect an actual cigarette has on timing — without touching
+    `totalSmoked` (so it never counts towards dependency) or the illness
+    streak (so it can't clear or delay the *other* smoking-illness
+    consequence). It also resets the escalation streak to zero, since
+    managing a craving without relapsing is exactly the behavior that
+    should break an escalating pattern.
+  - A new `NICOTINE_PATCH` item, sold at the `PHARMACY_COUNTER` via
+    sneak-right-click (extending `PharmacyUseHandler` with the same
+    empty-hand/sneak split `LiquorStoreUseHandler` already uses to sell
+    two items from one block) at a market-appropriate 1000-cent price
+    point between Medicine (1500) and a Liquor Store purchase — and used
+    later via a new `NicotinePatchUseHandler`, the same buy-then-use
+    shape Medicine already has.
+  - Exhaustively unit tested at the service layer: `NicotineServiceTest`
+    gains cases for a patch delaying withdrawal the same way smoking
+    would, a patch not resetting the illness streak (the very next
+    cigarette can still trigger illness), and a patch resetting the
+    escalation streak after a withdrawal — 384 total, all passing. The
+    purchase/use handlers are untested like every other
+    Fabric-event-driven consumable handler in the mod.
+  - **Known gaps**: no equivalent item exists to ease an alcohol
+    hangover; the patch is instant and free of any drawback of its own
+    (no side effect, no cooldown between uses beyond the price); the two
+    vice systems still don't interact with each other at all.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1939,7 +1968,13 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   `STREAK_RESET_TICKS` without another episode) to a severity that
   scales both the status effect's amplifier and its duration, so a
   player who keeps binge-drinking or keeps relapsing gets meaningfully
-  worse effects each time, up to a capped maximum.
+  worse effects each time, up to a capped maximum. As of slice 68, a
+  player can also actively manage a nicotine craving: a real
+  `NICOTINE_PATCH` item, sold at the Pharmacy Counter alongside Medicine
+  (sneak-right-click instead of the normal right-click), delays the next
+  withdrawal and resets its escalation streak via
+  `NicotineService.usePatch` — without the illness risk or buzz an
+  actual cigarette carries.
 - Missing: this is a *health-bar replacement disguised as a status
   effect*, not a real localized zone model — there's no per-body-part
   (head/torso/arms/legs) data structure, no bone-fracture-requiring-cast
@@ -1963,11 +1998,13 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   slice 38 above — but variety is: one drink type and one cigarette type;
   a real hangover effect exists as of slice 60 and nicotine withdrawal as
   of slice 62, and as of slice 67 both escalate in severity for repeat
-  benders/quit-attempts within a rolling window — but there's still no
-  way to ease withdrawal short of smoking again (there's no nicotine
-  patch/gum item), and the two vice systems still don't interact with
-  each other at all (getting drunk while withdrawing from nicotine, for
-  instance, is just two independent effect sets); NPCs can now catch a
+  benders/quit-attempts within a rolling window — as of slice 68 there's
+  finally a way to ease withdrawal short of smoking again, a real
+  `NICOTINE_PATCH` item sold at the Pharmacy Counter — but the two vice
+  systems still don't interact with each other at all (getting drunk
+  while withdrawing from nicotine, for instance, is just two independent
+  effect sets), and there's no equivalent item easing an alcohol
+  hangover; NPCs can now catch a
   cold in the
   rain as of slice 46, but still never drink, smoke, or get injured — the
   vice systems and fall injury remain player-only, only the
@@ -1976,7 +2013,8 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 **Section 6 — Commercial Enterprises, Retail & Nightlife**
 - Done: five "shop" blocks with a withdraw-or-refuse purchase pattern
   (Cash Register pays a wage rather than sells anything, Pharmacy Counter
-  sells Medicine, License Office sells a hunting permit, and — as of
+  sells Medicine and — as of slice 68 — a Nicotine Patch via
+  sneak-right-click, License Office sells a hunting permit, and — as of
   slice 38 — a Liquor Store sells Alcohol and Cigarettes) — a narrow slice
   of "retail," not general commerce — plus five real casino games. As of
   slice 33, `SlotMachine`: three reels over a fixed symbol set and an
@@ -2261,10 +2299,10 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 1. Everything in the "missing" lists above — expanding the underworld
    system slices 37/58 started (a second drug/lab type, rival dealer
    NPCs, or a distinct narcotics crime-severity tier), giving
-   alcohol/cigarettes from slices 38/60/62/67 more variety (a second
-   drink/cigarette tier, a nicotine patch/gum item, or letting the two
-   vice systems interact), a second vehicle type now that slices
-   39/51/52 rounded out the first
+   alcohol/cigarettes from slices 38/60/62/67/68 more variety (a second
+   drink/cigarette tier, an item easing an alcohol hangover to mirror
+   the nicotine patch, or letting the two vice systems interact), a
+   second vehicle type now that slices 39/51/52 rounded out the first
    car's fuel/ownership/speed, expanding the predator
    system slices 42/59/63/65/66 started (a second predator/prey pair
    remains the biggest open piece), extending the
@@ -2334,7 +2372,8 @@ real filing-history archive — see Section 3 above. Slice 65 gave deer
 meat and hide a real crafting/cooking use — see Section 8 above. Slice
 66 surfaced the deer population count in the Government phone app —
 see Sections 3/8 above. Slice 67 gave hangovers and nicotine withdrawal
-escalating severity — see Section 5 above.)
+escalating severity — see Section 5 above. Slice 68 added a real
+nicotine patch item to ease withdrawal — see Sections 5/6 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

@@ -10,6 +10,7 @@ import com.realworldmod.crime.ArrestAccess;
 import com.realworldmod.crime.ArrestHandler;
 import com.realworldmod.crime.ArrestOutcome;
 import com.realworldmod.crime.ArrestService;
+import com.realworldmod.crime.AssaultHandler;
 import com.realworldmod.crime.CrimeAccess;
 import com.realworldmod.crime.CrimeService;
 import com.realworldmod.crime.LawEnforcementService;
@@ -147,6 +148,7 @@ public final class RealWorldMod implements ModInitializer {
         new AlcoholUseHandler(intoxicationService).register();
         new CigaretteUseHandler(nicotineService).register();
         new GasPumpUseHandler(bankService).register();
+        new AssaultHandler(lawEnforcementService).register();
         PoachingAccess.set(gameWardenService);
         new PoachingHandler(lawEnforcementService, huntingLicenseService, gameWardenService).register();
         CarSpawnHandler.register();

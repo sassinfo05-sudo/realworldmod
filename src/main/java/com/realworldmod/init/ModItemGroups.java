@@ -38,6 +38,7 @@ public final class ModItemGroups {
                         entries.add(ModItems.ALCOHOL);
                         entries.add(ModItems.CIGARETTE);
                         entries.add(ModBlocks.GAS_PUMP);
+                        entries.add(ModItems.KNIFE);
                     })
                     .build());
 

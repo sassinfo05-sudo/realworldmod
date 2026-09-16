@@ -15,6 +15,7 @@
   "item.realworldmod.alcohol": "Bottle of Alcohol",
   "item.realworldmod.cigarette": "Cigarette",
   "block.realworldmod.gas_pump": "Gas Pump",
+  "item.realworldmod.knife": "Knife",
   "item.realworldmod.medicine": "Medicine",
   "item.realworldmod.car_key": "Car Key",
   "entity.realworldmod.car": "Car",
@@ -114,6 +115,7 @@
   "message.realworldmod.gas_pump_cannot_afford": "You can't afford any fuel right now.",
   "message.realworldmod.gas_pump_refueled": "Filled up %s liters for %s.",
   "message.realworldmod.gas_pump_partial_refuel": "You could only afford %s liters for %s.",
+  "message.realworldmod.assault_recorded": "Assault reported. Your wanted level has increased.",
   "gui.realworldmod.phone.settings.battery": "Battery: %s%%",
   "gui.realworldmod.phone.settings.power_off": "Lock phone",
   "gui.realworldmod.phone.messages.empty": "No messages yet."

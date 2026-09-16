@@ -3,6 +3,8 @@ package com.realworldmod.init;
 import com.realworldmod.RealWorldMod;
 import com.realworldmod.phone.PhoneBattery;
 import net.minecraft.item.Item;
+import net.minecraft.item.SwordItem;
+import net.minecraft.item.ToolMaterials;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
@@ -29,6 +31,9 @@ public final class ModItems {
     public static final Item ALCOHOL = register("alcohol", new Item(new Item.Settings().maxCount(16)));
 
     public static final Item CIGARETTE = register("cigarette", new Item(new Item.Settings().maxCount(16)));
+
+    /** A real melee weapon (Section 6 kitchen-utensil category doubling as Section 7's assault-enabling item). */
+    public static final Item KNIFE = register("knife", new SwordItem(ToolMaterials.IRON, new Item.Settings()));
 
     private ModItems() {
     }

@@ -767,6 +767,33 @@ updated with every slice so neither side ever has to guess.
     the vehicle simply refusing to accelerate; see the updated Section 4
     status above for the rest of what a real automotive system needs.
 
+- **Slice 40 — assault as a distinct tracked crime type, plus a real
+  knife weapon** (Section 7), closing a "requested and tracked, not
+  started" gap: until now, hurting another player registered nothing at
+  all in `CrimeService`.
+  - `AssaultHandler`: hooks `ServerLivingEntityEvents.AFTER_DAMAGE` — the
+    same Fabric event `medical.LegInjuryEffect` already uses for fall
+    damage — and, whenever the damage is `DamageTypes.PLAYER_ATTACK` and
+    both the victim and the attacker are players, records the offense
+    through the *existing* `LawEnforcementService.recordOffense`
+    pipeline at a higher severity (3) than poaching (1) or dealing
+    narcotics (2), rather than inventing a parallel assault-specific
+    consequence system.
+  - `ModItems.KNIFE`: a real `SwordItem` on iron-tier stats — the melee
+    weapon item category the same gap called for — though the crime
+    itself is recorded for any player-on-player hit, armed or not, since
+    a fistfight is assault too.
+  - Not separately unit tested: `LawEnforcementServiceTest` and
+    `CrimeServiceTest` already exhaustively cover `recordOffense` for any
+    severity value, the same mechanism poaching and narcotics dealing
+    already reused without adding their own duplicate tests — only the
+    event-hook wiring is new, and like every other Fabric event handler
+    in the mod, it needs a running Minecraft entity/world to exercise.
+  - **Known gaps**: see the updated Section 7 status above — no separate,
+    harsher severity for actually killing a player versus merely hitting
+    them, no consequence for attacking an NPC (NPCs have no health/death
+    of their own), and no weapon-specific detection.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1079,7 +1106,15 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   eventually come looking for them exactly as it would for any other
   offense — the underworld system was deliberately wired into the crime
   system that already exists rather than given its own isolated
-  wanted/consequence mechanic.
+  wanted/consequence mechanic. As of slice 40, hurting another player is
+  finally a tracked crime too: `AssaultHandler` hooks the same
+  player-on-player damage event `medical.LegInjuryEffect` already uses
+  for fall damage and, on any hit one player lands on another, records an
+  assault through the same `LawEnforcementService.recordOffense`
+  pipeline — at a higher severity than poaching or dealing, since a real
+  fistfight is worse than a stolen deer — alongside a real `KNIFE` melee
+  weapon (a `SwordItem` on iron-tier stats) as the item category the gap
+  also called for.
 - Missing: `PoliceEntity` only patrols/chases — no tactical cover, spike
   strips, pit maneuvers, backup calls, or squad coordination; deer/police
   spawn only via items (`POLICE_SPAWNER`), not real police-station
@@ -1113,13 +1148,15 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   player or of a random citizen); a defined path for the player to
   "become a criminal" as a real career/reputation track, not just an
   accumulating wanted level; illuminati-style secret societies and cults
-  as a distinct faction type from ordinary criminal organizations;
-  murder/assault as its own distinct, tracked crime type — today's
-  `CrimeService` only records trespassing- and poaching-style offenses,
-  nothing for actually attacking, hurting, or killing another player or
-  NPC — together with knives and other real melee weapons as the item
-  category enabling it (knives themselves double as a Section 6 kitchen
-  utensil; this is the weapon side of the same item); a full-scale
+  as a distinct faction type from ordinary criminal organizations; murder
+  as a crime distinct from the assault slice 40 added — killing a player
+  currently records the exact same offense as merely hitting them, with
+  no separate, harsher severity tier, and no consequence at all for
+  killing an NPC, since NPCs have no health/death of their own to lose;
+  other melee weapons beyond the one `KNIFE` item, and no weapon-specific
+  detection (an assault is recorded for any player-on-player hit,
+  bare-handed or armed, rather than only when a real weapon connects); a
+  full-scale
   military branch — enlistment, ranks, deployable operations — distinct
   from the individual military vehicles (tanks, military ships/planes)
   already tracked in Section 4.
@@ -1182,11 +1219,12 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    system slice 37 started (a second drug/lab type, rival dealer NPCs,
    or scaling catch chance by wanted level), giving alcohol/cigarettes
    from slice 38 more variety (a second drink/cigarette tier, a
-   hangover effect), or continuing to round out automotive now that
-   slice 39 added fuel visibility (a speed HUD, a second vehicle type)
-   are all reasonable next picks. Aviation/ATC and the space program stay
-   deliberately last, as the largest and least incrementally verifiable
-   pieces.
+   hangover effect), continuing to round out automotive now that
+   slice 39 added fuel visibility (a speed HUD, a second vehicle type),
+   or giving the assault crime slice 40 added a harsher, separate murder
+   tier are all reasonable next picks. Aviation/ATC and the space program
+   stay deliberately last, as the largest and least incrementally
+   verifiable pieces.
 
 (Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
 Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
@@ -1204,7 +1242,9 @@ closed out a real civil small-claims court — see Section 7 above. Slice
 37 started the previously entirely-unbuilt underworld/narcotics system —
 see Section 7 above. Slice 38 closed out alcohol/cigarettes as real
 consumable items — see Sections 5/6 above. Slice 39 closed out fuel
-visibility and refueling for `CarEntity` — see Section 4 above.)
+visibility and refueling for `CarEntity` — see Section 4 above. Slice 40
+closed out assault as a tracked crime type and added a real knife
+weapon — see Section 7 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

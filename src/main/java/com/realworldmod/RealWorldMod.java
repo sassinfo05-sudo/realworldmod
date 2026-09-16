@@ -46,6 +46,8 @@ import com.realworldmod.property.PropertyTaxService;
 import com.realworldmod.utilities.UtilityAccess;
 import com.realworldmod.utilities.UtilityService;
 import com.realworldmod.utilities.net.UtilityNetworking;
+import com.realworldmod.underworld.NarcoticsHandler;
+import com.realworldmod.underworld.NarcoticsService;
 import com.realworldmod.vehicle.CarSpawnHandler;
 import com.realworldmod.wildlife.DeerSpawnHandler;
 import com.realworldmod.wildlife.GameWardenService;
@@ -95,6 +97,7 @@ public final class RealWorldMod implements ModInitializer {
             new PropertyTaxService(propertyService.registry(), bankService);
     private final BlackjackService blackjackService = new BlackjackService(bankService);
     private final CivilCourtService civilCourtService = new CivilCourtService(bankService);
+    private final NarcoticsService narcoticsService = new NarcoticsService(bankService);
 
     @Override
     public void onInitialize() {
@@ -131,6 +134,7 @@ public final class RealWorldMod implements ModInitializer {
         BlackjackNetworking.registerPayloadTypes();
         BlackjackNetworking.registerServerReceivers(blackjackService);
         new CivilCourtHandler(civilCourtService).register();
+        new NarcoticsHandler(narcoticsService, lawEnforcementService).register();
         PoachingAccess.set(gameWardenService);
         new PoachingHandler(lawEnforcementService, huntingLicenseService, gameWardenService).register();
         CarSpawnHandler.register();

@@ -33,6 +33,7 @@ public final class ModItemGroups {
                         entries.add(ModBlocks.ROULETTE_TABLE);
                         entries.add(ModBlocks.BLACKJACK_TABLE);
                         entries.add(ModBlocks.COURTHOUSE);
+                        entries.add(ModBlocks.NARCOTICS_LAB);
                     })
                     .build());
 

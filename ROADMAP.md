@@ -675,6 +675,36 @@ updated with every slice so neither side ever has to guess.
     weighed against anything), no lease/partnership contracts, no judge
     NPC or courtroom; unverified without a running client.
 
+- **Slice 37 — underworld narcotics dealing tied into the crime system**
+  (Section 7), the other half of the priority list's slice-36 choice and
+  the first real content in the previously entirely-unbuilt underworld
+  gap:
+  - `NarcoticsService`: `tryCook`/`tryDeal`, following the same
+    cooldown-gated-action shape `JobService.tryWorkShift` already
+    established, but building a per-player stash count instead of paying
+    out immediately — cooking takes 30 seconds per unit, dealing sells
+    one stashed unit for a flat payout on a separate 10-second cooldown.
+  - `NarcoticsHandler` + `ModBlocks.NARCOTICS_LAB`: right-click (empty
+    hand) cooks, sneak-right-click deals; a successful deal has a real
+    30% chance of calling the *existing*
+    `LawEnforcementService.recordOffense` — the same method every other
+    crime in the mod already goes through — rather than inventing a
+    parallel narcotics-specific consequence system. That means dealing
+    raises wanted level exactly like any other offense, and the
+    already-built `PoliceEntity` chase/trial/arrest pipeline from slices
+    23/16 applies to a caught dealer with no additional code: an
+    illegal, faster, higher-paying alternative to a legal job with
+    genuine risk attached, not an isolated minigame.
+  - Exhaustively unit tested: first cook/deal always succeeds, repeat
+    attempts within cooldown are refused, cooldown expiry allows another
+    attempt, dealing with an empty stash fails, payout amounts and stash
+    counts update correctly, and different players have fully independent
+    stashes/cooldowns.
+  - **Known gaps**: see the updated Section 7 status above — one drug
+    type at one block, no smuggling/laundering, no rival dealers, catch
+    chance is a flat constant with no scaling by wanted level or law
+    enforcement presence; unverified without a running client.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -955,7 +985,19 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   player file a small-claims case against another via a `COURTHOUSE`
   block, and if the defendant doesn't contest it within a fixed response
   window, a genuine default judgment (the real legal term for exactly
-  this situation) automatically transfers the claimed amount.
+  this situation) automatically transfers the claimed amount. As of
+  slice 37, a first real underworld system exists too: a `NARCOTICS_LAB`
+  block that a player can cook a stash unit from (`NarcoticsService`,
+  cooldown-gated like `JobService`'s wage shifts) and then deal for real
+  money — a genuinely higher-paying, faster-cycling alternative to a
+  legal `CASH_REGISTER` job, but with a real 30% chance per deal of being
+  caught and recorded through the *existing* `LawEnforcementService`
+  pipeline, the same one every other crime in the mod uses, so a repeat
+  dealer's wanted level climbs and the already-built `PoliceEntity` will
+  eventually come looking for them exactly as it would for any other
+  offense — the underworld system was deliberately wired into the crime
+  system that already exists rather than given its own isolated
+  wanted/consequence mechanic.
 - Missing: `PoliceEntity` only patrols/chases — no tactical cover, spike
   strips, pit maneuvers, backup calls, or squad coordination; deer/police
   spawn only via items (`POLICE_SPAWNER`), not real police-station
@@ -972,12 +1014,15 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   and contesting just dismisses the case with no counter-argument or
   actual adjudication — "contest" currently just means "show up in time,"
   not a real defense; no real prison — no cell block, no yard, no
-  prison jobs, no faction/contraband/breakout mechanics; no underworld/
-  narcotics system (no dark web purchases, no
-  chemical labs, no drug smuggling, no money laundering through front
-  businesses) — the "dark web" referenced in Section 3 and the
-  "underworld" here are both entirely unbuilt. **Requested and tracked,
-  not started**: running for and holding government office (up to
+  prison jobs, no faction/contraband/breakout mechanics; the underworld/
+  narcotics system built in slice 37 is a single cook/deal loop at one
+  block type — no dark web purchases, no variety of drugs/effects, no
+  drug smuggling routes, no money laundering through front businesses,
+  no rival dealer NPCs or turf, and no distinct "narcotics" crime
+  severity tier (dealing is recorded at a fixed severity through the
+  same generic offense pipeline as trespassing or poaching) — the "dark
+  web" referenced in Section 3 is still entirely unbuilt. **Requested and
+  tracked, not started**: running for and holding government office (up to
   leading the whole in-game country); terrorism attacks that occur
   dynamically as the game progresses and get repaired afterward (also
   needs the "construction actually works" gap below); undercover police
@@ -1051,10 +1096,13 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 ## Priority order for what's next
 
 1. Everything in the "missing" lists above — a fourth casino game (poker
-   or craps) alongside slots/roulette/blackjack, or starting on the
-   underworld/narcotics gap (still entirely unbuilt), are both reasonable
-   next picks. Aviation/ATC and the space program stay deliberately
-   last, as the largest and least incrementally verifiable pieces.
+   or craps) alongside slots/roulette/blackjack, expanding the underworld
+   system slice 37 started (a second drug/lab type, rival dealer NPCs,
+   or scaling catch chance by wanted level), or diversifying into a
+   section that hasn't had a slice in a while (biology/medical, or
+   automotive/aviation short of full ATC) are all reasonable next picks.
+   Aviation/ATC and the space program stay deliberately last, as the
+   largest and least incrementally verifiable pieces.
 
 (Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
 Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
@@ -1068,7 +1116,9 @@ home/workplace structures for `CitizenEntity` — see Section 2 above.
 Slice 32 closed out treasury visibility with a Government phone app —
 see Sections 3/7 above. Slices 33/34/35 got the casino its first three
 real tables (slots, roulette, blackjack) — see Section 6 above. Slice 36
-closed out a real civil small-claims court — see Section 7 above.)
+closed out a real civil small-claims court — see Section 7 above. Slice
+37 started the previously entirely-unbuilt underworld/narcotics system —
+see Section 7 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

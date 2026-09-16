@@ -45,6 +45,10 @@ public final class ModBlocks {
     public static final Block COURTHOUSE = register("courthouse",
             new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));
 
+    /** Section 7's underworld/narcotics gap, reduced to a cook/deal loop — see {@code NarcoticsHandler}. */
+    public static final Block NARCOTICS_LAB = register("narcotics_lab",
+            new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));
+
     private ModBlocks() {
     }
 

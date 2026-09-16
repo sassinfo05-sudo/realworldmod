@@ -605,6 +605,46 @@ updated with every slice so neither side ever has to guess.
     as slice 33's slot machine; still no blackjack/poker/craps; unverified
     without a running client.
 
+- **Slice 35 — real interactive blackjack, the casino's third table**
+  (Section 6), the mod's first multi-step casino game rather than a
+  single right-click:
+  - `BlackjackGame`: a pure engine with real rules, not simplified ones —
+    Ace-aware hand scoring (counts as 11 unless that would bust, then
+    demotes to 1, checked one Ace at a time so a hand with multiple Aces
+    demotes only as many as needed), a dealer that hits on any total
+    below 17 and stands otherwise, a natural-blackjack check that
+    resolves the round on the deal itself when the player draws a
+    two-card 21, and a real outcome table (`PLAYER_BLACKJACK` at 3:2,
+    `PLAYER_WIN` at even money, `PUSH` returns the bet, `DEALER_WIN`
+    forfeits it) — exhaustively unit-tested including a deterministic
+    "rigged `Random`" test harness so dealer-hits-until-17 and the ace
+    soft/hard logic could be asserted exactly rather than only
+    statistically.
+  - `BlackjackService`: per-player session tracking (one round at a time,
+    a resolved round stays visible until a new one starts) over the same
+    withdraw-then-payout `BankService` pattern every other paid
+    interaction in the mod uses.
+  - A real multi-message networking protocol — `BlackjackStatePayload`
+    (state on screen open, so closing and reopening mid-round doesn't
+    lose track of it), `BlackjackStartPayload`/`HitPayload`/`StandPayload`
+    (C2S actions), and `BlackjackStateResponsePayload` (S2C, concealing
+    the dealer's hole card until the round resolves — the real "hidden
+    card" rule, not just omitted for no reason) — a step up from every
+    earlier phone-app payload pair, since this is the mod's first
+    genuinely multi-step, multi-message game rather than one request and
+    one response.
+  - `BlackjackScreen`: the mod's first interactive, stateful game UI
+    (Deal/Hit/Stand `ButtonWidget`s that enable/disable based on whether
+    a round is in progress) rather than a read-only display or a single
+    action button.
+  - **Known gaps**: no double-down, split pairs, insurance, or surrender;
+    draws with replacement from an infinite shoe rather than a finite
+    deck (defensible for a game with no card-counting mechanic, but not
+    how a real physical shoe works); one fixed bet size; a losing bet
+    vanishes rather than reaching a tracked house account; the screen's
+    button enable/disable logic and hand rendering are unverified without
+    a running client, the same caveat as every other UI in the mod.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -816,26 +856,35 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 - Done: four "shop" blocks with a withdraw-or-refuse purchase pattern
   (Cash Register pays a wage rather than sells anything, Pharmacy Counter
   sells Medicine, License Office sells a hunting permit) — a narrow slice
-  of "retail," not general commerce — plus two real casino games. As of
+  of "retail," not general commerce — plus three real casino games. As of
   slice 33, `SlotMachine`: three reels over a fixed symbol set and an
   actual payout table (three sevens pays 10x the bet, bars 5x, bells 3x,
   cherries 2x, any two matching is a push, no match loses the bet). As of
   slice 34, `Roulette`: a real 38-pocket American wheel (0, 00, and 1-36
   with the standard red/black assignment) — right-click bets red,
   sneak-right-click bets black, a win pays real 1:1, landing on green
-  always loses a color bet. Both are unit-tested exhaustively against
-  every outcome, not just the category existing with no game underneath.
+  always loses a color bet. As of slice 35, `BlackjackGame`: the mod's
+  first real interactive multi-step casino game (a proper Deal/Hit/Stand
+  screen, not a single right-click) — real hand scoring (Aces count 11
+  unless that would bust, then drop to 1), a dealer that hits below 17
+  and stands otherwise, a hidden hole card until the round resolves, and
+  a genuine 3:2 natural-blackjack payout. All three are unit-tested
+  exhaustively against every outcome, not just the category existing
+  with no game underneath.
 - Missing: grocery stores/shopping carts, furniture stores, clothing
   boutiques with a layered fashion/customization engine, bakeries, gun/
   ammo shops, phone/PC retail beyond the two items that exist, player-run
   businesses (buying commercial plots, setting prices on a POS UI, hiring
   NPC cashiers, automatic Friday payroll), the rest of a real casino
-  (blackjack/poker/craps — two games exist now, not the whole floor;
-  roulette itself is color-betting only, no number/split/street bets),
-  strip clubs/VIP lounges/nightclubs/DJ booths with proximity audio; both
-  games' losing bets simply vanish rather than reaching a tracked "house"
-  account, and each is a single fixed bet size with no way to wager more
-  or less. **Requested and tracked, not started**: real wealth-tier
+  (poker/craps — three games exist now, not the whole floor; roulette
+  itself is color-betting only, no number/split/street bets; blackjack
+  has no double-down/split-pairs/insurance, no multi-deck penetration
+  tracking, and draws with replacement from an infinite shoe rather than
+  a finite deck), strip clubs/VIP lounges/nightclubs/DJ booths with
+  proximity audio; all three games' losing bets simply vanish rather
+  than reaching a tracked "house" account, and each is a single fixed
+  bet size with no way to wager more or less. **Requested and tracked,
+  not started**: real wealth-tier
   recognition (nothing currently distinguishes or reacts to
   a player being a "millionaire" or "billionaire" — `BankService` just
   stores an unbounded `long`); public parks as a distinct, purposeful
@@ -963,8 +1012,8 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 ## Priority order for what's next
 
 1. Everything in the "missing" lists above — a civil/court system
-   distinct from the criminal trial slice 23 built, or a third casino
-   game (blackjack or poker) alongside slots and roulette, are both
+   distinct from the criminal trial slice 23 built, or a fourth casino
+   game (poker or craps) alongside slots/roulette/blackjack, are both
    reasonable next picks. Aviation/ATC and the space program stay
    deliberately last, as the largest and least incrementally verifiable
    pieces.
@@ -979,8 +1028,8 @@ NPC — see Section 8 above. Slices 29/31 closed out sales, income, and
 property tax — see Section 7 above. Slice 30 closed out real
 home/workplace structures for `CitizenEntity` — see Section 2 above.
 Slice 32 closed out treasury visibility with a Government phone app —
-see Sections 3/7 above. Slices 33/34 got the casino its first two real
-tables (slots, roulette) — see Section 6 above.)
+see Sections 3/7 above. Slices 33/34/35 got the casino its first three
+real tables (slots, roulette, blackjack) — see Section 6 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

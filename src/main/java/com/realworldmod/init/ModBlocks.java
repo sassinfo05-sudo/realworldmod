@@ -37,6 +37,10 @@ public final class ModBlocks {
     public static final Block ROULETTE_TABLE = register("roulette_table",
             new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));
 
+    /** A third real casino game with a full interactive UI — see {@code BlackjackService}. */
+    public static final Block BLACKJACK_TABLE = register("blackjack_table",
+            new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));
+
     private ModBlocks() {
     }
 

@@ -1,7 +1,9 @@
 package com.realworldmod;
 
+import com.realworldmod.commerce.BlackjackService;
 import com.realworldmod.commerce.RouletteUseHandler;
 import com.realworldmod.commerce.SlotMachineUseHandler;
+import com.realworldmod.commerce.net.BlackjackNetworking;
 import com.realworldmod.crime.ArrestAccess;
 import com.realworldmod.crime.ArrestHandler;
 import com.realworldmod.crime.ArrestOutcome;
@@ -89,6 +91,7 @@ public final class RealWorldMod implements ModInitializer {
     private final GameWardenService gameWardenService = new GameWardenService(bankService);
     private final PropertyTaxService propertyTaxService =
             new PropertyTaxService(propertyService.registry(), bankService);
+    private final BlackjackService blackjackService = new BlackjackService(bankService);
 
     @Override
     public void onInitialize() {
@@ -122,6 +125,8 @@ public final class RealWorldMod implements ModInitializer {
         new LicenseUseHandler(bankService, huntingLicenseService).register();
         new SlotMachineUseHandler(bankService).register();
         new RouletteUseHandler(bankService).register();
+        BlackjackNetworking.registerPayloadTypes();
+        BlackjackNetworking.registerServerReceivers(blackjackService);
         PoachingAccess.set(gameWardenService);
         new PoachingHandler(lawEnforcementService, huntingLicenseService, gameWardenService).register();
         CarSpawnHandler.register();

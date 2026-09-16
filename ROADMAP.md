@@ -1260,6 +1260,31 @@ updated with every slice so neither side ever has to guess.
     survived assault, and no investigation/detective mechanic, for
     either victim type.
 
+- **Slice 56 — a Contest button in the Court Registry app** (Section 3),
+  closing slice 53's own "read-only — no in-app contest button" known gap:
+  - A new `CourtRegistryContestPayload` (C2S, unit payload) lets
+    `CourtRegistryAppScreen` dismiss the player's pending case without
+    leaving the phone; `CourtRegistryNetworking` handles it by calling
+    the already-existing `CivilCourtService.contest(UUID)` (unchanged
+    since slice 36) and replying with the same status response the
+    status-request handler builds, refactored into one shared
+    `buildResponse` helper both receivers now call.
+  - The screen's new Contest button is only enabled while
+    `ClientCourtRegistryState.State.hasPendingCase()` is true, the same
+    active-flag-toggle pattern every other multi-button screen in the
+    mod (Blackjack, Craps, Three Card Poker) already uses.
+  - No new unit tests: `CivilCourtServiceTest` already exhaustively
+    covers `contest`'s behavior (dismisses a pending case, returns false
+    with none, allows a fresh claim afterward); only the payload
+    plumbing and button wiring are new, needing a running client/server
+    pair like every other phone-app slice (338 tests total, unchanged,
+    all still passing).
+  - **Known gaps**: still no plaintiff name shown, no filing history or
+    past-case archive, and contesting still just dismisses the claim
+    outright with no counter-argument or real adjudication — same
+    limitations `CivilCourtService.contest` always had, just reachable
+    from one more place now.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1428,7 +1453,9 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   Messages, Banking, Criminal Record, Utilities, Government, and — as of
   slice 53 — Court Registry, showing whether the player has a pending
   civil case against them, the claimed amount, and the seconds left to
-  contest it) over a real client↔server networking pattern.
+  contest it, plus — as of slice 56 — a Contest button that dismisses
+  the case right from the app) over a real client↔server networking
+  pattern.
 - Missing: PearOS vs. OpenDroid distinction (rooting, sideloading,
   terminal access), cracked screens/repair shops, charging cables as a
   physical item, PC building (motherboard/CPU/GPU/RAM/PSU parts, physical
@@ -1437,9 +1464,9 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   web-page-like content (today's apps are native screens, not pages), real
   estate portal, credit score dashboard, stock/forex exchange, a criminal
   court registry as a web UI (the Criminal Record app is that start; the
-  new Court Registry app in slice 53 covers the civil side, read-only —
-  no plaintiff name shown, no in-app contest button, no filing history or
-  past-case archive), tax audit portal,
+  Court Registry app from slices 53/56 covers the civil side, including
+  an in-app Contest button as of slice 56 — still no plaintiff name
+  shown, no filing history or past-case archive), tax audit portal,
   BlockTube (record/edit/upload video, subscribers, ad revenue), dark web
   marketplace, game consoles/discs/arcades/claw machines/racing sims.
   **Requested and tracked, not started**: every phone/PC app being a
@@ -1824,13 +1851,13 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    slice 42 started (a second predator/prey pair, pack hunting),
    extending the NPC-inclusion slices 46-49/55 started to another system
    (NPC pathfinding to a real shop, or an NPC-specific arrest/detainment
-   flow now that citizens can be assault/murder victims), adding an
-   in-app contest button and plaintiff name resolution to slice 53's
-   Court Registry, or bringing Slots/Roulette up to the other three
-   tables' slice-54 wager-selection bar (they'd need a real screen first,
-   since both are still a single block right-click) are all reasonable
-   next picks. Aviation/ATC and the space program stay deliberately
-   last, as the largest and least incrementally verifiable pieces.
+   flow now that citizens can be assault/murder victims), adding
+   plaintiff name resolution to slice 53/56's Court Registry, or bringing
+   Slots/Roulette up to the other three tables' slice-54 wager-selection
+   bar (they'd need a real screen first, since both are still a single
+   block right-click) are all reasonable next picks. Aviation/ATC and
+   the space program stay deliberately last, as the largest and least
+   incrementally verifiable pieces.
 
 (Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
 Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
@@ -1871,7 +1898,8 @@ Section 4 above. Slice 53 gave the civil court a Court Registry phone
 app — see Section 3 above. Slice 54 gave three of the five casino
 tables a real player-chosen wager — see Section 6 above. Slice 55
 extended assault and murder to protect `CitizenEntity` victims too —
-see Section 7 above.)
+see Section 7 above. Slice 56 added a Contest button to the Court
+Registry app — see Section 3 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

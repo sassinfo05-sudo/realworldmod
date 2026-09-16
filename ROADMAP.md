@@ -1065,6 +1065,36 @@ updated with every slice so neither side ever has to guess.
     pathfinding to a real pharmacy, and a citizen still can't be
     assaulted as a distinct offense or get arrested.
 
+- **Slice 50 — Craps, the casino's fifth real game** (Section 6), rounding
+  out the priority list's "fifth casino game" item:
+  - `CrapsGame`: the real Pass Line bet structure — a come-out roll of 7
+    or 11 wins immediately ("a natural"), 2, 3, or 12 loses immediately
+    ("craps"), and any other total establishes "the point," after which
+    the shooter keeps rolling until the point repeats (a win) or a 7
+    shows first ("seven out," a loss). Deliberately scoped to the Pass
+    Line alone — no Come/Don't Pass/Don't Come, odds, or proposition bets
+    (Field, Hardways, Any Craps) — but the Pass Line is the game's own
+    core structure, not a corner cut from it.
+  - `CrapsService` + full networking (state/start/roll/response) +
+    `CrapsScreen`: the same withdraw-then-settle session shape
+    `BlackjackService`/`ThreeCardPokerService` use, adapted for a bet
+    that can take any number of rolls to resolve rather than a fixed
+    two- or three-step flow — the client screen just keeps a Roll button
+    live until the round resolves, with a Bet button to start the next
+    one.
+  - Exhaustively unit tested: 13 `CrapsGameTest` cases (every come-out
+    outcome, point establishment, point-repeat win, seven-out loss,
+    non-resolving rolls continuing the round, post-resolution guard, and
+    payout multipliers) and 7 `CrapsServiceTest` cases (bet withdrawal,
+    insufficient-funds handling, in-progress-round guard, win/loss payout
+    verified against the real `Random`-driven outcome rather than a
+    rigged one, and restarting after resolution) — 20 new tests, 324
+    total, all passing.
+  - **Known gaps**: no Come/Don't Pass/Don't Come/odds/proposition bets
+    (the rest of a real craps table), one fixed bet size, draws with
+    replacement rather than modeling physical dice; unverified without a
+    running client.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1341,7 +1371,7 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   (Cash Register pays a wage rather than sells anything, Pharmacy Counter
   sells Medicine, License Office sells a hunting permit, and — as of
   slice 38 — a Liquor Store sells Alcohol and Cigarettes) — a narrow slice
-  of "retail," not general commerce — plus four real casino games. As of
+  of "retail," not general commerce — plus five real casino games. As of
   slice 33, `SlotMachine`: three reels over a fixed symbol set and an
   actual payout table (three sevens pays 10x the bet, bars 5x, bells 3x,
   cherries 2x, any two matching is a push, no match loses the bet). As of
@@ -1360,22 +1390,29 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   Three Card Poker rule that a straight outranks a flush — the opposite
   of five-card poker, since a straight is the rarer hand with only three
   cards), and a dealer that must qualify with Queen-high or better before
-  the hand comparison even happens. All four are unit-tested exhaustively
-  against every outcome, not just the category existing with no game
-  underneath.
+  the hand comparison even happens. As of slice 50, `CrapsGame` rounds out
+  a fifth: the real Pass Line bet, not a simplified stand-in — a come-out
+  roll of 7 or 11 wins immediately ("a natural"), 2/3/12 loses immediately
+  ("craps"), and any other total establishes "the point," after which the
+  shooter keeps rolling until the point repeats (a win) or a 7 shows first
+  ("seven out," a loss). All five are unit-tested exhaustively against
+  every outcome, not just the category existing with no game underneath.
 - Missing: grocery stores/shopping carts, furniture stores, clothing
   boutiques with a layered fashion/customization engine, bakeries, gun/
   ammo shops, phone/PC retail beyond the two items that exist, player-run
   businesses (buying commercial plots, setting prices on a POS UI, hiring
-  NPC cashiers, automatic Friday payroll), the rest of a real casino
-  (craps — four games exist now, not the whole floor; roulette itself is
+  NPC cashiers, automatic Friday payroll), the rest of a real casino floor
+  (five games exist now, not the whole floor; roulette itself is
   color-betting only, no number/split/street bets; blackjack has no
   double-down/split-pairs/insurance, no multi-deck penetration tracking;
   poker has no Pair Plus side bet, no 6-card bonus, and only Ante/Play,
-  not a full poker room with other players; all four games draw with
-  replacement from an infinite shoe rather than a finite deck), strip
-  clubs/VIP lounges/nightclubs/DJ booths with proximity audio; all four
-  games' losing bets simply vanish rather than reaching a tracked "house"
+  not a full poker room with other players; craps has only the Pass Line
+  — no Come/Don't Pass/Don't Come, no odds bets, no proposition bets like
+  Field or Hardways; all five games draw with replacement from an
+  infinite shoe/dice-pair rather than modeling physical wear or bias),
+  strip clubs/VIP lounges/nightclubs/DJ booths with proximity audio; all
+  five games' losing bets simply vanish rather than reaching a tracked
+  "house"
   account, and each is a single fixed
   bet size with no way to wager more or less. **Requested and tracked,
   not started**: real wealth-tier
@@ -1576,17 +1613,17 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
 
 ## Priority order for what's next
 
-1. Everything in the "missing" lists above — a fifth casino game (craps)
-   now that poker rounds out four, expanding the underworld system slice
-   37 started (a second drug/lab type, rival dealer NPCs, or scaling
-   catch chance by wanted level), giving alcohol/cigarettes from slice 38
-   more variety (a second drink/cigarette tier, a hangover effect),
-   continuing to round out automotive now that slice 39 added fuel
-   visibility (a speed HUD, a second vehicle type), expanding the
+1. Everything in the "missing" lists above — expanding the underworld
+   system slice 37 started (a second drug/lab type, rival dealer NPCs, or
+   scaling catch chance by wanted level), giving alcohol/cigarettes from
+   slice 38 more variety (a second drink/cigarette tier, a hangover
+   effect), continuing to round out automotive now that slice 39 added
+   fuel visibility (a speed HUD, a second vehicle type), expanding the
    predator system slice 42 started (a second predator/prey pair, pack
-   hunting), or extending the NPC-inclusion slices 46-49 started to
-   another system (NPC pathfinding to a real shop, or a distinct
-   NPC-victim assault/arrest consequence) are all reasonable next picks.
+   hunting), extending the NPC-inclusion slices 46-49 started to another
+   system (NPC pathfinding to a real shop, or a distinct NPC-victim
+   assault/arrest consequence), or giving the casino a wagerable bet size
+   now that all five tables exist are all reasonable next picks.
    Aviation/ATC and the space program stay deliberately last, as the
    largest and least incrementally verifiable pieces.
 
@@ -1621,7 +1658,8 @@ wage-and-tax pipeline players use — see Section 2 above. Slice 48
 extended fall injuries to every living entity, not just players — see
 Sections 2/5 above. Slice 49 closed the loop by having a sick or injured
 citizen actually spend that income on medicine — see Sections 2/5
-above.)
+above. Slice 50 gave the casino its fifth real table, Craps — see
+Section 6 above.)
 
 Each future slice follows the same pattern: a self-contained Java
 package, unit tests where the logic doesn't require a running game

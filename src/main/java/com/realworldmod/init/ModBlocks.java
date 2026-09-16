@@ -46,6 +46,10 @@ public final class ModBlocks {
     public static final Block POKER_TABLE = register("poker_table",
             new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));
 
+    /** A fifth real casino game (real Pass Line craps) — see {@code CrapsService}. */
+    public static final Block CRAPS_TABLE = register("craps_table",
+            new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));
+
     /** Files/contests small-claims civil cases — see {@code CivilCourtHandler}. */
     public static final Block COURTHOUSE = register("courthouse",
             new Block(AbstractBlock.Settings.create().strength(3.5f).requiresTool()));

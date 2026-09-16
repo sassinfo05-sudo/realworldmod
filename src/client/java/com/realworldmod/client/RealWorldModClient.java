@@ -7,6 +7,7 @@ import com.realworldmod.client.economy.ClientBankState;
 import com.realworldmod.client.economy.ClientTreasuryState;
 import com.realworldmod.client.phone.PhoneLockScreen;
 import com.realworldmod.client.utilities.ClientUtilityState;
+import com.realworldmod.client.utilities.ClientWaterState;
 import com.realworldmod.client.crime.PoliceEntityRenderer;
 import com.realworldmod.client.npc.CitizenEntityRenderer;
 import com.realworldmod.client.vehicle.CarEntityRenderer;
@@ -23,6 +24,7 @@ import com.realworldmod.init.ModEntities;
 import com.realworldmod.init.ModItems;
 import com.realworldmod.phone.PhoneBattery;
 import com.realworldmod.utilities.net.UtilityStatusResponsePayload;
+import com.realworldmod.utilities.net.WaterStatusResponsePayload;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
@@ -49,6 +51,8 @@ public final class RealWorldModClient implements ClientModInitializer {
                 (payload, context) -> ClientCrimeState.set(payload.wantedLevel()));
         ClientPlayNetworking.registerGlobalReceiver(UtilityStatusResponsePayload.ID,
                 (payload, context) -> ClientUtilityState.set(payload.powerConnected(), payload.unpaidCents()));
+        ClientPlayNetworking.registerGlobalReceiver(WaterStatusResponsePayload.ID,
+                (payload, context) -> ClientWaterState.set(payload.connected(), payload.unpaidCents()));
         ClientPlayNetworking.registerGlobalReceiver(BlackjackStateResponsePayload.ID,
                 (payload, context) -> ClientBlackjackState.set(new ClientBlackjackState.State(
                         payload.hasActiveGame(), payload.playerHandOrdinals(), payload.dealerHandOrdinals(),

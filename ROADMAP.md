@@ -886,6 +886,30 @@ updated with every slice so neither side ever has to guess.
     billing only; unverified without a running client for the block's
     visible states.
 
+- **Slice 44 — water status and Pay Now visibility in the Utilities
+  phone app** (Section 9), the direct follow-up slice 43's own known
+  gaps called out:
+  - `WaterStatusRequestPayload`/`WaterStatusResponsePayload`/
+    `PayWaterBillPayload`/`WaterNetworking`: a mirror of the existing
+    power networking triple, registered and handled the same way, and
+    `ClientWaterState` mirrors `ClientUtilityState` as the client-side
+    cache.
+  - `UtilitiesAppScreen` now renders both utilities independently: power's
+    existing connected/disconnected line and balance, plus a second water
+    line and balance, each with its own Pay Now button — because slice 43
+    made the two bill and disconnect completely separately, showing only
+    one would leave the other invisible again.
+  - No new unit tests: this slice is UI/networking wiring around
+    `WaterService`, which slice 43 already tested exhaustively — the same
+    "no new tests" call the original Utilities/Government phone app UI
+    slices made, since there's no new pure logic to test, only glue
+    between an already-tested service and a screen that needs a running
+    client to verify (265 tests total, unchanged, all still passing).
+  - **Known gaps**: still no real water-tower structure, reservoir
+    capacity, or usage-based billing (see Section 9 above); the screen's
+    layout and button behavior are unverified without a running client,
+    the same caveat as every other UI in the mod.
+
 ### Cross-cutting things already true of the whole codebase
 
 - Every Minecraft-side API used (items, blocks, events, mixins, data
@@ -1323,14 +1347,17 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
   versa — the real-world case a single shared "connected" flag couldn't
   represent. `WaterOutletBlock` (a sink) visibly goes dry the same way
   `UtilityLampBlock` visibly goes dark, closing "no sinks that dry up".
+  As of slice 44, the Utilities phone app shows both independently: its
+  own water connection line and unpaid balance alongside power's, with a
+  separate Pay Water Bill button next to Pay Power Bill — mirroring the
+  request/response/pay-now networking triple (`WaterStatusRequestPayload`/
+  `WaterStatusResponsePayload`/`PayWaterBillPayload`) the power app
+  already used.
 - Missing: no power *generation* (no plants of any kind — nuclear/solar/
   fossil — and no city-wide grid-stability simulation, "power" is purely
-  an account flag, not a simulated grid); water has no phone-app
-  visibility or manual pay button yet — only the automatic billing cycle
-  and the sink's connected state, the same order power's own history
-  followed (slice 12 shipped billing before slice 32 added the phone
-  app) — and no real water-tower *structure*, reservoir capacity, or
-  usage-based (rather than flat-rate) billing; no cell-tower/phone-
+  an account flag, not a simulated grid); no real water-tower
+  *structure*, reservoir capacity, or usage-based (rather than flat-rate)
+  billing for either utility; no cell-tower/phone-
   signal consequence for unpaid bills (the phone's battery/lock system
   from slice 2 is entirely separate from the utility system), no waste
   management (no trash generation, no garbage trucks, no landfills/
@@ -1349,11 +1376,10 @@ eradication, real-world worldgen, anti-griefing, structural physics)**
    hangover effect), continuing to round out automotive now that
    slice 39 added fuel visibility (a speed HUD, a second vehicle type),
    expanding the predator system slice 42 started (a second
-   predator/prey pair, pack hunting), or giving the water utility slice
-   43 added phone-app visibility the way power got in slice 32 are all
-   reasonable next picks. Aviation/ATC and the space program stay
-   deliberately last, as the largest and least incrementally verifiable
-   pieces.
+   predator/prey pair, pack hunting), or a fourth casino game to
+   further round out Section 6 are all reasonable next picks. Aviation/
+   ATC and the space program stay deliberately last, as the largest and
+   least incrementally verifiable pieces.
 
 (Slice 21 closed out daily-schedule-driven `CitizenEntity` movement — see
 Section 2 above. Slice 22 closed out real wildlife AI — see Section 8
@@ -1377,6 +1403,7 @@ weapon — see Section 7 above. Slice 41 closed out a separate, harsher
 murder crime tier — see Section 7 above. Slice 42 closed out predator AI
 with `CoyoteEntity` hunting `DeerEntity` — see Section 8 above. Slice 43
 closed out water as a second, independent billed utility — see Section 9
+above. Slice 44 closed out water's phone-app visibility — see Section 9
 above.)
 
 Each future slice follows the same pattern: a self-contained Java

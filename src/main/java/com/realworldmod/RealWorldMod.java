@@ -52,6 +52,7 @@ import com.realworldmod.utilities.UtilityService;
 import com.realworldmod.utilities.WaterAccess;
 import com.realworldmod.utilities.WaterService;
 import com.realworldmod.utilities.net.UtilityNetworking;
+import com.realworldmod.utilities.net.WaterNetworking;
 import com.realworldmod.vehicle.CarSpawnHandler;
 import com.realworldmod.vehicle.GasPumpUseHandler;
 import com.realworldmod.vice.AlcoholUseHandler;
@@ -139,6 +140,8 @@ public final class RealWorldMod implements ModInitializer {
         CrimeNetworking.registerServerReceiver(crimeService);
         UtilityNetworking.registerPayloadTypes();
         UtilityNetworking.registerServerReceivers(utilityService);
+        WaterNetworking.registerPayloadTypes();
+        WaterNetworking.registerServerReceivers(waterService);
         new JobUseHandler(jobService).register();
         LegInjuryEffect.register();
         MedicineUseHandler.register();
